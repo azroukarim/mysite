@@ -34,12 +34,12 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   const formatPrice = (eurPrice: number): string => {
     if (currency === "MAD") {
       const mad = Math.round(eurPrice * EUR_TO_MAD);
-      return `${mad} درهم`;
+      return `${mad} MAD`;
     }
     return `€${eurPrice.toFixed(2)}`;
   };
 
-  const symbol = currency === "MAD" ? "درهم" : "€";
+  const symbol = currency === "MAD" ? "MAD" : "€";
 
   return (
     <CurrencyContext.Provider value={{ currency, setCurrency, formatPrice, convertPrice, symbol }}>

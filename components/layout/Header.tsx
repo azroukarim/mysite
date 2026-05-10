@@ -148,7 +148,7 @@ export default function Header() {
               >
                 <span className={currency === 'EUR' ? 'text-blue-600' : 'text-gray-400'}>€</span>
                 <span className="text-gray-300">/</span>
-                <span className={currency === 'MAD' ? 'text-green-600' : 'text-gray-400'}>د.م</span>
+                <span className={currency === 'MAD' ? 'text-green-600' : 'text-gray-400'}>MAD</span>
               </button>
 
               {/* Language Toggle */}
@@ -218,7 +218,7 @@ export default function Header() {
                 >
                   <span className={currency === 'EUR' ? 'text-blue-600' : 'text-gray-400'}>€ EUR</span>
                   <span className="text-gray-300 mx-1">/</span>
-                  <span className={currency === 'MAD' ? 'text-green-600' : 'text-gray-400'}>د.م MAD</span>
+                  <span className={currency === 'MAD' ? 'text-green-600' : 'text-gray-400'}>MAD</span>
                 </button>
               </div>
               
