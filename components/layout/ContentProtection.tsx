@@ -3,11 +3,27 @@
 import { useEffect, useState } from "react";
 
 export default function ContentProtection() {
-  const [enabled, setEnabled] = useState(true);
+  const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
-    // Protection is always enabled by default
-    setEnabled(true);
+    // 1. Skip protection if we are on an admin page
+    if (window.location.pathname.startsWith('/admin')) {
+      setEnabled(false);
+      return;
+    }
+
+    // 2. Check if protection is enabled from API
+    fetch("/api/admin/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setEnabled(data.protection_enabled);
+        }
+      })
+      .catch(() => {
+        // Fallback to false if API fails
+        setEnabled(false);
+      });
   }, []);
 
   useEffect(() => {
