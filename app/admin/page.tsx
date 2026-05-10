@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { 
   Plus, Edit, Trash2, Save, X, Lock, LogOut, 
   ChevronLeft, Package, Image as ImageIcon, 
-  DollarSign, Tag, Search, CheckCircle2
+  DollarSign, Tag, Search, CheckCircle2, Shield, ShieldAlert
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -57,6 +57,7 @@ export default function AdminDashboard() {
 
   const [status, setStatus] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [protectionEnabled, setProtectionEnabled] = useState(false);
 
   // Load session and products on load
   useEffect(() => {
@@ -73,6 +74,13 @@ export default function AdminDashboard() {
     fetch('/api/products')
       .then((res) => res.json())
       .then((data) => setProducts(data));
+
+    // Fetch settings
+    fetch('/api/admin/settings')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) setProtectionEnabled(data.protection_enabled);
+      });
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -102,6 +110,31 @@ export default function AdminDashboard() {
     setUsername('');
     setPassword('');
     localStorage.removeItem('adminSession');
+  };
+
+  const toggleProtection = async () => {
+    const newValue = !protectionEnabled;
+    setProtectionEnabled(newValue);
+    setStatus('Updating protection...');
+    
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, protection_enabled: newValue }),
+      });
+
+      if (res.ok) {
+        setStatus('Protection updated!');
+        setTimeout(() => setStatus(''), 2000);
+      } else {
+        setProtectionEnabled(!newValue); // revert on error
+        alert('Failed to update protection');
+      }
+    } catch (error) {
+      setProtectionEnabled(!newValue);
+      alert('Error updating protection');
+    }
   };
 
   const handleSave = async (updatedProducts: Product[]) => {
@@ -272,6 +305,19 @@ export default function AdminDashboard() {
                 {status}
               </span>
             )}
+            <button 
+              onClick={toggleProtection}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-medium border ${
+                protectionEnabled 
+                ? "bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100" 
+                : "bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100"
+              }`}
+              title={protectionEnabled ? "Disable Content Protection" : "Enable Content Protection"}
+            >
+              {protectionEnabled ? <ShieldAlert size={18} /> : <Shield size={18} />}
+              <span className="hidden sm:inline">{protectionEnabled ? "Protection ON" : "Protection OFF"}</span>
+            </button>
+
             <button 
               onClick={handleLogout}
               className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all font-medium"

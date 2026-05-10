@@ -1,5 +1,6 @@
 import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
+import ContentProtection from "@/components/layout/ContentProtection";
 import { CartProvider } from "@/context/CartContext";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -30,6 +31,7 @@ export default function RootLayout({
       >
         <LanguageProvider>
           <CartProvider>
+            <ContentProtection />
             <Header />
             <main className="flex-grow">{children}</main>
             <Footer />
