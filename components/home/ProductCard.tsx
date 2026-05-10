@@ -17,6 +17,7 @@ interface Product {
   price: number;
   category?: string;
   link?: string;
+  duration?: string;
 }
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -27,6 +28,16 @@ export default function ProductCard({ product }: { product: Product }) {
 
   const { addToCart } = useCart();
   const { formatPrice } = useCurrency();
+
+  // Parse the first duration to get an old price if it exists
+  const getOldPrice = () => {
+    if (!product.duration) return null;
+    const firstOption = product.duration.split(',')[0];
+    const parts = firstOption.split('|');
+    return parts[2] ? parseFloat(parts[2].trim()) : null;
+  };
+
+  const oldPrice = getOldPrice();
 
   const handleAction = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -126,6 +137,11 @@ export default function ProductCard({ product }: { product: Product }) {
           <span className="text-lg font-bold text-foreground">
             {formatPrice(product.price)}
           </span>
+          {oldPrice && (
+            <span className="text-sm text-slate-400 line-through">
+              {formatPrice(oldPrice)}
+            </span>
+          )}
         </div>
 
         <Button
