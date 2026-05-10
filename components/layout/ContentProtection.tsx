@@ -3,18 +3,11 @@
 import { useEffect, useState } from "react";
 
 export default function ContentProtection() {
-  const [enabled, setEnabled] = useState(false);
+  const [enabled, setEnabled] = useState(true);
 
   useEffect(() => {
-    // Check if protection is enabled from API
-    fetch("/api/admin/settings")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && data.protection_enabled) {
-          setEnabled(true);
-        }
-      })
-      .catch(() => {});
+    // Protection is always enabled by default
+    setEnabled(true);
   }, []);
 
   useEffect(() => {
