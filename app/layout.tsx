@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     "Discover a wide selection of premium IPTV packages and entertainment services on Stream TV. Enjoy fast activation and 24/7 support. Shop now!",
 };
 
+import ContentProtection from "@/components/layout/ContentProtection";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,6 +31,7 @@ export default function RootLayout({
       <body
         className={`${inter.className}  antialiased flex flex-col min-h-screen`}
       >
+        <ContentProtection />
         <LanguageProvider>
           <CurrencyProvider>
             <CartProvider>
@@ -38,59 +41,6 @@ export default function RootLayout({
             </CartProvider>
           </CurrencyProvider>
         </LanguageProvider>
-
-        {/* Synchronous absolute protection script */}
-        <script dangerouslySetInnerHTML={{ __html: `
-          (function() {
-            var isProtected = function() {
-              return !window.location.pathname.startsWith('/admin') && !window.location.pathname.startsWith('/dashboard-master');
-            };
-            
-            var prevent = function(e) {
-              if (isProtected()) {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-              }
-            };
-            
-            document.addEventListener('contextmenu', prevent, true);
-            document.addEventListener('selectstart', prevent, true);
-            document.addEventListener('copy', prevent, true);
-            
-            document.addEventListener('mousedown', function(e) {
-              if (isProtected() && (e.button === 2 || e.button === 3)) {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-              }
-            }, true);
-            
-            document.addEventListener('keydown', function(e) {
-              if (isProtected()) {
-                var forbidden = ['F12', 'PrintScreen'];
-                if (forbidden.indexOf(e.key) !== -1 || 
-                   (e.ctrlKey && ['u','s','c','p','i','j'].indexOf(e.key.toLowerCase()) !== -1)) {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  return false;
-                }
-              }
-            }, true);
-            
-            setInterval(function() {
-              if (isProtected()) {
-                document.oncontextmenu = prevent;
-                document.body.style.userSelect = 'none';
-                document.body.style.webkitUserSelect = 'none';
-              } else {
-                document.oncontextmenu = null;
-                document.body.style.userSelect = 'auto';
-                document.body.style.webkitUserSelect = 'auto';
-              }
-            }, 500);
-          })();
-        `}} />
       </body>
     </html>
   );
