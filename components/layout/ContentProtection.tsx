@@ -6,19 +6,26 @@ export default function ContentProtection() {
   const [enabled, setEnabled] = useState(true);
 
   useEffect(() => {
-    const checkProtection = () => {
-      const path = window.location.pathname;
-      if (path.startsWith('/admin') || path.startsWith('/dashboard-master')) {
-        setEnabled(false);
-        return;
+    const fetchSettings = async () => {
+      try {
+        const path = window.location.pathname;
+        if (path.startsWith('/admin') || path.startsWith('/dashboard-master')) {
+          setEnabled(false);
+          return;
+        }
+
+        const res = await fetch('/api/admin/settings');
+        const data = await res.json();
+        if (data.success) {
+          setEnabled(data.protection_enabled);
+        }
+      } catch (error) {
+        console.error('Failed to fetch protection settings:', error);
       }
-      
-      // Always enable protection for the main website to ensure security
-      setEnabled(true);
     };
 
-    checkProtection();
-    const interval = setInterval(checkProtection, 1000);
+    fetchSettings();
+    const interval = setInterval(fetchSettings, 5000); // Check every 5 seconds
     return () => clearInterval(interval);
   }, []);
 

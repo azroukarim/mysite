@@ -58,7 +58,7 @@ export default function AdminDashboard() {
 
   const [status, setStatus] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [protectionEnabled, setProtectionEnabled] = useState(false);
+  const [protectionEnabled, setProtectionEnabled] = useState<boolean | null>(null);
 
   // Load session and products on load
   useEffect(() => {
@@ -277,15 +277,26 @@ export default function AdminDashboard() {
             )}
             <button 
               onClick={toggleProtection}
+              disabled={protectionEnabled === null}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-medium border ${
-                protectionEnabled 
+                protectionEnabled === null
+                ? "bg-slate-50 text-slate-300 border-slate-100 cursor-wait"
+                : protectionEnabled 
                 ? "bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100" 
                 : "bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100"
               }`}
-              title={protectionEnabled ? "Disable Content Protection" : "Enable Content Protection"}
+              title={protectionEnabled === null ? "Loading settings..." : (protectionEnabled ? "Disable Content Protection" : "Enable Content Protection")}
             >
-              {protectionEnabled ? <ShieldAlert size={18} /> : <Shield size={18} />}
-              <span className="hidden sm:inline">{protectionEnabled ? "Protection ON" : "Protection OFF"}</span>
+              {protectionEnabled === null ? (
+                <div className="w-4 h-4 border-2 border-slate-300 border-t-transparent rounded-full animate-spin" />
+              ) : protectionEnabled ? (
+                <ShieldAlert size={18} />
+              ) : (
+                <Shield size={18} />
+              )}
+              <span className="hidden sm:inline">
+                {protectionEnabled === null ? "Loading..." : (protectionEnabled ? "Protection ON" : "Protection OFF")}
+              </span>
             </button>
 
             <button 
