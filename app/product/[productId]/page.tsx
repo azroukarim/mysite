@@ -25,6 +25,7 @@ import {
   Package,
 } from "lucide-react";
 import CountdownTimer from "@/components/product/CountdownTimer";
+import { parseSaleDate } from "@/lib/dateUtils";
 
 export default function Product() {
   const { addToCart } = useCart();
@@ -41,6 +42,11 @@ export default function Product() {
   const [saleEnded, setSaleEnded] = useState(false);
   const { t, language } = useLanguage();
   const { formatPrice } = useCurrency();
+
+  // Reset sale status when date changes
+  useEffect(() => {
+    setSaleEnded(false);
+  }, [product?.sale_end_date]);
 
   const handleShare = async () => {
     const shareData = {
@@ -71,7 +77,10 @@ export default function Product() {
       try {
         const res = await fetch('/api/products');
         const allProducts = await res.json();
-        const found = allProducts.find((p: any) => p.id === parseInt(productId as string));
+        const idInt = parseInt(productId as string);
+        const found = allProducts.find((p: any) => 
+          p.id === idInt || p.name.toLowerCase().replace(/\s+/g, '-') === (productId as string).toLowerCase()
+        );
         setProduct(found);
       } catch (error) {
         console.error("Failed to fetch product:", error);
@@ -107,9 +116,19 @@ export default function Product() {
   const currentPrice = selectedDuration ? selectedDuration.price : (product?.price || 0);
   const currentOldPrice = selectedDuration?.oldPrice ?? null;
 
-  const isSaleActive = product?.sale_end_date && !saleEnded && new Date(product.sale_end_date).getTime() > Date.now();
-  const finalPrice = isSaleActive ? currentPrice : (currentOldPrice || currentPrice);
-  const finalOldPrice = isSaleActive ? currentOldPrice : null;
+  const hasSaleEndDate = !!product?.sale_end_date;
+  const isSaleActive = hasSaleEndDate && !saleEnded && (() => {
+    const target = parseSaleDate(product.sale_end_date);
+    return target ? target > Date.now() : false;
+  })();
+  
+  const finalPrice = hasSaleEndDate
+    ? (isSaleActive ? currentPrice : (currentOldPrice || currentPrice))
+    : currentPrice;
+
+  const finalOldPrice = hasSaleEndDate
+    ? (isSaleActive ? currentOldPrice : null)
+    : currentOldPrice;
 
   if (loading) {
     return (

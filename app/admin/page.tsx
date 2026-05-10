@@ -7,6 +7,8 @@ import {
   Euro, Tag, Search, CheckCircle2, Shield, ShieldAlert
 } from 'lucide-react';
 import Link from 'next/link';
+import CountdownTimer from '@/components/product/CountdownTimer';
+import { parseSaleDate } from '@/lib/dateUtils';
 
 interface Product {
   id: number;
@@ -61,6 +63,8 @@ export default function AdminDashboard() {
   const [status, setStatus] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [protectionEnabled, setProtectionEnabled] = useState<boolean | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [bulkSaleDate, setBulkSaleDate] = useState<string | null>(null);
 
   // Load session and products on load
   useEffect(() => {
@@ -216,7 +220,7 @@ export default function AdminDashboard() {
     
     const success = await handleSave([...products, productToAdd]);
     if (success) {
-      setNewProduct({ name: '', price: 0, description: '', image: '', category: 'PREMIUM IPTV', duration: '' });
+      setNewProduct({ name: '', price: 0, description: '', image: '', category: 'PREMIUM IPTV', duration: '', sale_end_date: null });
       setSelectedDurations({});
     }
   };
@@ -247,6 +251,20 @@ export default function AdminDashboard() {
     if (success) {
       setEditingProduct(null);
       setEditSelectedDurations({});
+    }
+  };
+  
+  const applyBulkSaleDate = async () => {
+    if (selectedIds.length === 0) return;
+    
+    const updated = products.map(p => 
+      selectedIds.includes(p.id) ? { ...p, sale_end_date: bulkSaleDate } : p
+    );
+    
+    const success = await handleSave(updated);
+    if (success) {
+      setSelectedIds([]);
+      setBulkSaleDate(null);
     }
   };
 
@@ -366,6 +384,36 @@ export default function AdminDashboard() {
 
                 <div className="space-y-3">
                   <label className="text-sm font-bold text-slate-700 block">Subscription Durations & Prices</label>
+                  
+                  {/* Flash Sale Date Picker for New Product */}
+                  <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 space-y-3 mb-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Tag size={16} className="text-amber-600" />
+                        <label className="text-xs font-bold text-amber-700 uppercase tracking-wider">Flash Sale End Date</label>
+                      </div>
+                      <input 
+                        type="checkbox"
+                        checked={!!newProduct.sale_end_date}
+                        onChange={(e) => {
+                          setNewProduct({
+                            ...newProduct, 
+                            sale_end_date: e.target.checked ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null
+                          });
+                        }}
+                        className="w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                      />
+                    </div>
+                    {newProduct.sale_end_date && (
+                      <input 
+                        type="date"
+                        className="w-full p-2 text-sm bg-white border border-amber-200 rounded-xl outline-none text-amber-900"
+                        value={newProduct.sale_end_date.split('T')[0]}
+                        onChange={(e) => setNewProduct({ ...newProduct, sale_end_date: e.target.value })}
+                      />
+                    )}
+                  </div>
+
                   <div className="grid grid-cols-1 gap-3">
                     {PREDEFINED_DURATIONS.map(dur => (
                       <div key={dur} className="flex items-center gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-200 transition-colors flex-wrap">
@@ -455,6 +503,20 @@ export default function AdminDashboard() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50/50 border-b border-slate-100">
+                      <th className="px-6 py-5 w-12">
+                        <input 
+                          type="checkbox" 
+                          className="w-5 h-5 rounded border-slate-300 text-blue-600"
+                          checked={selectedIds.length === filteredProducts.length && filteredProducts.length > 0}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedIds(filteredProducts.map(p => p.id));
+                            } else {
+                              setSelectedIds([]);
+                            }
+                          }}
+                        />
+                      </th>
                       <th className="px-6 py-5 text-[13px] font-bold text-slate-500 uppercase tracking-wider w-24">Package</th>
                       <th className="px-6 py-5 text-[13px] font-bold text-slate-500 uppercase tracking-wider">Details</th>
                       <th className="px-6 py-5 text-[13px] font-bold text-slate-500 uppercase tracking-wider w-32 text-right">Actions</th>
@@ -462,7 +524,21 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {filteredProducts.map((product) => (
-                      <tr key={product.id} className="group hover:bg-blue-50/30 transition-colors">
+                      <tr key={product.id} className={`group hover:bg-blue-50/30 transition-colors ${selectedIds.includes(product.id) ? 'bg-blue-50/50' : ''}`}>
+                        <td className="px-6 py-5 align-top">
+                          <input 
+                            type="checkbox" 
+                            className="w-5 h-5 rounded border-slate-300 text-blue-600"
+                            checked={selectedIds.includes(product.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedIds([...selectedIds, product.id]);
+                              } else {
+                                setSelectedIds(selectedIds.filter(id => id !== product.id));
+                              }
+                            }}
+                          />
+                        </td>
                         <td className="px-6 py-5 align-top">
                           <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-slate-50 border border-slate-200">
                             {product.image && (
@@ -571,6 +647,14 @@ export default function AdminDashboard() {
                                 <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold uppercase tracking-tight">
                                   {product.category}
                                 </span>
+                                {product.sale_end_date && (() => {
+                                  const target = parseSaleDate(product.sale_end_date);
+                                  return target && target > Date.now();
+                                })() && (
+                                  <div className="scale-75 origin-left">
+                                    <CountdownTimer endDate={product.sale_end_date} />
+                                  </div>
+                                )}
                               </div>
                               <p className="text-sm text-slate-500 line-clamp-2">{product.description}</p>
                               {product.duration && (
@@ -606,6 +690,53 @@ export default function AdminDashboard() {
           </div>
         </div>
       </main>
+
+      {/* Bulk Action Bar */}
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-8 duration-300">
+          <div className="bg-slate-900 text-white px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-6 border border-slate-800 backdrop-blur-md">
+            <div className="flex items-center gap-3 pr-6 border-r border-slate-700">
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center font-bold text-sm">
+                {selectedIds.length}
+              </div>
+              <span className="text-sm font-medium text-slate-300">Items selected</span>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Tag size={16} className="text-blue-400" />
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Set Flash Sale</span>
+              </div>
+              
+              <div className="flex items-center gap-2 bg-slate-800 p-1.5 rounded-2xl border border-slate-700">
+                <input 
+                  type="date" 
+                  className="bg-transparent border-none outline-none text-sm px-2 text-white [color-scheme:dark]"
+                  value={bulkSaleDate || ''}
+                  onChange={(e) => setBulkSaleDate(e.target.value)}
+                />
+                <button 
+                  onClick={applyBulkSaleDate}
+                  disabled={!bulkSaleDate}
+                  className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:hover:bg-blue-600 px-4 py-1.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2"
+                >
+                  Apply to All
+                </button>
+              </div>
+
+              <div className="h-6 w-[1px] bg-slate-700 mx-2" />
+
+              <button 
+                onClick={() => setSelectedIds([])}
+                className="p-2 hover:bg-slate-800 rounded-xl text-slate-400 hover:text-white transition-colors"
+                title="Clear selection"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

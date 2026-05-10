@@ -10,6 +10,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import CountdownTimer from "@/components/product/CountdownTimer";
+import { parseSaleDate } from "@/lib/dateUtils";
 
 interface Product {
   id: number;
@@ -28,6 +29,11 @@ export default function ProductCard({ product }: { product: Product }) {
   const [isAdding, setIsAdding] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
   const [saleEnded, setSaleEnded] = useState(false);
+  
+  // Reset sale status when date changes
+  useEffect(() => {
+    setSaleEnded(false);
+  }, [product.sale_end_date]);
 
   const { addToCart } = useCart();
   const { formatPrice } = useCurrency();
@@ -42,11 +48,23 @@ export default function ProductCard({ product }: { product: Product }) {
 
   const oldPrice = getOldPrice();
   
-  const isSaleActive = product.sale_end_date && !saleEnded && new Date(product.sale_end_date).getTime() > Date.now();
+  const hasSaleEndDate = !!product.sale_end_date;
+  const isSaleActive = hasSaleEndDate && !saleEnded && (() => {
+    const target = parseSaleDate(product.sale_end_date);
+    return target ? target > Date.now() : false;
+  })();
 
   // Pricing logic based on sale status
-  const currentPrice = isSaleActive ? product.price : (oldPrice || product.price);
-  const strikethroughPrice = isSaleActive ? oldPrice : null;
+  // 1. If it's a flash sale and it's active: show discounted price (product.price) and strike through oldPrice
+  // 2. If it's a flash sale and it's EXPIRED: revert to original price (oldPrice)
+  // 3. If it's NOT a flash sale: show product.price as current and strike through oldPrice if it exists
+  const currentPrice = hasSaleEndDate 
+    ? (isSaleActive ? product.price : (oldPrice || product.price))
+    : product.price;
+
+  const strikethroughPrice = hasSaleEndDate
+    ? (isSaleActive ? oldPrice : null)
+    : oldPrice;
 
   const handleAction = async (e: React.MouseEvent) => {
     e.preventDefault();

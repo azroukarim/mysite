@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Timer } from 'lucide-react';
+import { parseSaleDate } from '@/lib/dateUtils';
 
 interface CountdownTimerProps {
   endDate: string;
@@ -17,7 +18,8 @@ export default function CountdownTimer({ endDate, onEnd }: CountdownTimerProps) 
   } | null>(null);
 
   useEffect(() => {
-    const targetDate = new Date(endDate).getTime();
+    const targetDate = parseSaleDate(endDate);
+    if (!targetDate) return;
 
     const calculateTimeLeft = () => {
       const now = new Date().getTime();
