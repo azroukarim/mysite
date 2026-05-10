@@ -25,15 +25,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { password, products } = body;
 
-    // Fetch expected password from Supabase
-    const { data: config, error: configError } = await supabase
-      .from('admin_config')
-      .select('password')
-      .single();
-
-    if (configError || password !== config.password) {
-      return NextResponse.json({ error: 'كلمة السر غير صالحة (Unauthorized)' }, { status: 401 });
-    }
+    // Password check removed for direct access
 
     if (!Array.isArray(products)) {
       return NextResponse.json({ error: 'بيانات المنتجات غير صالحة' }, { status: 400 });

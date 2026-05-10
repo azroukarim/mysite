@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
+import { useCurrency } from "@/context/CurrencyContext";
 import { Shield, ShoppingBag, Truck } from "lucide-react";
 import Link from "next/link";
 
 export default function EmptyCart() {
+  const { formatPrice } = useCurrency();
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-32">
       <div className="max-w-2xl mx-auto text-center">
@@ -28,7 +30,7 @@ export default function EmptyCart() {
           <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <Truck className="h-4 w-4" />
-              Free shipping over $50
+              Free shipping over {formatPrice(50)}
             </div>
             <div className="flex items-center gap-2">
               <Shield className="h-4 w-4" />

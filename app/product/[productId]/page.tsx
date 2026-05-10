@@ -12,6 +12,7 @@ import RelatedProducts from "@/components/product/RelatedProducts";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/context/CartContext";
+import { useCurrency } from "@/context/CurrencyContext";
 import { cn } from "@/lib/utils";
 import {
   Check,
@@ -37,6 +38,7 @@ export default function Product() {
   const [selectedDuration, setSelectedDuration] = useState<any>(null);
   const [showCopied, setShowCopied] = useState(false);
   const { t, language } = useLanguage();
+  const { formatPrice } = useCurrency();
 
   const handleShare = async () => {
     const shareData = {
@@ -82,8 +84,11 @@ export default function Product() {
   const durationOptions = useMemo(() => {
     if (!product?.duration?.includes('|')) return null;
     return product.duration.split(',').map((opt: string) => {
-      const [label, price] = opt.split('|');
-      return { label: label.trim(), price: parseFloat(price.trim()) };
+      const parts = opt.split('|');
+      const label = parts[0]?.trim();
+      const price = parseFloat(parts[1]?.trim());
+      const oldPrice = parts[2] ? parseFloat(parts[2].trim()) : null;
+      return { label, price, oldPrice };
     });
   }, [product?.duration]);
 
@@ -98,6 +103,7 @@ export default function Product() {
   }, [product, durationOptions, selectedDuration]);
 
   const currentPrice = selectedDuration ? selectedDuration.price : (product?.price || 0);
+  const currentOldPrice = selectedDuration?.oldPrice ?? null;
 
   if (loading) {
     return (
@@ -181,8 +187,18 @@ export default function Product() {
 
           <div className="flex items-center gap-3">
             <span className="text-4xl font-black text-primary">
-              ${currentPrice.toFixed(2)}
+              {formatPrice(currentPrice)}
             </span>
+            {currentOldPrice && (
+              <>
+                <span className="text-2xl font-semibold text-slate-400 line-through">
+                  {formatPrice(currentOldPrice)}
+                </span>
+                <span className="px-2 py-1 bg-red-500 text-white text-xs font-black rounded-lg">
+                  -{Math.round(((currentOldPrice - currentPrice) / currentOldPrice) * 100)}%
+                </span>
+              </>
+            )}
           </div>
 
           <p className="text-muted-foreground leading-relaxed">
@@ -250,8 +266,11 @@ export default function Product() {
                             "text-lg font-black",
                             isSelected ? "text-primary" : "text-slate-900"
                           )}>
-                            ${opt.price}
+                            {formatPrice(opt.price)}
                           </div>
+                          {opt.oldPrice && (
+                            <div className="text-xs text-slate-400 line-through">{formatPrice(opt.oldPrice)}</div>
+                          )}
                         </div>
 
                         {isSelected && (
@@ -344,7 +363,7 @@ export default function Product() {
               onClick={() => {
                 const WHATSAPP_NUMBER = "212670965351";
                 const durationText = selectedDuration ? `نوع الاشتراك: ${selectedDuration.label}` : (product.duration ? `نوع الاشتراك: ${product.duration}` : `الكمية: ${quantity}`);
-                const message = `مرحباً، أود طلب منتج: ${product.name}\n${durationText}\nالسعر الإجمالي: $${(currentPrice * quantity).toFixed(2)}`;
+                const message = `مرحباً، أود طلب منتج: ${product.name}\n${durationText}\nالسعر الإجمالي: ${formatPrice(currentPrice * quantity)}`;
                 const encodedMessage = encodeURIComponent(message);
                 window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
               }}

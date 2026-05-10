@@ -3,81 +3,72 @@
 import { useEffect, useState } from "react";
 
 export default function ContentProtection() {
-  const [enabled, setEnabled] = useState(false);
+  const [enabled, setEnabled] = useState(true);
 
   useEffect(() => {
-    // 1. Skip protection if we are on an admin page
-    if (window.location.pathname.startsWith('/admin')) {
-      setEnabled(false);
-      return;
-    }
-
-    // 2. Check if protection is enabled from API
-    fetch("/api/admin/settings")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          setEnabled(data.protection_enabled);
-        }
-      })
-      .catch(() => {
-        // Fallback to false if API fails
+    const checkProtection = () => {
+      const path = window.location.pathname;
+      if (path.startsWith('/admin') || path.startsWith('/dashboard-master')) {
         setEnabled(false);
-      });
+        return;
+      }
+      
+      // Always enable protection for the main website to ensure security
+      setEnabled(true);
+    };
+
+    checkProtection();
+    const interval = setInterval(checkProtection, 1000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      document.body.style.userSelect = "auto";
+      document.body.style.webkitUserSelect = "auto";
+      document.oncontextmenu = null;
+      document.onselectstart = null;
+      return;
+    }
 
-    // 1. Prevent Right Click
-    const handleContextMenu = (e: MouseEvent) => {
+    const preventDefault = (e: Event) => {
       e.preventDefault();
+      e.stopPropagation();
+      return false;
     };
 
-    // 2. Prevent Copy
-    const handleCopy = (e: ClipboardEvent) => {
-      e.preventDefault();
-    };
-
-    // 3. Prevent Keyboard Shortcuts (F12, Ctrl+U, Ctrl+Shift+I, etc.)
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Disable F12
-      if (e.key === "F12") {
+      const forbiddenKeys = ['F12', 'PrintScreen'];
+      if (forbiddenKeys.includes(e.key) || 
+         (e.ctrlKey && (['u', 's', 'c', 'p'].includes(e.key.toLowerCase()))) ||
+         (e.ctrlKey && e.shiftKey && (['i', 'j', 'c'].includes(e.key.toUpperCase())))) {
         e.preventDefault();
-      }
-      // Disable Ctrl+U (View Source)
-      if (e.ctrlKey && e.key === "u") {
-        e.preventDefault();
-      }
-      // Disable Ctrl+Shift+I (DevTools)
-      if (e.ctrlKey && e.shiftKey && e.key === "I") {
-        e.preventDefault();
-      }
-      // Disable Ctrl+C (Copy)
-      if (e.ctrlKey && e.key === "c") {
-        e.preventDefault();
-      }
-      // Disable PrintScreen
-      if (e.key === "PrintScreen") {
-        alert("Screenshots are disabled on this site.");
-        e.preventDefault();
+        e.stopPropagation();
+        return false;
       }
     };
 
-    // Apply CSS to prevent text selection
     document.body.style.userSelect = "none";
     document.body.style.webkitUserSelect = "none";
     
-    window.addEventListener("contextmenu", handleContextMenu);
-    window.addEventListener("copy", handleCopy);
-    window.addEventListener("keydown", handleKeyDown);
+    // Use both properties and event listeners with capture phase
+    document.oncontextmenu = preventDefault;
+    document.onselectstart = preventDefault;
+    
+    document.addEventListener("contextmenu", preventDefault, { capture: true });
+    document.addEventListener("copy", preventDefault, { capture: true });
+    document.addEventListener("keydown", handleKeyDown, { capture: true });
+    document.addEventListener("selectstart", preventDefault, { capture: true });
 
     return () => {
       document.body.style.userSelect = "auto";
       document.body.style.webkitUserSelect = "auto";
-      window.removeEventListener("contextmenu", handleContextMenu);
-      window.removeEventListener("copy", handleCopy);
-      window.removeEventListener("keydown", handleKeyDown);
+      document.oncontextmenu = null;
+      document.onselectstart = null;
+      document.removeEventListener("contextmenu", preventDefault, { capture: true });
+      document.removeEventListener("copy", preventDefault, { capture: true });
+      document.removeEventListener("keydown", handleKeyDown, { capture: true });
+      document.removeEventListener("selectstart", preventDefault, { capture: true });
     };
   }, [enabled]);
 

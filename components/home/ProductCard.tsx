@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCart } from "@/context/CartContext";
+import { useCurrency } from "@/context/CurrencyContext";
 import { cn } from "@/lib/utils";
 import { Check, Eye, Heart, ShoppingCart } from "lucide-react";
 import Image from "next/image";
@@ -25,6 +26,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const [justAdded, setJustAdded] = useState(false);
 
   const { addToCart } = useCart();
+  const { formatPrice } = useCurrency();
 
   const handleAction = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -122,7 +124,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
         <div className="flex items-center gap-2">
           <span className="text-lg font-bold text-foreground">
-            ${product.price.toFixed(2)}
+            {formatPrice(product.price)}
           </span>
         </div>
 

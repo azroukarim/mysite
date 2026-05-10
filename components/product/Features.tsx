@@ -1,9 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { useCurrency } from "@/context/CurrencyContext";
 import { RotateCcw, Shield, Truck } from "lucide-react";
 
 export default function Features() {
+  const { formatPrice } = useCurrency();
   const features = [
-    { icon: Truck, title: "Free Shipping", desc: "On orders over $50" },
+    { icon: Truck, title: "Free Shipping", desc: `On orders over ${formatPrice(50)}` },
     { icon: Shield, title: "Warranty", desc: "1 year guarantee" },
     { icon: RotateCcw, title: "Easy Returns", desc: "30-day return policy" },
   ];

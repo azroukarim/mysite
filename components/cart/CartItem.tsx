@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/context/CartContext";
+import { useCurrency } from "@/context/CurrencyContext";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 
@@ -19,6 +20,7 @@ interface CartItemProps {
 
 export default function CartItem({ item, isLast }: CartItemProps) {
   const { removeFromCart, updateQuantity } = useCart();
+  const { formatPrice } = useCurrency();
 
   return (
     <div>
@@ -40,7 +42,7 @@ export default function CartItem({ item, isLast }: CartItemProps) {
                 {item.name}
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                ${item.price.toFixed(2)} each
+                {formatPrice(item.price)} each
               </p>
             </div>
 
@@ -82,7 +84,7 @@ export default function CartItem({ item, isLast }: CartItemProps) {
 
             <div className="text-right">
               <p className="text-lg font-bold text-foreground">
-                ${(item.price * item.quantity).toFixed(2)}
+                {formatPrice(item.price * item.quantity)}
               </p>
             </div>
           </div>

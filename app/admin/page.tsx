@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { 
   Plus, Edit, Trash2, Save, X, Lock, LogOut, 
   ChevronLeft, Package, Image as ImageIcon, 
-  DollarSign, Tag, Search, CheckCircle2, Shield, ShieldAlert
+  Euro, Tag, Search, CheckCircle2, Shield, ShieldAlert
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -52,8 +52,9 @@ export default function AdminDashboard() {
   });
   
   // State for duration checkboxes and prices
-  const [selectedDurations, setSelectedDurations] = useState<Record<string, string>>({});
-  const [editSelectedDurations, setEditSelectedDurations] = useState<Record<string, string>>({});
+  // { label: { price, oldPrice } }
+  const [selectedDurations, setSelectedDurations] = useState<Record<string, { price: string; oldPrice: string }>>({});
+  const [editSelectedDurations, setEditSelectedDurations] = useState<Record<string, { price: string; oldPrice: string }>>({});
 
   const [status, setStatus] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -125,15 +126,24 @@ export default function AdminDashboard() {
       });
 
       if (res.ok) {
-        setStatus('Protection updated!');
-        setTimeout(() => setStatus(''), 2000);
+        const data = await res.json();
+        if (data.success) {
+          setStatus('Protection updated!');
+          setTimeout(() => setStatus(''), 2000);
+        } else {
+          setProtectionEnabled(!newValue);
+          alert('Error: ' + (data.error || 'Failed to update'));
+          setStatus('');
+        }
       } else {
-        setProtectionEnabled(!newValue); // revert on error
-        alert('Failed to update protection');
+        setProtectionEnabled(!newValue);
+        alert('Server error: Failed to update protection');
+        setStatus('');
       }
     } catch (error) {
       setProtectionEnabled(!newValue);
-      alert('Error updating protection');
+      alert('Network error updating protection');
+      setStatus('');
     }
   };
 
@@ -163,20 +173,23 @@ export default function AdminDashboard() {
   };
 
   // Helper to format duration string from object
-  const formatDurationString = (durMap: Record<string, string>) => {
+  const formatDurationString = (durMap: Record<string, { price: string; oldPrice: string }>) => {
     return Object.entries(durMap)
-      .filter(([_, price]) => price !== '')
-      .map(([label, price]) => `${label}|${price}`)
+      .filter(([_, v]) => v.price !== '')
+      .map(([label, v]) => v.oldPrice ? `${label}|${v.price}|${v.oldPrice}` : `${label}|${v.price}`)
       .join(', ');
   };
 
   // Helper to parse duration string to object
-  const parseDurationString = (durStr: string) => {
-    const res: Record<string, string> = {};
+  const parseDurationString = (durStr: string): Record<string, { price: string; oldPrice: string }> => {
+    const res: Record<string, { price: string; oldPrice: string }> = {};
     if (!durStr) return res;
     durStr.split(',').forEach(opt => {
-      const [label, price] = opt.split('|');
-      if (label && price) res[label.trim()] = price.trim();
+      const parts = opt.split('|');
+      const label = parts[0]?.trim();
+      const price = parts[1]?.trim() || '';
+      const oldPrice = parts[2]?.trim() || '';
+      if (label && price) res[label] = { price, oldPrice };
     });
     return res;
   };
@@ -188,8 +201,8 @@ export default function AdminDashboard() {
     }
 
     const durationStr = formatDurationString(selectedDurations);
-    // Use the first duration's price as the main price if available
-    const mainPrice = Object.values(selectedDurations)[0] || "0";
+    const firstVal = Object.values(selectedDurations)[0];
+    const mainPrice = firstVal?.price || "0";
 
     const id = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
     const productToAdd = { 
@@ -221,8 +234,9 @@ export default function AdminDashboard() {
   const saveEdit = async () => {
     if (!editingProduct) return;
     
-    const durationStr = formatDurationString(editSelectedDurations);
-    const mainPrice = Object.values(editSelectedDurations)[0] || editingProduct.price.toString();
+    const durationStr = formatDurationString(editSelectedDurations || {});
+    const firstVal = Object.values(editSelectedDurations || {})[0];
+    const mainPrice = firstVal?.price || editingProduct.price.toString();
 
     const updated = products.map((p) => 
       p.id === editingProduct.id ? { ...editingProduct, price: Number(mainPrice), duration: durationStr } : p
@@ -239,51 +253,7 @@ export default function AdminDashboard() {
     p.category?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0f172a] p-4 font-sans">
-        <div className="max-w-md w-full bg-slate-900/50 backdrop-blur-xl rounded-3xl shadow-2xl p-10 space-y-8 border border-white/10">
-          <div className="text-center space-y-4">
-            <div className="inline-flex p-4 bg-blue-500/10 text-blue-400 rounded-2xl border border-blue-500/20">
-              <Lock size={40} />
-            </div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Admin Portal</h1>
-            <p className="text-slate-400">Secure access to Bloom dashboard</p>
-          </div>
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300 ml-1">Username</label>
-              <input
-                type="text"
-                placeholder="admin"
-                className="w-full bg-slate-800/50 text-white px-5 py-4 rounded-2xl border border-white/5 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all placeholder:text-slate-600"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                autoFocus
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300 ml-1">Password</label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                className="w-full bg-slate-800/50 text-white px-5 py-4 rounded-2xl border border-white/5 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all placeholder:text-slate-600"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98]"
-            >
-              Unlock Dashboard
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
+  // Dashboard is now directly accessible
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans pb-20">
       <nav className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200">
@@ -385,8 +355,8 @@ export default function AdminDashboard() {
                   <label className="text-sm font-bold text-slate-700 block">Subscription Durations & Prices</label>
                   <div className="grid grid-cols-1 gap-3">
                     {PREDEFINED_DURATIONS.map(dur => (
-                      <div key={dur} className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-200 transition-colors">
-                        <div className="flex items-center gap-2 flex-1">
+                      <div key={dur} className="flex items-center gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-200 transition-colors flex-wrap">
+                        <div className="flex items-center gap-2 flex-1 min-w-[120px]">
                           <input 
                             type="checkbox"
                             id={`dur-${dur}`}
@@ -394,7 +364,7 @@ export default function AdminDashboard() {
                             checked={!!selectedDurations[dur]}
                             onChange={(e) => {
                               if (e.target.checked) {
-                                setSelectedDurations({ ...selectedDurations, [dur]: '0' });
+                                setSelectedDurations({ ...selectedDurations, [dur]: { price: '0', oldPrice: '' } });
                               } else {
                                 const next = { ...selectedDurations };
                                 delete next[dur];
@@ -405,15 +375,27 @@ export default function AdminDashboard() {
                           <label htmlFor={`dur-${dur}`} className="text-sm font-medium text-slate-600 cursor-pointer">{dur}</label>
                         </div>
                         {selectedDurations[dur] !== undefined && (
-                          <div className="relative w-28">
-                            <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                            <input 
-                              type="number"
-                              placeholder="Price"
-                              className="w-full pl-7 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-blue-500 outline-none"
-                              value={selectedDurations[dur]}
-                              onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: e.target.value })}
-                            />
+                          <div className="flex items-center gap-2">
+                            <div className="relative w-24">
+                              <Euro className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" size={13} />
+                              <input 
+                                type="number"
+                                placeholder="Price"
+                                className="w-full pl-6 pr-2 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-blue-500 outline-none"
+                                value={selectedDurations[dur].price}
+                                onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], price: e.target.value } })}
+                              />
+                            </div>
+                            <div className="relative w-24">
+                              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-red-300 text-xs font-bold line-through">€</span>
+                              <input 
+                                type="number"
+                                placeholder="Old"
+                                className="w-full pl-5 pr-2 py-2 bg-red-50 border border-red-100 rounded-xl text-sm focus:border-red-300 outline-none text-red-400"
+                                value={selectedDurations[dur].oldPrice}
+                                onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], oldPrice: e.target.value } })}
+                              />
+                            </div>
                           </div>
                         )}
                       </div>
@@ -495,29 +477,39 @@ export default function AdminDashboard() {
                               <div className="space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                 <label className="text-xs font-bold text-slate-500 uppercase">Durations & Prices</label>
                                 {PREDEFINED_DURATIONS.map(dur => (
-                                  <div key={dur} className="flex items-center gap-2">
+                                  <div key={dur} className="flex items-center gap-2 flex-wrap">
                                     <input 
                                       type="checkbox" 
                                       className="w-4 h-4"
-                                      checked={editSelectedDurations[dur] !== undefined}
+                                      checked={(editSelectedDurations || {})[dur] !== undefined}
                                       onChange={(e) => {
                                         if (e.target.checked) {
-                                          setEditSelectedDurations({ ...editSelectedDurations, [dur]: '0' });
+                                          setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { price: '0', oldPrice: '' } });
                                         } else {
-                                          const next = { ...editSelectedDurations };
+                                          const next = { ...(editSelectedDurations || {}) };
                                           delete next[dur];
                                           setEditSelectedDurations(next);
                                         }
                                       }}
                                     />
                                     <span className="text-xs font-medium flex-1">{dur}</span>
-                                    {editSelectedDurations[dur] !== undefined && (
-                                      <input 
-                                        type="number"
-                                        className="w-20 p-1.5 text-xs border border-slate-200 rounded-lg outline-none"
-                                        value={editSelectedDurations[dur]}
-                                        onChange={(e) => setEditSelectedDurations({ ...editSelectedDurations, [dur]: e.target.value })}
-                                      />
+                                    {(editSelectedDurations || {})[dur] !== undefined && (
+                                      <div className="flex items-center gap-1">
+                                        <input 
+                                          type="number"
+                                          placeholder="Price"
+                                          className="w-16 p-1.5 text-xs border border-slate-200 rounded-lg outline-none"
+                                          value={(editSelectedDurations || {})[dur]?.price || ''}
+                                          onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], price: e.target.value } })}
+                                        />
+                                        <input 
+                                          type="number"
+                                          placeholder="Old€"
+                                          className="w-16 p-1.5 text-xs border border-red-100 bg-red-50 rounded-lg outline-none text-red-400"
+                                          value={(editSelectedDurations || {})[dur]?.oldPrice || ''}
+                                          onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], oldPrice: e.target.value } })}
+                                        />
+                                      </div>
                                     )}
                                   </div>
                                 ))}

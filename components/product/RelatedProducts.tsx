@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useCurrency } from "@/context/CurrencyContext";
 import products from "@/data/products.json";
 import { Product } from "@/types/product";
 import Image from "next/image";
@@ -10,6 +11,7 @@ interface RelatedProductsProps {
 }
 
 export default function RelatedProducts({ product }: RelatedProductsProps) {
+  const { formatPrice } = useCurrency();
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
@@ -45,7 +47,7 @@ export default function RelatedProducts({ product }: RelatedProductsProps) {
                     {relatedProduct.name}
                   </h3>
                   <p className="text-lg font-bold text-primary">
-                    ${relatedProduct.price.toFixed(2)}
+                    {formatPrice(relatedProduct.price)}
                   </p>
                 </CardContent>
               </Link>

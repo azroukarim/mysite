@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/context/CartContext";
+import { useCurrency } from "@/context/CurrencyContext";
 import { CreditCard, Heart, Shield, Truck } from "lucide-react";
 import Link from "next/link";
 
 export default function OrderSummary() {
   const { cart } = useCart();
+  const { formatPrice } = useCurrency();
 
   const subtotal = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -25,10 +27,10 @@ export default function OrderSummary() {
     cart.forEach((item, index) => {
       message += `📌 *المنتج ${index + 1}:* ${item.name}\n`;
       message += `   - الكمية: ${item.quantity}\n`;
-      message += `   - السعر: $${(item.price * item.quantity).toFixed(2)}\n\n`;
+      message += `   - السعر: ${formatPrice(item.price * item.quantity)}\n\n`;
     });
     message += `━━━━━━━━━━━━━━━\n`;
-    message += `💰 *المجموع الكلي: $${total.toFixed(2)}*\n`;
+    message += `💰 *المجموع الكلي: ${formatPrice(total)}*\n`;
     message += `━━━━━━━━━━━━━━━`;
     
     const encodedMessage = encodeURIComponent(message);
@@ -48,7 +50,7 @@ export default function OrderSummary() {
             <span className="text-muted-foreground">
               المجموع الفرعي ({itemCount} منتجات)
             </span>
-            <span className="font-medium">${subtotal.toFixed(2)}</span>
+            <span className="font-medium">{formatPrice(subtotal)}</span>
           </div>
 
           <Separator />
@@ -56,7 +58,7 @@ export default function OrderSummary() {
           <div className="flex justify-between">
             <span className="text-lg font-semibold">المجموع الكلي</span>
             <span className="text-lg font-bold text-primary">
-              ${total.toFixed(2)}
+              {formatPrice(total)}
             </span>
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 import { useCart } from "@/context/CartContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { useCurrency } from "@/context/CurrencyContext";
 import { Menu, Search, ShoppingCart, X, Globe } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -11,6 +12,7 @@ import { Button } from "../ui/button";
 export default function Header() {
   const { cart } = useCart();
   const { language, setLanguage, t } = useLanguage();
+  const { currency, setCurrency } = useCurrency();
   const cartCount =
     cart?.reduce((total, item) => total + item.quantity, 0) || 0;
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -138,6 +140,18 @@ export default function Header() {
             </Link>
 
             <div className="flex items-center space-x-2">
+              {/* Currency Toggle */}
+              <button
+                onClick={() => setCurrency(currency === 'EUR' ? 'MAD' : 'EUR')}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-gray-200 hover:bg-gray-50 transition-colors text-xs font-bold"
+                title={currency === 'EUR' ? 'تبديل إلى الدرهم المغربي' : 'Switch to EUR'}
+              >
+                <span className={currency === 'EUR' ? 'text-blue-600' : 'text-gray-400'}>€</span>
+                <span className="text-gray-300">/</span>
+                <span className={currency === 'MAD' ? 'text-green-600' : 'text-gray-400'}>د.م</span>
+              </button>
+
+              {/* Language Toggle */}
               <Button
                 variant="ghost"
                 size="sm"
@@ -192,10 +206,25 @@ export default function Header() {
               ))}
             </div>
 
-            <div className="flex flex-col space-y-3 pt-4 sm:hidden">
+            <div className="flex flex-col space-y-3 pt-4 sm:hidden border-t border-gray-100 mt-4">
+              <div className="flex items-center justify-between px-3">
+                <span className="text-sm font-medium text-gray-500">Currency / العملة</span>
+                <button
+                  onClick={() => {
+                    setCurrency(currency === 'EUR' ? 'MAD' : 'EUR');
+                    closeMobileMenu();
+                  }}
+                  className="flex items-center gap-1 px-4 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm font-bold"
+                >
+                  <span className={currency === 'EUR' ? 'text-blue-600' : 'text-gray-400'}>€ EUR</span>
+                  <span className="text-gray-300 mx-1">/</span>
+                  <span className={currency === 'MAD' ? 'text-green-600' : 'text-gray-400'}>د.م MAD</span>
+                </button>
+              </div>
+              
               <Button 
                 variant="outline" 
-                className="w-full text-sm font-bold uppercase"
+                className="w-full text-sm font-bold uppercase justify-start px-3"
                 onClick={() => {
                   setLanguage(language === 'en' ? 'fr' : 'en');
                   closeMobileMenu();
