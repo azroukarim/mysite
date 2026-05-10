@@ -24,6 +24,7 @@ import {
   Star,
   Package,
 } from "lucide-react";
+import CountdownTimer from "@/components/product/CountdownTimer";
 
 export default function Product() {
   const { addToCart } = useCart();
@@ -37,6 +38,7 @@ export default function Product() {
   const [isLiked, setIsLiked] = useState(false);
   const [selectedDuration, setSelectedDuration] = useState<any>(null);
   const [showCopied, setShowCopied] = useState(false);
+  const [saleEnded, setSaleEnded] = useState(false);
   const { t, language } = useLanguage();
   const { formatPrice } = useCurrency();
 
@@ -105,6 +107,10 @@ export default function Product() {
   const currentPrice = selectedDuration ? selectedDuration.price : (product?.price || 0);
   const currentOldPrice = selectedDuration?.oldPrice ?? null;
 
+  const isSaleActive = product?.sale_end_date && !saleEnded && new Date(product.sale_end_date).getTime() > Date.now();
+  const finalPrice = isSaleActive ? currentPrice : (currentOldPrice || currentPrice);
+  const finalOldPrice = isSaleActive ? currentOldPrice : null;
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
@@ -125,7 +131,7 @@ export default function Product() {
     addToCart({
       id: product.id,
       name: `${product.name} (${selectedDuration?.label || product.duration || 'Standard'})`,
-      price: currentPrice,
+      price: finalPrice,
       image: product.image,
       quantity: quantity,
     });
@@ -185,17 +191,32 @@ export default function Product() {
             </span>
           </div>
 
+          {product.sale_end_date && !saleEnded && (
+            <div className="flex items-center gap-3 mb-2">
+              <CountdownTimer 
+                endDate={product.sale_end_date} 
+                onEnd={() => setSaleEnded(true)}
+              />
+              <span className="text-[10px] font-black bg-red-600 text-white px-2 py-1 rounded-lg uppercase tracking-wider animate-pulse">
+                Flash Sale Active
+              </span>
+            </div>
+          )}
+
           <div className="flex items-center gap-3">
-            <span className="text-4xl font-black text-primary">
-              {formatPrice(currentPrice)}
+            <span className={cn(
+              "text-4xl font-black transition-colors",
+              isSaleActive ? "text-red-600" : "text-primary"
+            )}>
+              {formatPrice(finalPrice)}
             </span>
-            {currentOldPrice && (
+            {finalOldPrice && (
               <>
                 <span className="text-2xl font-semibold text-slate-400 line-through">
-                  {formatPrice(currentOldPrice)}
+                  {formatPrice(finalOldPrice)}
                 </span>
                 <span className="px-2 py-1 bg-red-500 text-white text-xs font-black rounded-lg">
-                  -{Math.round(((currentOldPrice - currentPrice) / currentOldPrice) * 100)}%
+                  -{Math.round(((finalOldPrice - finalPrice) / finalOldPrice) * 100)}%
                 </span>
               </>
             )}
@@ -363,7 +384,7 @@ export default function Product() {
               onClick={() => {
                 const WHATSAPP_NUMBER = "212670965351";
                 const durationText = selectedDuration ? `نوع الاشتراك: ${selectedDuration.label}` : (product.duration ? `نوع الاشتراك: ${product.duration}` : `الكمية: ${quantity}`);
-                const message = `مرحباً، أود طلب منتج: ${product.name}\n${durationText}\nالسعر الإجمالي: ${formatPrice(currentPrice * quantity)}`;
+                const message = `مرحباً، أود طلب منتج: ${product.name}\n${durationText}\nالسعر الإجمالي: ${formatPrice(finalPrice * quantity)}`;
                 const encodedMessage = encodeURIComponent(message);
                 window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
               }}
@@ -403,13 +424,13 @@ export default function Product() {
               {showCopied ? "Link Copied!" : "Share"}
             </Button>
           </div>
-        </div> {/* Closes space-y-4 (line 162) */}
-      </div> {/* Closes Right Column space-y-6 (line 134) */}
-    </div> {/* Closes Grid grid-cols-2 (line 116) */}
+        </div>
+      </div>
+    </div>
 
     <Features />
 
     <RelatedProducts product={product} />
-  </div> /* Closes container (line 113) */
+  </div>
   );
 }

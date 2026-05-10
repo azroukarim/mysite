@@ -16,6 +16,7 @@ interface Product {
   image: string;
   category?: string;
   duration?: string;
+  sale_end_date?: string | null;
 }
 
 const PREDEFINED_DURATIONS = [
@@ -48,7 +49,8 @@ export default function AdminDashboard() {
     description: '', 
     image: '', 
     category: 'PREMIUM IPTV',
-    duration: ''
+    duration: '',
+    sale_end_date: null
   });
   
   // State for duration checkboxes and prices
@@ -477,13 +479,38 @@ export default function AdminDashboard() {
                                 value={editingProduct.name}
                                 onChange={(e) => setEditingProduct({...editingProduct, name: e.target.value})}
                               />
-                              <input
+                               <input
                                 type="text"
                                 placeholder="Category"
                                 className="w-full p-3 text-sm border border-slate-200 rounded-xl outline-none"
                                 value={editingProduct.category}
                                 onChange={(e) => setEditingProduct({...editingProduct, category: e.target.value})}
                               />
+
+                              <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <label className="text-xs font-bold text-amber-700 uppercase tracking-wider">Flash Sale Countdown</label>
+                                  <input 
+                                    type="checkbox"
+                                    checked={!!editingProduct.sale_end_date}
+                                    onChange={(e) => {
+                                      setEditingProduct({
+                                        ...editingProduct, 
+                                        sale_end_date: e.target.checked ? new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null
+                                      });
+                                    }}
+                                    className="w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                                  />
+                                </div>
+                                {editingProduct.sale_end_date && (
+                                  <input 
+                                    type="date"
+                                    className="w-full p-2 text-sm bg-white border border-amber-200 rounded-xl outline-none text-amber-900"
+                                    value={editingProduct.sale_end_date.split('T')[0]}
+                                    onChange={(e) => setEditingProduct({ ...editingProduct, sale_end_date: e.target.value })}
+                                  />
+                                )}
+                              </div>
                               
                               <div className="space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                 <label className="text-xs font-bold text-slate-500 uppercase">Durations & Prices</label>

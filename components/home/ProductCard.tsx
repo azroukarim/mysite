@@ -8,7 +8,8 @@ import { cn } from "@/lib/utils";
 import { Check, Eye, Heart, ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import CountdownTimer from "@/components/product/CountdownTimer";
 
 interface Product {
   id: number;
@@ -18,6 +19,7 @@ interface Product {
   category?: string;
   link?: string;
   duration?: string;
+  sale_end_date?: string | null;
 }
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -25,6 +27,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const [imageError, setImageError] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
+  const [saleEnded, setSaleEnded] = useState(false);
 
   const { addToCart } = useCart();
   const { formatPrice } = useCurrency();
@@ -38,6 +41,12 @@ export default function ProductCard({ product }: { product: Product }) {
   };
 
   const oldPrice = getOldPrice();
+  
+  const isSaleActive = product.sale_end_date && !saleEnded && new Date(product.sale_end_date).getTime() > Date.now();
+
+  // Pricing logic based on sale status
+  const currentPrice = isSaleActive ? product.price : (oldPrice || product.price);
+  const strikethroughPrice = isSaleActive ? oldPrice : null;
 
   const handleAction = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -54,7 +63,7 @@ export default function ProductCard({ product }: { product: Product }) {
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.price,
+      price: currentPrice,
       image: product.image,
       quantity: 1,
     });
@@ -73,6 +82,16 @@ export default function ProductCard({ product }: { product: Product }) {
   return (
     <Card className="group overflow-hidden bg-card border-border hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
       <div className="relative overflow-hidden">
+        {/* Flash Sale Countdown */}
+        {product.sale_end_date && !saleEnded && (
+          <div className="absolute top-3 left-3 z-10">
+            <CountdownTimer 
+              endDate={product.sale_end_date} 
+              onEnd={() => setSaleEnded(true)}
+            />
+          </div>
+        )}
+
         <Button
           variant="ghost"
           size="icon"
@@ -123,23 +142,33 @@ export default function ProductCard({ product }: { product: Product }) {
 
       <CardContent className="p-4 space-y-3">
         <Link href={`/product/${product.id}`}>
-          {product.category && (
-            <span className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1 block">
-              {product.category}
-            </span>
-          )}
+          <div className="flex items-center justify-between mb-1">
+            {product.category && (
+              <span className="text-[10px] font-bold text-primary uppercase tracking-widest block">
+                {product.category}
+              </span>
+            )}
+            {isSaleActive && (
+              <span className="text-[9px] font-black bg-red-100 text-red-600 px-1.5 py-0.5 rounded uppercase animate-bounce">
+                Flash Sale
+              </span>
+            )}
+          </div>
           <h2 className="font-semibold text-foreground line-clamp-1 hover:text-primary transition-colors">
             {product.name}
           </h2>
         </Link>
 
         <div className="flex items-center gap-2">
-          <span className="text-lg font-bold text-foreground">
-            {formatPrice(product.price)}
+          <span className={cn(
+            "text-lg font-bold transition-colors",
+            isSaleActive ? "text-red-600" : "text-foreground"
+          )}>
+            {formatPrice(currentPrice)}
           </span>
-          {oldPrice && (
+          {strikethroughPrice && (
             <span className="text-sm text-slate-400 line-through">
-              {formatPrice(oldPrice)}
+              {formatPrice(strikethroughPrice)}
             </span>
           )}
         </div>
@@ -149,7 +178,9 @@ export default function ProductCard({ product }: { product: Product }) {
             "w-full transition-all duration-300",
             justAdded
               ? "bg-green-600 text-white hover:bg-green-600"
-              : "bg-primary text-primary-foreground hover:bg-primary/90"
+              : isSaleActive 
+                ? "bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-500/20"
+                : "bg-primary text-primary-foreground hover:bg-primary/90"
           )}
           onClick={handleAction}
           disabled={isAdding}
