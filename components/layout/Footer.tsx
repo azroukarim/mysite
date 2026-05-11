@@ -186,11 +186,10 @@ export default function Footer() {
             </Link>
           </div>
 
-          <div className="flex items-center gap-4 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
-            <div className="px-2 py-1 border border-slate-300 rounded text-[10px] font-bold">VISA</div>
-            <div className="px-2 py-1 border border-slate-300 rounded text-[10px] font-bold">MASTERCARD</div>
-            <div className="px-2 py-1 border border-slate-300 rounded text-[10px] font-bold">PAYPAL</div>
-            <div className="px-2 py-1 border border-slate-300 rounded text-[10px] font-bold">BITCOIN</div>
+          <div className="flex flex-wrap items-center justify-center md:justify-end gap-2 opacity-60 hover:opacity-100 transition-all duration-500 max-w-lg">
+            {['BINANCE', 'CASHPLUS', 'WAFACASH', 'REMITLY', 'MONEYGRAM', 'CIH BANK', 'BARID CASH', 'DAMAN CASH', 'WESTERN UNION', 'RIA', 'MONEYTRANS', 'SENDWAVE'].map((method) => (
+              <div key={method} className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-[9px] font-bold tracking-wider">{method}</div>
+            ))}
           </div>
         </div>
       </div>
