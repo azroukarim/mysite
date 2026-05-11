@@ -120,7 +120,7 @@ export default function Footer() {
                 STREAM<span className="text-blue-600 italic">TV</span>
               </Link>
               <p className="text-muted-foreground mb-6 max-w-sm">
-                {t('footer_desc_iptv')}
+                {t('footer_desc_streaming')}
               </p>
 
               <div className="space-y-3">

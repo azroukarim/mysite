@@ -33,8 +33,8 @@ const PREDEFINED_DURATIONS = [
 ];
 
 const CATEGORIES = [
-  'PREMIUM IPTV',
-  'GOLD IPTV',
+  'PREMIUM STREAMING',
+  'GOLD STREAMING',
   '4K STREAMING',
   'SMART TV',
   'ANDROID BOX',
@@ -56,7 +56,7 @@ export default function AdminDashboard() {
     price: 0, 
     description: '', 
     image: '', 
-    category: 'PREMIUM IPTV',
+    category: 'PREMIUM STREAMING',
     duration: '',
     sale_end_date: null
   });
@@ -330,7 +330,7 @@ export default function AdminDashboard() {
     
     const success = await handleSave([...products, productToAdd]);
     if (success) {
-      setNewProduct({ name: '', price: 0, description: '', image: '', category: 'PREMIUM IPTV', duration: '', sale_end_date: null });
+      setNewProduct({ name: '', price: 0, description: '', image: '', category: 'PREMIUM STREAMING', duration: '', sale_end_date: null });
       setSelectedDurations({});
     }
   };
@@ -633,8 +633,8 @@ export default function AdminDashboard() {
       <main className="max-w-7xl mx-auto px-4 py-8 space-y-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-1">
-            <h2 className="text-3xl font-extrabold tracking-tight">IPTV Manager</h2>
-            <p className="text-slate-500">Configure your IPTV packages and multi-duration pricing.</p>
+            <h2 className="text-3xl font-extrabold tracking-tight">Streaming Manager</h2>
+            <p className="text-slate-500">Configure your streaming packages and multi-duration pricing.</p>
           </div>
           
           <div className="relative flex-1 md:w-80 max-w-md">
@@ -664,7 +664,7 @@ export default function AdminDashboard() {
                   <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Package Name</label>
                   <input
                     type="text"
-                    placeholder="e.g. Premium 4K IPTV"
+                    placeholder="e.g. Premium 4K Streaming"
                     className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition-all text-sm"
                     value={newProduct.name}
                     onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
@@ -675,7 +675,7 @@ export default function AdminDashboard() {
                   <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Category</label>
                   <input
                     type="text"
-                    placeholder="e.g. PREMIUM IPTV..."
+                    placeholder="e.g. PREMIUM STREAMING..."
                     className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition-all text-sm"
                     value={newProduct.category?.replace('HIDDEN:', '') || ''}
                     onChange={(e) => {
@@ -1035,7 +1035,7 @@ export default function AdminDashboard() {
                                   )}
                                 </span>
                                 <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold uppercase tracking-tight">
-                                  {product.category?.replace('HIDDEN:', '') || 'PREMIUM IPTV'}
+                                  {product.category?.replace('HIDDEN:', '') || 'PREMIUM STREAMING'}
                                 </span>
                                 {product.sale_end_date && (() => {
                                   const target = parseSaleDate(product.sale_end_date);

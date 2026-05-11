@@ -22,12 +22,12 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "STREAMTV STORE - Best Premium IPTV & Entertainment Services",
-  description: "Get the ultimate streaming experience with STREAMTV STORE. Best 4K IPTV packages, instant activation, and 24/7 support. Upgrade your entertainment today!",
-  keywords: ["IPTV Morocco", "Premium IPTV", "4K Streaming", "Best IPTV Store", "Stream TV", "Arabic IPTV", "IPTV Subscription"],
+  title: "STREAMTV STORE - Best Premium Streaming & Entertainment Services",
+  description: "Get the ultimate streaming experience with STREAMTV STORE. Best 4K Streaming packages, instant activation, and 24/7 support. Upgrade your entertainment today!",
+  keywords: ["Streaming Morocco", "Premium Streaming", "4K Streaming", "Best TV Store", "Stream TV", "Arabic Streaming", "TV Subscription"],
   openGraph: {
     title: "STREAMTV STORE - Premium Entertainment",
-    description: "Discover the best IPTV packages with 4K quality and 24/7 support.",
+    description: "Discover the best Streaming packages with 4K quality and 24/7 support.",
     url: "https://bloomtpl-100.vercel.app",
     siteName: "STREAMTV STORE",
     images: [
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "STREAMTV STORE - Premium Entertainment",
-    description: "Best IPTV packages with 4K quality and 24/7 support.",
+    description: "Best Streaming packages with 4K quality and 24/7 support.",
     images: ["https://bloomtpl-100.vercel.app/og-image.jpg"],
   },
 };

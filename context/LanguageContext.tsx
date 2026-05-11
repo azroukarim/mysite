@@ -17,8 +17,8 @@ const translations: any = {
     fr: 'STREAMTV STORE' 
   },
   hero_desc: { 
-    en: 'Discover a wide selection of premium IPTV packages and entertainment apps with 4K quality, 24/7 support, and instant activation. Shop now!', 
-    fr: 'Découvrez une large sélection de forfaits IPTV premium et d\'applications de divertissement avec une qualité 4K, un support 24/7 et une activation instantanée. Achetez maintenant !' 
+    en: 'Discover a wide selection of premium Streaming packages and entertainment apps with 4K quality, 24/7 support, and instant activation. Shop now!', 
+    fr: 'Découvrez une large sélection de forfaits Streaming premium et d\'applications de divertissement avec une qualité 4K, un support 24/7 et une activation instantanée. Achetez maintenant !' 
   },
   
   // Product Page
@@ -45,9 +45,9 @@ const translations: any = {
   footer_supported_devices: { en: 'Supported Devices', fr: 'Appareils supportés' },
   footer_refund_policy: { en: 'Refund Policy', fr: 'Politique de remboursement' },
   footer_whatsapp: { en: 'WhatsApp Support', fr: 'Support WhatsApp' },
-  footer_desc_iptv: { 
-    en: 'Your #1 source for premium IPTV worldwide. Enjoy 20,000+ channels and VOD in 4K/UHD quality.', 
-    fr: 'Votre source n°1 pour l\'IPTV premium dans le monde. Profitez de plus de 20 000 chaînes et VOD en qualité 4K/UHD.' 
+  footer_desc_streaming: { 
+    en: 'Your #1 source for premium Streaming worldwide. Enjoy 20,000+ channels and VOD in 4K/UHD quality.', 
+    fr: 'Votre source n°1 pour le Streaming premium dans le monde. Profitez de plus de 20 000 chaînes et VOD en qualité 4K/UHD.' 
   },
 
   // Contact Page
@@ -89,7 +89,7 @@ const translations: any = {
   contact_call_now: { en: 'Call Us Now', fr: 'Appelez-nous maintenant' },
   contact_live_chat: { en: 'Live Chat', fr: 'Chat en direct' },
 
-  // IPTV FAQs
+  // Streaming FAQs
   faq_q1: { en: 'How do I receive my subscription?', fr: 'Comment vais-je recevoir mon abonnement ?' },
   faq_a1: { en: 'Your login details will be sent immediately via WhatsApp or Email after payment confirmation.', fr: 'Vos identifiants seront envoyés immédiatement via WhatsApp ou Email après confirmation du paiement.' },
   faq_q2: { en: 'Which devices are supported?', fr: 'Quels appareils sont supportés ?' },
