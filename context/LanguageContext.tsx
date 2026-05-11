@@ -44,6 +44,23 @@ const translations: any = {
   footer_installation: { en: 'Installation Guide', fr: 'Guide d\'installation' },
   footer_supported_devices: { en: 'Supported Devices', fr: 'Appareils supportés' },
   footer_refund_policy: { en: 'Refund Policy', fr: 'Politique de remboursement' },
+  refund_policy_title: { en: 'Refund Policy', fr: 'Politique de remboursement' },
+  refund_policy_subtitle: { en: 'Transparent terms to protect our customers and our service.', fr: 'Des conditions transparentes pour protéger nos clients et notre service.' },
+  refund_no_refund_after_delivery_title: { en: 'No Refunds After Delivery', fr: 'Pas de remboursement après livraison' },
+  refund_no_refund_after_delivery_desc: { 
+    en: 'Once your streaming credentials have been delivered via WhatsApp or Email, the service is considered consumed. Due to the nature of digital products, we cannot offer refunds once the account is active.', 
+    fr: 'Une fois vos identifiants de streaming livrés via WhatsApp ou Email, le service est considéré comme consommé. En raison de la nature des produits numériques, nous ne pouvons pas proposer de remboursement une fois le compte actif.' 
+  },
+  refund_technical_issues_title: { en: 'Technical Support First', fr: 'Support technique d\'abord' },
+  refund_technical_issues_desc: { 
+    en: 'If you experience technical difficulties, our support team is available 24/7 to assist you. Refunds are only considered if we are unable to resolve a major service disruption on our end within 48 hours.', 
+    fr: 'Si vous rencontrez des difficultés techniques, notre équipe de support est disponible 24/7 pour vous aider. Les remboursements ne sont envisagés que si nous ne sommes pas en mesure de résoudre une interruption majeure de service de notre côté dans les 48 heures.' 
+  },
+  refund_compatibility_title: { en: 'Device Compatibility', fr: 'Compatibilité des appareils' },
+  refund_compatibility_desc: { 
+    en: 'It is the customer\'s responsibility to ensure their device is compatible with our service before purchasing. No refunds will be issued for compatibility issues with personal hardware or internet speed.', 
+    fr: 'Il est de la responsabilité du client de s\'assurer que son appareil est compatible avec notre service avant l\'achat. Aucun remboursement ne sera effectué pour des problèmes de compatibilité avec le matériel personnel ou la vitesse Internet.' 
+  },
   footer_whatsapp: { en: 'WhatsApp Support', fr: 'Support WhatsApp' },
   footer_desc_streaming: { 
     en: 'Your #1 source for premium Streaming worldwide. Enjoy 20,000+ channels and VOD in 4K/UHD quality.', 

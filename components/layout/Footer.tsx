@@ -44,9 +44,9 @@ export default function Footer() {
       title: "Customer Care",
       links: [
         { href: "/contact", label: "Contact Us" },
-        { href: "#", label: t('footer_installation') },
-        { href: "#", label: t('footer_supported_devices') },
-        { href: "#", label: t('footer_refund_policy') },
+        { href: "/installation", label: t('footer_installation') },
+        { href: "/supported-devices", label: t('footer_supported_devices') },
+        { href: "/refund-policy", label: t('footer_refund_policy') },
       ],
     },
     {
