@@ -20,7 +20,11 @@ export default function ProductList() {
         const data = await res.json();
         if (Array.isArray(data)) {
           // Keep the exact order from the API
-          const visibleProducts = data.filter((p: any) => !p.category?.startsWith('HIDDEN:'));
+          const visibleProducts = data.filter((p: any) => 
+            !p.category?.startsWith('HIDDEN:') && 
+            p.category !== 'SETTINGS_NEWS' &&
+            p.id !== 999999
+          );
           setProducts(visibleProducts);
         }
       } catch (error) {

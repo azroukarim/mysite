@@ -115,7 +115,13 @@ export default function AdminDashboard() {
 
     fetch('/api/products')
       .then((res) => res.json())
-      .then((data) => setProducts(data));
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setProducts(data.filter((p: any) => p.category !== 'SETTINGS_NEWS' && p.id !== 999999));
+        } else {
+          setProducts([]);
+        }
+      });
 
     // Fetch news
     fetch('/api/admin/news')
