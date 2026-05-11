@@ -638,7 +638,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans pb-20">
       <nav className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+        <div className="max-w-[1400px] mx-auto px-6 h-24 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/" className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-500">
               <ChevronLeft size={20} />
@@ -691,7 +691,7 @@ export default function AdminDashboard() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 py-8 space-y-10">
+      <main className="max-w-[1400px] mx-auto px-6 py-12 space-y-12">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-4">
             <div className="space-y-1">
@@ -898,7 +898,7 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Category</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Category</label>
                   <input
                     type="text"
                     placeholder="e.g. PREMIUM STREAMING..."
@@ -915,7 +915,7 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Image URL</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Image URL</label>
                   <input
                     type="text"
                     placeholder="https://..."
@@ -927,7 +927,7 @@ export default function AdminDashboard() {
               </div>
 
               <div className="space-y-3">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Durations & Prices</label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Durations & Prices</label>
                 
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 flex items-center justify-between">
@@ -970,7 +970,7 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Duration Selectors in one line */}
-                <div className="flex flex-wrap gap-1 mb-2 p-1 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="flex flex-wrap gap-1.5 mb-2 p-1.5 bg-slate-50 rounded-xl border border-slate-100">
                   {PREDEFINED_DURATIONS.map(dur => (
                     <button
                       key={dur}
@@ -984,7 +984,7 @@ export default function AdminDashboard() {
                           setSelectedDurations({ ...selectedDurations, [dur]: { price: '0', oldPrice: '' } });
                         }
                       }}
-                      className={`flex-1 py-1 px-1 rounded-lg text-[9px] font-black transition-all border ${
+                      className={`flex-1 py-1.5 px-1 rounded-lg text-[11px] font-black transition-all border ${
                         selectedDurations[dur]
                           ? "bg-blue-600 text-white border-blue-600 shadow-sm"
                           : "bg-white text-slate-500 border-slate-200 hover:border-blue-300"
@@ -1081,7 +1081,7 @@ export default function AdminDashboard() {
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
-                  className={`px-5 py-2 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all duration-300 border ${
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-300 border ${
                     selectedCategory === category
                       ? "bg-slate-900 text-white border-slate-900 shadow-md"
                       : "bg-white border-slate-200 text-slate-500 hover:border-slate-900 hover:text-slate-900 shadow-sm"
@@ -1124,9 +1124,9 @@ export default function AdminDashboard() {
                           }}
                         />
                       </th>
-                      <th className="px-6 py-5 text-[13px] font-bold text-slate-500 uppercase tracking-wider w-24">Package</th>
-                      <th className="px-6 py-5 text-[13px] font-bold text-slate-500 uppercase tracking-wider">Details</th>
-                      <th className="px-6 py-5 text-[13px] font-bold text-slate-500 uppercase tracking-wider w-32 text-right">Actions</th>
+                      <th className="px-6 py-5 text-sm font-bold text-slate-500 uppercase tracking-wider w-24">Package</th>
+                      <th className="px-6 py-5 text-sm font-bold text-slate-500 uppercase tracking-wider">Details</th>
+                      <th className="px-6 py-5 text-sm font-bold text-slate-500 uppercase tracking-wider w-32 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -1161,7 +1161,7 @@ export default function AdminDashboard() {
                           {editingProduct?.id === product.id ? (
                             <div className="space-y-3">
                               <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Package Name</label>
+                                <label className="text-xs font-bold text-slate-400 uppercase ml-1">Package Name</label>
                                 <input
                                   type="text"
                                   className="w-full p-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-blue-500"
@@ -1170,7 +1170,7 @@ export default function AdminDashboard() {
                                 />
                               </div>
                               <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Category</label>
+                                <label className="text-xs font-bold text-slate-400 uppercase ml-1">Category</label>
                                 <input
                                   type="text"
                                   placeholder="Category"
@@ -1186,7 +1186,7 @@ export default function AdminDashboard() {
                                 />
                               </div>
                               <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Image URL</label>
+                                <label className="text-xs font-bold text-slate-400 uppercase ml-1">Image URL</label>
                                 <input
                                   type="text"
                                   placeholder="Image URL (Logo)"
@@ -1224,7 +1224,7 @@ export default function AdminDashboard() {
                               <div className="space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                 <label className="text-xs font-bold text-slate-500 uppercase">Durations & Prices</label>
                                 {/* Edit Duration Selectors in one line */}
-                                <div className="flex flex-wrap gap-1 mb-2 p-1 bg-white rounded-xl border border-slate-200">
+                                <div className="flex flex-wrap gap-1.5 mb-2 p-1.5 bg-white rounded-xl border border-slate-200">
                                   {PREDEFINED_DURATIONS.map(dur => (
                                     <button
                                       key={dur}
@@ -1238,7 +1238,7 @@ export default function AdminDashboard() {
                                           setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { price: '0', oldPrice: '' } });
                                         }
                                       }}
-                                      className={`flex-1 py-0.5 px-0.5 rounded-lg text-[8px] font-black transition-all border ${
+                                      className={`flex-1 py-1 px-0.5 rounded-lg text-[10px] font-black transition-all border ${
                                         (editSelectedDurations || {})[dur]
                                           ? "bg-blue-600 text-white border-blue-600 shadow-sm"
                                           : "bg-white text-slate-500 border-slate-200 hover:border-blue-300"
@@ -1269,7 +1269,7 @@ export default function AdminDashboard() {
                                             <input 
                                               type="number"
                                               placeholder={`Old ${symbol}`}
-                                              className="w-full p-1 bg-red-50/30 border border-red-50 rounded-lg text-[9px] outline-none text-red-400 line-through placeholder:text-red-200"
+                                              className="w-full p-1.5 bg-red-50/30 border border-red-50 rounded-lg text-xs outline-none text-red-400 line-through placeholder:text-red-200"
                                               value={(editSelectedDurations || {})[dur]?.oldPrice || ''}
                                               onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], oldPrice: e.target.value } })}
                                             />
