@@ -5,12 +5,13 @@ import {
   Plus, Edit, Trash2, Save, X, Lock, LogOut, 
   ChevronLeft, Package, Image as ImageIcon, 
   Euro, Tag, Search, CheckCircle2, Shield, ShieldAlert,
-  Eye, EyeOff, Copy, ChevronUp, ChevronDown, LayoutGrid, List
+  Eye, EyeOff, Copy, ChevronUp, ChevronDown, LayoutGrid, List, Megaphone
 } from 'lucide-react';
 import Link from 'next/link';
 import CountdownTimer from '@/components/product/CountdownTimer';
 import { parseSaleDate } from '@/lib/dateUtils';
 import { supabase } from '@/lib/supabase';
+import { useCurrency } from '@/context/CurrencyContext';
 
 interface Product {
   id: number;
@@ -42,6 +43,7 @@ const CATEGORIES = [
 ];
 
 export default function AdminDashboard() {
+  const { currency, symbol, formatPrice, convertPrice } = useCurrency();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -73,6 +75,12 @@ export default function AdminDashboard() {
   const [protectionEnabled, setProtectionEnabled] = useState<boolean | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [bulkSaleDate, setBulkSaleDate] = useState<string | null>(null);
+  
+  const [activeTab, setActiveTab] = useState<'products' | 'news'>('products');
+  const [news, setNews] = useState<string[]>([]);
+  const [newsSpeed, setNewsSpeed] = useState(30);
+  const [newsDirection, setNewsDirection] = useState<'left' | 'right'>('left');
+  const [newNewsItem, setNewNewsItem] = useState('');
 
   // Load session and products on load
   useEffect(() => {
@@ -86,6 +94,14 @@ export default function AdminDashboard() {
       setIsResetMode(true);
       setIsRecoveryFlow(true);
     }
+
+    // Listen for auth state changes (specifically for password recovery)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsResetMode(true);
+        setIsRecoveryFlow(true);
+      }
+    });
 
     const savedSession = localStorage.getItem('adminSession');
     if (savedSession) {
@@ -101,12 +117,26 @@ export default function AdminDashboard() {
       .then((res) => res.json())
       .then((data) => setProducts(data));
 
+    // Fetch news
+    fetch('/api/admin/news')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && Array.isArray(data.items)) {
+          setNews(data.items);
+          setNewsSpeed(data.speed || 30);
+          setNewsDirection(data.direction || 'left');
+        }
+      });
+
     // Fetch settings
     fetch('/api/admin/settings')
       .then((res) => res.json())
       .then((data) => {
         if (data.success) setProtectionEnabled(data.protection_enabled);
       });
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -430,6 +460,38 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleSaveNews = async (updatedNews: string[], updatedSpeed: number = newsSpeed, updatedDirection: 'left' | 'right' = newsDirection) => {
+    setStatus('Saving news...');
+    try {
+      const res = await fetch('/api/admin/news', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: updatedNews, speed: updatedSpeed, direction: updatedDirection }),
+      });
+      if (res.ok) {
+        setNews(updatedNews);
+        setNewsSpeed(updatedSpeed);
+        setNewsDirection(updatedDirection);
+        setStatus('News saved!');
+        setTimeout(() => setStatus(''), 2000);
+      }
+    } catch (error) {
+      alert('Error saving news');
+    }
+  };
+
+  const addNewsItem = () => {
+    if (!newNewsItem) return;
+    const updated = [...news, newNewsItem];
+    handleSaveNews(updated);
+    setNewNewsItem('');
+  };
+
+  const deleteNewsItem = (index: number) => {
+    const updated = news.filter((_, i) => i !== index);
+    handleSaveNews(updated);
+  };
+
   // Filter products without automatic sorting to allow manual order
   const adminCategories = ['All', ...Array.from(new Set(products.map(p => p.category?.replace('HIDDEN:', '')).filter(Boolean)))];
 
@@ -632,24 +694,189 @@ export default function AdminDashboard() {
 
       <main className="max-w-7xl mx-auto px-4 py-8 space-y-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-1">
-            <h2 className="text-3xl font-extrabold tracking-tight">Streaming Manager</h2>
-            <p className="text-slate-500">Configure your streaming packages and multi-duration pricing.</p>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <h2 className="text-3xl font-extrabold tracking-tight">Streaming Manager</h2>
+              <p className="text-slate-500">Configure your streaming packages and multi-duration pricing.</p>
+            </div>
+            
+            {/* Tabs */}
+            <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-2xl w-fit border border-slate-200">
+              <button 
+                onClick={() => setActiveTab('products')}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                  activeTab === 'products' 
+                  ? 'bg-white text-blue-600 shadow-sm' 
+                  : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <Package size={18} />
+                Products
+              </button>
+              <button 
+                onClick={() => setActiveTab('news')}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                  activeTab === 'news' 
+                  ? 'bg-white text-blue-600 shadow-sm' 
+                  : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <Megaphone size={18} />
+                News Ticker
+              </button>
+            </div>
           </div>
           
-          <div className="relative flex-1 md:w-80 max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Search packages..."
-              className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none shadow-sm"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+          {activeTab === 'products' && (
+            <div className="relative flex-1 md:w-80 max-w-md">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input 
+                type="text" 
+                placeholder="Search packages..."
+                className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none shadow-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          )}
         </div>
 
-        <div className="space-y-10">
+        {activeTab === 'news' ? (
+          /* News Management View */
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm max-w-4xl mx-auto">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-blue-600 text-white rounded-2xl shadow-lg shadow-blue-500/20">
+                  <Megaphone size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">News Ticker Manager</h3>
+                  <p className="text-sm text-slate-500">Manage the scrolling news bar on your storefront.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mb-8">
+                <input 
+                  type="text"
+                  placeholder="Type a new announcement here..."
+                  className="flex-1 px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
+                  value={newNewsItem}
+                  onChange={(e) => setNewNewsItem(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && addNewsItem()}
+                />
+                <button 
+                  onClick={addNewsItem}
+                  className="px-8 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg active:scale-95"
+                >
+                  Post News
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div className="flex gap-6">
+                  <div className="flex-1 flex flex-col gap-3">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Scrolling Speed</h4>
+                    <div className="flex gap-2">
+                      {[
+                        { label: 'Slow', value: 60 },
+                        { label: 'Normal', value: 30 },
+                        { label: 'Fast', value: 15 },
+                        { label: 'Very Fast', value: 8 }
+                      ].map((s) => (
+                        <button
+                          key={s.value}
+                          onClick={() => handleSaveNews(news, s.value, newsDirection)}
+                          className={`flex-1 py-3 px-4 rounded-2xl text-xs font-bold transition-all border ${
+                            newsSpeed === s.value
+                            ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200'
+                            : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300 hover:bg-blue-50'
+                          }`}
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex-1 flex flex-col gap-3">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Direction</h4>
+                    <div className="flex gap-2">
+                      {[
+                        { label: 'Left (LTR)', value: 'left' },
+                        { label: 'Right (RTL)', value: 'right' }
+                      ].map((d) => (
+                        <button
+                          key={d.value}
+                          onClick={() => handleSaveNews(news, newsSpeed, d.value as 'left' | 'right')}
+                          className={`flex-1 py-3 px-4 rounded-2xl text-xs font-bold transition-all border ${
+                            newsDirection === d.value
+                            ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200'
+                            : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300 hover:bg-blue-50'
+                          }`}
+                        >
+                          {d.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Current Announcements</h4>
+                  {news.length === 0 ? (
+                    <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-400">
+                      No active news. Post something above to show it on your store!
+                    </div>
+                  ) : (
+                    <div className="grid gap-3">
+                      {news.map((item, i) => (
+                        <div key={i} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:border-blue-200 hover:shadow-md transition-all group">
+                          <div className="flex items-center gap-4">
+                            <div className="w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-600 rounded-full text-xs font-bold">
+                              {i + 1}
+                            </div>
+                            <span className="font-medium text-slate-700">{item}</span>
+                          </div>
+                          <button 
+                            onClick={() => deleteNewsItem(i)}
+                            className="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                            title="Delete news item"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-blue-600 p-8 rounded-3xl text-white max-w-4xl mx-auto shadow-2xl shadow-blue-500/20 relative overflow-hidden">
+              <div className="relative z-10">
+                <h3 className="text-xl font-bold mb-2">Live Preview</h3>
+                <p className="text-blue-100 text-sm mb-6">This is how your news ticker looks on the home page:</p>
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
+                   <div className="w-full py-2 overflow-hidden whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="px-3 bg-white text-blue-600 text-[10px] font-bold uppercase tracking-widest rounded-lg mr-4">
+                        NEWS
+                      </div>
+                      <div 
+                        className={`${newsDirection === 'right' ? 'animate-marquee-preview-rtl' : 'animate-marquee-preview'} inline-block text-white text-xs font-bold`}
+                        style={{ animationDuration: `${newsSpeed / 2}s` }}
+                      >
+                        {news.length > 0 ? news.join('  •  ') : 'Welcome to Stream TV Store! New packages added daily...'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-10">
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-blue-600 text-white rounded-lg shadow-sm">
@@ -768,7 +995,7 @@ export default function AdminDashboard() {
                       {selectedDurations[dur] !== undefined && (
                         <div className="flex items-center gap-1.5 flex-1">
                           <div className="relative flex-1">
-                            <Euro className="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400" size={10} />
+                            <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">€</span>
                             <input 
                               type="number"
                               className="w-full pl-4 pr-1 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-bold outline-none"
@@ -779,12 +1006,17 @@ export default function AdminDashboard() {
                           <div className="relative flex-1">
                             <input 
                               type="number"
-                              placeholder="Old"
+                              placeholder="Old€"
                               className="w-full p-1 bg-red-50/30 border border-red-50 rounded-lg text-[10px] outline-none text-red-400 line-through"
                               value={selectedDurations[dur].oldPrice}
                               onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], oldPrice: e.target.value } })}
                             />
                           </div>
+                          {currency === 'MAD' && (
+                            <div className="text-[9px] text-emerald-600 font-bold whitespace-nowrap">
+                              ≈ {Math.round(Number(selectedDurations[dur].price || 0) * 11)} DH
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -992,20 +1224,30 @@ export default function AdminDashboard() {
                                     <span className="text-xs font-medium flex-1">{dur}</span>
                                     {(editSelectedDurations || {})[dur] !== undefined && (
                                       <div className="flex items-center gap-1">
-                                        <input 
-                                          type="number"
-                                          placeholder="Price"
-                                          className="w-16 p-1.5 text-xs border border-slate-200 rounded-lg outline-none"
-                                          value={(editSelectedDurations || {})[dur]?.price || ''}
-                                          onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], price: e.target.value } })}
-                                        />
-                                        <input 
-                                          type="number"
-                                          placeholder="Old€"
-                                          className="w-16 p-1.5 text-xs border border-red-100 bg-red-50 rounded-lg outline-none text-red-400"
-                                          value={(editSelectedDurations || {})[dur]?.oldPrice || ''}
-                                          onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], oldPrice: e.target.value } })}
-                                        />
+                                        <div className="relative">
+                                          <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">€</span>
+                                          <input 
+                                            type="number"
+                                            placeholder="Price"
+                                            className="w-20 pl-4 pr-1 py-1.5 text-xs border border-slate-200 rounded-lg outline-none"
+                                            value={(editSelectedDurations || {})[dur]?.price || ''}
+                                            onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], price: e.target.value } })}
+                                          />
+                                        </div>
+                                        <div className="relative">
+                                          <input 
+                                            type="number"
+                                            placeholder="Old€"
+                                            className="w-16 p-1.5 text-xs border border-red-100 bg-red-50 rounded-lg outline-none text-red-400"
+                                            value={(editSelectedDurations || {})[dur]?.oldPrice || ''}
+                                            onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], oldPrice: e.target.value } })}
+                                          />
+                                        </div>
+                                        {currency === 'MAD' && (
+                                          <div className="text-[10px] text-emerald-600 font-bold">
+                                            ≈ {Math.round(Number((editSelectedDurations || {})[dur]?.price || 0) * 11)} DH
+                                          </div>
+                                        )}
                                       </div>
                                     )}
                                   </div>
@@ -1055,9 +1297,13 @@ export default function AdminDashboard() {
                                       <div key={i} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg shadow-sm text-[11px]">
                                         <span className="font-bold text-slate-800">{label}</span>
                                         <div className="w-[1px] h-3 bg-slate-200" />
-                                        <span className="font-black text-blue-600 text-xs">{price}€</span>
+                                        <span className="font-black text-blue-600 text-xs">
+                                          {currency === 'MAD' ? `${Math.round(Number(price) * 11)} DH` : `€${price}`}
+                                        </span>
                                         {oldPrice && (
-                                          <span className="text-slate-400 line-through decoration-red-400/50 font-medium">{oldPrice}€</span>
+                                          <span className="text-slate-400 line-through decoration-red-400/50 font-medium">
+                                            {currency === 'MAD' ? `${Math.round(Number(oldPrice) * 11)} DH` : `€${oldPrice}`}
+                                          </span>
                                         )}
                                       </div>
                                     );
@@ -1203,7 +1449,9 @@ export default function AdminDashboard() {
                         <h4 className="font-bold text-slate-900 line-clamp-1">{product.name}</h4>
                       </div>
                       <div className="text-right">
-                        <span className="text-lg font-black text-slate-900">{product.price}€</span>
+                        <span className="text-lg font-black text-slate-900">
+                          {currency === 'MAD' ? `${Math.round(product.price * 11)} DH` : `€${product.price}`}
+                        </span>
                       </div>
                     </div>
                     <p className="text-xs text-slate-500 line-clamp-2">{product.description}</p>
@@ -1226,6 +1474,7 @@ export default function AdminDashboard() {
             </div>
           )}
         </div>
+      )}
       </main>
 
       {/* Bulk Action Bar */}

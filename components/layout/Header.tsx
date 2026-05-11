@@ -126,10 +126,10 @@ export default function Header() {
               {/* Currency Toggle */}
               <button
                 onClick={() => setCurrency(currency === 'EUR' ? 'MAD' : 'EUR')}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-gray-200 hover:bg-gray-50 transition-colors text-xs font-bold"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 hover:bg-gray-50 transition-colors text-xs font-bold"
                 title={currency === 'EUR' ? 'تبديل إلى الدرهم المغربي' : 'Switch to EUR'}
               >
-                <span className={currency === 'EUR' ? 'text-blue-600' : 'text-gray-400'}>€</span>
+                <span className={currency === 'EUR' ? 'text-blue-600' : 'text-gray-400'}>EUR</span>
                 <span className="text-gray-300">/</span>
                 <span className={currency === 'MAD' ? 'text-green-600' : 'text-gray-400'}>MAD</span>
               </button>
@@ -183,7 +183,7 @@ export default function Header() {
                   }}
                   className="flex items-center gap-1 px-4 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm font-bold"
                 >
-                  <span className={currency === 'EUR' ? 'text-blue-600' : 'text-gray-400'}>€ EUR</span>
+                  <span className={currency === 'EUR' ? 'text-blue-600' : 'text-gray-400'}>EUR</span>
                   <span className="text-gray-300 mx-1">/</span>
                   <span className={currency === 'MAD' ? 'text-green-600' : 'text-gray-400'}>MAD</span>
                 </button>

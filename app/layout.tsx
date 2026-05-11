@@ -50,6 +50,8 @@ export const metadata: Metadata = {
 
 import ContentProtection from "@/components/layout/ContentProtection";
 
+import AuthRedirectHandler from "@/components/auth/AuthRedirectHandler";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -60,6 +62,7 @@ export default function RootLayout({
       <body
         className={`${inter.className} ${montserrat.variable} antialiased flex flex-col min-h-screen`}
       >
+        <AuthRedirectHandler />
         <ContentProtection />
         <LanguageProvider>
           <CurrencyProvider>

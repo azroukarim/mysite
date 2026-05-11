@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import ProductCard from "./ProductCard";
 
+import NewsTicker from "./NewsTicker";
+
 export default function ProductList() {
   const { t, language } = useLanguage();
   const [products, setProducts] = useState<any[]>([]);
@@ -53,6 +55,11 @@ export default function ProductList() {
 
   return (
     <div className="space-y-8">
+      {/* News Bar */}
+      <div className="max-w-md mx-auto px-4 sm:px-0">
+        <NewsTicker />
+      </div>
+
       {/* Search Bar */}
       <div className="relative max-w-md mx-auto px-4 sm:px-0">
         <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-slate-400">
