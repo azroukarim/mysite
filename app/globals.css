@@ -169,3 +169,26 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes flag-wave {
+  0%, 100% { 
+    transform: perspective(500px) rotateY(0deg) rotateX(0deg) skewY(0deg); 
+  }
+  25% { 
+    transform: perspective(500px) rotateY(10deg) rotateX(5deg) skewY(2deg); 
+  }
+  50% { 
+    transform: perspective(500px) rotateY(-10deg) rotateX(-5deg) skewY(-2deg); 
+  }
+  75% { 
+    transform: perspective(500px) rotateY(5deg) rotateX(2deg) skewY(1deg); 
+  }
+}
+
+.animate-flag-wave {
+  display: inline-block;
+  animation: flag-wave 5s ease-in-out infinite;
+  transform-origin: center center;
+  filter: drop-shadow(0 5px 15px rgba(0,0,0,0.1));
+}
+

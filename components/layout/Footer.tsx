@@ -113,11 +113,13 @@ export default function Footer() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
             <div className="lg:col-span-2">
               <Link
-                className="text-2xl font-black tracking-tighter text-gray-900 hover:text-gray-700 transition-colors flex items-center gap-1"
+                className="text-2xl font-black tracking-tighter text-gray-900 hover:text-gray-700 transition-colors flex items-center gap-1 group"
                 href="/"
                 aria-label="Stream TV Home"
               >
-                STREAM<span className="text-blue-600 italic">TV</span>
+                <div className="animate-flag-wave">
+                  STREAM<span className="text-blue-600 italic">TV</span>
+                </div>
               </Link>
               <p className="text-muted-foreground mb-6 max-w-sm">
                 {t('footer_desc_streaming')}

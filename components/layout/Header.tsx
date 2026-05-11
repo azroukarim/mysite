@@ -57,11 +57,13 @@ export default function Header() {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-8 lg:space-x-12">
             <Link
-              className="text-2xl font-black tracking-tighter text-gray-900 hover:text-gray-700 transition-colors flex items-center gap-1"
+              className="text-2xl font-black tracking-tighter text-gray-900 hover:text-gray-700 transition-colors flex items-center gap-1 group"
               href="/"
               aria-label="Stream TV Home"
             >
-              STREAM<span className="text-blue-600 italic">TV</span>
+              <div className="animate-flag-wave">
+                STREAM<span className="text-blue-600 italic">TV</span>
+              </div>
             </Link>
 
             <nav
