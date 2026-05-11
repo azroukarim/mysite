@@ -445,6 +445,22 @@ export default function Product() {
               {showCopied ? "Link Copied!" : "Share"}
             </Button>
           </div>
+          </div>
+
+          {/* Safe Payment Methods */}
+          <div className="pt-6 mt-6 border-t border-slate-100">
+            <p className="text-[10px] font-bold text-slate-400 mb-3 uppercase tracking-wider text-center">
+              {language === 'en' ? 'Guaranteed Safe Checkout' : 'Paiement Sécurisé Garanti'}
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-2 opacity-80">
+              {['BINANCE', 'CASHPLUS', 'WAFACASH', 'REMITLY', 'MONEYGRAM', 'CIH BANK', 'BARID CASH', 'DAMAN CASH', 'WESTERN UNION', 'RIA', 'MONEYTRANS', 'SENDWAVE'].map((method) => (
+                <div key={method} className="px-2 py-1 bg-slate-50 border border-slate-100 text-slate-500 rounded text-[9px] font-bold tracking-wider">
+                  {method}
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
