@@ -78,36 +78,7 @@ export default function Footer() {
   return (
     <footer className="bg-background border-t border-border">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="py-12 border-b border-border">
-          <div className="max-w-2xl mx-auto text-center">
-            <h3 className="text-2xl font-bold text-foreground mb-4">
-              {t('stay_loop')}
-            </h3>
-            <p className="text-muted-foreground mb-6">
-              {t('newsletter_desc')}
-            </p>
-            <form
-              onSubmit={handleNewsletterSubmit}
-              className="flex max-w-md mx-auto gap-2"
-            >
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="flex-1"
-                required
-              />
-              <Button
-                type="submit"
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                <ArrowRight className="h-4 w-4" />
-                <span className="sr-only">Subscribe</span>
-              </Button>
-            </form>
-          </div>
-        </div>
+
 
         <div className="py-12">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
