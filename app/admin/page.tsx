@@ -1159,33 +1159,42 @@ export default function AdminDashboard() {
                         </td>
                         <td className="px-6 py-5 align-top">
                           {editingProduct?.id === product.id ? (
-                            <div className="space-y-4">
-                              <input
-                                type="text"
-                                className="w-full p-3 text-sm border border-slate-200 rounded-xl outline-none"
-                                value={editingProduct.name}
-                                onChange={(e) => setEditingProduct({...editingProduct, name: e.target.value})}
-                              />
-                               <input
-                                type="text"
-                                placeholder="Category"
-                                className="w-full p-3 text-sm border border-slate-200 rounded-xl outline-none"
-                                value={editingProduct.category?.replace('HIDDEN:', '') || ''}
-                                onChange={(e) => {
-                                  const isCurrentlyHidden = editingProduct.category?.startsWith('HIDDEN:');
-                                  setEditingProduct({
-                                    ...editingProduct, 
-                                    category: isCurrentlyHidden ? `HIDDEN:${e.target.value}` : e.target.value
-                                  });
-                                }}
-                              />
-                              <input
-                                type="text"
-                                placeholder="Image URL (Logo)"
-                                className="w-full p-3 text-sm border border-slate-200 rounded-xl outline-none"
-                                value={editingProduct.image || ''}
-                                onChange={(e) => setEditingProduct({...editingProduct, image: e.target.value})}
-                              />
+                            <div className="space-y-3">
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Package Name</label>
+                                <input
+                                  type="text"
+                                  className="w-full p-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-blue-500"
+                                  value={editingProduct.name}
+                                  onChange={(e) => setEditingProduct({...editingProduct, name: e.target.value})}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Category</label>
+                                <input
+                                  type="text"
+                                  placeholder="Category"
+                                  className="w-full p-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-blue-500"
+                                  value={editingProduct.category?.replace('HIDDEN:', '') || ''}
+                                  onChange={(e) => {
+                                    const isCurrentlyHidden = editingProduct.category?.startsWith('HIDDEN:');
+                                    setEditingProduct({
+                                      ...editingProduct, 
+                                      category: isCurrentlyHidden ? `HIDDEN:${e.target.value}` : e.target.value
+                                    });
+                                  }}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Image URL</label>
+                                <input
+                                  type="text"
+                                  placeholder="Image URL (Logo)"
+                                  className="w-full p-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-blue-500"
+                                  value={editingProduct.image || ''}
+                                  onChange={(e) => setEditingProduct({...editingProduct, image: e.target.value})}
+                                />
+                              </div>
 
                               <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 space-y-3">
                                 <div className="flex items-center justify-between">
