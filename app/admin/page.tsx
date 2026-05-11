@@ -24,14 +24,7 @@ interface Product {
   sale_end_date?: string | null;
 }
 
-const PREDEFINED_DURATIONS = [
-  '1 month',
-  '3 months',
-  '6 months',
-  '12 months',
-  '24 months',
-  'Lifetime'
-];
+const PREDEFINED_DURATIONS = ['1M', '3M', '6M', '12M', '24M', 'LIFETIME'];
 
 const CATEGORIES = [
   'PREMIUM STREAMING',
@@ -976,35 +969,46 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-1.5 max-h-40 overflow-y-auto pr-2 custom-scrollbar border border-slate-100 p-2 rounded-xl bg-white">
+                {/* Duration Selectors in one line */}
+                <div className="flex flex-wrap gap-2 mb-2 p-2 bg-slate-50 rounded-xl border border-slate-100">
                   {PREDEFINED_DURATIONS.map(dur => (
-                    <div key={dur} className="flex items-center gap-2 p-2 bg-slate-50/50 rounded-lg border border-slate-100 hover:border-blue-100 transition-colors flex-wrap sm:flex-nowrap">
-                      <div className="flex items-center gap-2 min-w-[100px]">
-                        <input 
-                          type="checkbox"
-                          id={`dur-${dur}`}
-                          className="w-4 h-4 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500"
-                          checked={!!selectedDurations[dur]}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedDurations({ ...selectedDurations, [dur]: { price: '0', oldPrice: '' } });
-                            } else {
-                              const next = { ...selectedDurations };
-                              delete next[dur];
-                              setSelectedDurations(next);
-                            }
-                          }}
-                        />
-                        <label htmlFor={`dur-${dur}`} className="text-[11px] font-bold text-slate-600 cursor-pointer">{dur}</label>
-                      </div>
-                      
-                      {selectedDurations[dur] !== undefined && (
-                        <div className="flex items-center gap-1.5 flex-1">
+                    <button
+                      key={dur}
+                      type="button"
+                      onClick={() => {
+                        if (selectedDurations[dur]) {
+                          const next = { ...selectedDurations };
+                          delete next[dur];
+                          setSelectedDurations(next);
+                        } else {
+                          setSelectedDurations({ ...selectedDurations, [dur]: { price: '0', oldPrice: '' } });
+                        }
+                      }}
+                      className={`flex-1 py-1.5 px-1 rounded-lg text-[10px] font-black transition-all border ${
+                        selectedDurations[dur]
+                          ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                          : "bg-white text-slate-500 border-slate-200 hover:border-blue-300"
+                      }`}
+                    >
+                      {dur}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Price Inputs for Selected Durations */}
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                  {Object.keys(selectedDurations).length > 0 ? (
+                    PREDEFINED_DURATIONS.filter(dur => selectedDurations[dur]).map(dur => (
+                      <div key={dur} className="flex items-center gap-3 p-2 bg-white rounded-xl border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-1 duration-200">
+                        <span className="text-[11px] font-black text-slate-900 w-8">{dur}</span>
+                        
+                        <div className="flex items-center gap-2 flex-1">
                           <div className="relative flex-1">
-                            <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">€</span>
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">€</span>
                             <input 
                               type="number"
-                              className="w-full pl-4 pr-1 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-bold outline-none"
+                              placeholder="Price"
+                              className="w-full pl-5 pr-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-bold outline-none focus:border-blue-500 focus:bg-white transition-all"
                               value={selectedDurations[dur].price}
                               onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], price: e.target.value } })}
                             />
@@ -1012,21 +1016,20 @@ export default function AdminDashboard() {
                           <div className="relative flex-1">
                             <input 
                               type="number"
-                              placeholder="Old€"
-                              className="w-full p-1 bg-red-50/30 border border-red-50 rounded-lg text-[10px] outline-none text-red-400 line-through"
+                              placeholder="Old Price €"
+                              className="w-full p-1.5 bg-red-50/30 border border-red-50 rounded-lg text-[10px] outline-none text-red-400 line-through placeholder:text-red-200"
                               value={selectedDurations[dur].oldPrice}
                               onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], oldPrice: e.target.value } })}
                             />
                           </div>
-                          {currency === 'MAD' && (
-                            <div className="text-[9px] text-emerald-600 font-bold whitespace-nowrap">
-                              ≈ {Math.round(Number(selectedDurations[dur].price || 0) * 11)} DH
-                            </div>
-                          )}
                         </div>
-                      )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-4 border border-dashed border-slate-200 rounded-xl text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                      Select durations above
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
 
@@ -1211,53 +1214,66 @@ export default function AdminDashboard() {
                               
                               <div className="space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                 <label className="text-xs font-bold text-slate-500 uppercase">Durations & Prices</label>
-                                {PREDEFINED_DURATIONS.map(dur => (
-                                  <div key={dur} className="flex items-center gap-2 flex-wrap">
-                                    <input 
-                                      type="checkbox" 
-                                      className="w-4 h-4"
-                                      checked={(editSelectedDurations || {})[dur] !== undefined}
-                                      onChange={(e) => {
-                                        if (e.target.checked) {
-                                          setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { price: '0', oldPrice: '' } });
-                                        } else {
+                                {/* Edit Duration Selectors in one line */}
+                                <div className="flex flex-wrap gap-1.5 mb-2 p-1.5 bg-white rounded-xl border border-slate-200">
+                                  {PREDEFINED_DURATIONS.map(dur => (
+                                    <button
+                                      key={dur}
+                                      type="button"
+                                      onClick={() => {
+                                        if ((editSelectedDurations || {})[dur]) {
                                           const next = { ...(editSelectedDurations || {}) };
                                           delete next[dur];
                                           setEditSelectedDurations(next);
+                                        } else {
+                                          setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { price: '0', oldPrice: '' } });
                                         }
                                       }}
-                                    />
-                                    <span className="text-xs font-medium flex-1">{dur}</span>
-                                    {(editSelectedDurations || {})[dur] !== undefined && (
-                                      <div className="flex items-center gap-1">
-                                        <div className="relative">
-                                          <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">€</span>
-                                          <input 
-                                            type="number"
-                                            placeholder="Price"
-                                            className="w-20 pl-4 pr-1 py-1.5 text-xs border border-slate-200 rounded-lg outline-none"
-                                            value={(editSelectedDurations || {})[dur]?.price || ''}
-                                            onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], price: e.target.value } })}
-                                          />
-                                        </div>
-                                        <div className="relative">
-                                          <input 
-                                            type="number"
-                                            placeholder="Old€"
-                                            className="w-16 p-1.5 text-xs border border-red-100 bg-red-50 rounded-lg outline-none text-red-400"
-                                            value={(editSelectedDurations || {})[dur]?.oldPrice || ''}
-                                            onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], oldPrice: e.target.value } })}
-                                          />
-                                        </div>
-                                        {currency === 'MAD' && (
-                                          <div className="text-[10px] text-emerald-600 font-bold">
-                                            ≈ {Math.round(Number((editSelectedDurations || {})[dur]?.price || 0) * 11)} DH
+                                      className={`flex-1 py-1 px-0.5 rounded-lg text-[9px] font-black transition-all border ${
+                                        (editSelectedDurations || {})[dur]
+                                          ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                                          : "bg-white text-slate-500 border-slate-200 hover:border-blue-300"
+                                      }`}
+                                    >
+                                      {dur}
+                                    </button>
+                                  ))}
+                                </div>
+
+                                {/* Price Inputs for Selected Edit Durations */}
+                                <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
+                                  {Object.keys(editSelectedDurations || {}).length > 0 ? (
+                                    PREDEFINED_DURATIONS.filter(dur => (editSelectedDurations || {})[dur]).map(dur => (
+                                      <div key={dur} className="flex items-center gap-2 p-1.5 bg-white rounded-lg border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-1 duration-200">
+                                        <span className="text-[10px] font-black text-slate-900 w-6">{dur}</span>
+                                        <div className="flex items-center gap-1.5 flex-1">
+                                          <div className="relative flex-1">
+                                            <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">€</span>
+                                            <input 
+                                              type="number"
+                                              className="w-full pl-4 pr-1 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[10px] font-bold outline-none focus:border-blue-500 focus:bg-white transition-all"
+                                              value={(editSelectedDurations || {})[dur]?.price || ''}
+                                              onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], price: e.target.value } })}
+                                            />
                                           </div>
-                                        )}
+                                          <div className="relative flex-1">
+                                            <input 
+                                              type="number"
+                                              placeholder="Old Price"
+                                              className="w-full p-1 bg-red-50/30 border border-red-50 rounded-lg text-[9px] outline-none text-red-400 line-through placeholder:text-red-200"
+                                              value={(editSelectedDurations || {})[dur]?.oldPrice || ''}
+                                              onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], oldPrice: e.target.value } })}
+                                            />
+                                          </div>
+                                        </div>
                                       </div>
-                                    )}
-                                  </div>
-                                ))}
+                                    ))
+                                  ) : (
+                                    <div className="text-center py-2 border border-dashed border-slate-200 rounded-lg text-[9px] font-bold text-slate-400 uppercase">
+                                      No durations selected
+                                    </div>
+                                  )}
+                                </div>
                               </div>
 
                               <textarea
