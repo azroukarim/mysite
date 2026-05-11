@@ -221,7 +221,7 @@ export default function Product() {
                 onEnd={() => setSaleEnded(true)}
               />
               <span className="text-[10px] font-black bg-red-600 text-white px-2 py-1 rounded-lg uppercase tracking-wider animate-pulse">
-                Flash Sale Active
+                {t('flash_sale_active')}
               </span>
             </div>
           )}
@@ -298,7 +298,7 @@ export default function Product() {
                               {opt.label}
                             </div>
                             <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">
-                              Full Access
+                              {t('full_access')}
                             </div>
                           </div>
                         </div>
@@ -470,11 +470,11 @@ export default function Product() {
           <div className="bg-white p-8 sm:p-10 rounded-[2.5rem] border border-slate-100 shadow-sm">
             <h2 className="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
               <div className="w-1.5 h-8 bg-primary rounded-full" />
-              Product Description
+              {t('product_desc_title')}
             </h2>
             <div className="prose prose-slate max-w-none">
               <p className="text-slate-600 leading-relaxed text-lg whitespace-pre-wrap">
-                {product.description || "No detailed description available for this product."}
+                {product.description || t('no_desc')}
               </p>
             </div>
           </div>
@@ -486,15 +486,15 @@ export default function Product() {
           <div className="bg-primary/5 p-8 rounded-[2.5rem] border border-primary/10">
             <h3 className="text-lg font-black text-primary mb-4 flex items-center gap-2">
               <ShieldCheck className="h-5 w-5" />
-              Our Guarantee
+              {t('our_guarantee')}
             </h3>
             <ul className="space-y-4">
               {[
-                "24/7 Premium Support",
-                "99.9% Server Uptime",
-                "Full Money Back Guarantee",
-                "Secure Payment Method",
-                "Antifreeze Technology"
+                t('guarantee_1'),
+                t('guarantee_2'),
+                t('guarantee_3'),
+                t('guarantee_4'),
+                t('guarantee_5')
               ].map((item, i) => (
                 <li key={i} className="flex items-center gap-3 text-sm font-bold text-slate-700">
                   <div className="w-1.5 h-1.5 bg-primary rounded-full" />
@@ -505,15 +505,15 @@ export default function Product() {
           </div>
           
           <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-200">
-            <h3 className="text-lg font-black text-slate-900 mb-4">Need Help?</h3>
+            <h3 className="text-lg font-black text-slate-900 mb-4">{t('need_help')}</h3>
             <p className="text-sm text-slate-500 mb-6 font-medium">
-              If you have any questions about this product, feel free to contact our support team.
+              {t('need_help_desc')}
             </p>
             <Button 
               className="w-full bg-white text-slate-900 border border-slate-200 hover:bg-slate-50 font-bold"
               onClick={() => window.open('https://wa.me/212670965351', '_blank')}
             >
-              Contact Support
+              {t('contact_support')}
             </Button>
           </div>
         </div>
