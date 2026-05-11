@@ -3,7 +3,7 @@
 import { useCart } from "@/context/CartContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
-import { Menu, Search, ShoppingCart, X, Globe } from "lucide-react";
+import { Menu, ShoppingCart, X, Globe } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -17,8 +17,7 @@ export default function Header() {
     cart?.reduce((total, item) => total + item.quantity, 0) || 0;
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
   const pathname = usePathname();
 
   useEffect(() => {
@@ -87,28 +86,10 @@ export default function Header() {
             </nav>
           </div>
 
-          <div className="hidden lg:flex flex-1 max-w-md mx-8">
-            <form className="relative w-full">
-              <input
-                type="search"
-                placeholder={t('search_placeholder')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
-                aria-label={t('search_placeholder')}
-              />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            </form>
-          </div>
+
 
           <div className="flex items-center space-x-2 sm:space-x-4">
-            <button
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="lg:hidden p-2 rounded-full hover:bg-gray-100 transition-colors"
-              aria-label="Search"
-            >
-              <Search className="h-5 w-5 text-gray-700" />
-            </button>
+
 
             <button
               onClick={toggleMobileMenu}
@@ -152,35 +133,19 @@ export default function Header() {
               </button>
 
               {/* Language Toggle */}
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
                 onClick={() => setLanguage(language === 'en' ? 'fr' : 'en')}
-                className="flex items-center gap-1.5 font-bold text-xs uppercase"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 hover:bg-gray-50 transition-all font-bold text-xs uppercase"
+                title={language === 'en' ? 'Switch to French' : 'Passer en Anglais'}
               >
-                <Globe className="h-4 w-4" />
-                {language === 'en' ? 'FR' : 'EN'}
-              </Button>
+                <Globe className="h-3.5 w-3.5 text-blue-500" />
+                <span>{language === 'en' ? 'FR' : 'EN'}</span>
+              </button>
             </div>
           </div>
         </div>
 
-        {isSearchOpen && (
-          <div className="lg:hidden mt-4 animate-in slide-in-from-top duration-200">
-            <form className="relative">
-              <input
-                type="search"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                aria-label="Search products"
-                autoFocus
-              />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            </form>
-          </div>
-        )}
+
 
         {isMobileOpen && (
           <nav

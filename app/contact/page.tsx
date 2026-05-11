@@ -16,10 +16,13 @@ import {
   Phone,
   Send,
   Shield,
+  MessageCircle,
 } from "lucide-react";
 import { useState } from "react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function Contact() {
+  const { t, language } = useLanguage();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -36,45 +39,45 @@ export default function Contact() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-
-    setTimeout(() => {
-      setIsSubmitted(false);
-      setFormData({ name: "", email: "", subject: "", message: "" });
-    }, 3000);
+    
+    const whatsappNumber = "212670965351";
+    const text = `*New Message from Website*%0A%0A*Name:* ${formData.name}%0A*Email:* ${formData.email}%0A*Subject:* ${formData.subject}%0A*Message:* ${formData.message}`;
+    
+    window.open(`https://wa.me/${whatsappNumber}?text=${text}`, '_blank');
   };
 
   const contactInfo = [
     {
       icon: Mail,
-      title: "Email Us",
-      details: ["hello@bloomshop.com", "support@bloomshop.com"],
-      description: "Send us an email anytime",
+      title: t('contact_email_us'),
+      details: ["support@streamtv.com"],
+      description: t('hero_desc').includes('email') ? t('hero_desc') : "Send us an email anytime",
     },
     {
       icon: Phone,
-      title: "Call Us",
-      details: ["+1 (555) 123-4567", "+1 (555) 987-6543"],
-      description: "Mon-Fri from 8am to 5pm",
+      title: t('contact_call_us'),
+      details: ["+212 670965351"],
+      description: language === 'fr' ? "Disponible tous les jours (Ven: 14h-00h, Autres jours: 8h-00h)" : "Available daily (Fri: 2pm-12pm, Other days: 8am-12pm)",
     },
     {
       icon: MapPin,
-      title: "Visit Us",
-      details: ["123 Fashion Street", "Style City, SC 12345"],
-      description: "Come say hello at our office",
+      title: t('contact_visit_us'),
+      details: ["ifrane . maroc"],
+      description: language === 'fr' ? "Venez nous dire bonjour à notre bureau" : "Come say hello at our office",
     },
     {
       icon: Clock,
-      title: "Working Hours",
-      details: ["Monday - Friday: 9am - 6pm", "Saturday: 10am - 4pm"],
-      description: "Sunday: Closed",
+      title: t('contact_working_hours'),
+      details: language === 'fr' ? [
+        "Lun-Jeu & Sam-Dim: 8h - 00h",
+        "Vendredi: 14h - 00h"
+      ] : [
+        "Mon-Thu & Sat-Sun: 8am - 12pm",
+        "Friday: 2pm - 12pm"
+      ],
+      description: t('contact_open_all_week'),
     },
   ];
 
@@ -102,17 +105,13 @@ export default function Contact() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto">
             <Badge className="mb-6 bg-primary text-primary-foreground">
-              Get in Touch
+              {t('contact_get_in_touch')}
             </Badge>
             <h1 className="text-4xl lg:text-6xl font-bold text-foreground mb-6">
-              We&apos;d love to{" "}
-              <span className="text-primary block lg:inline lg:ml-4">
-                hear from you
-              </span>
+              {t('contact_hear_from_you_title')}
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Have a question, suggestion, or just want to say hello? We&apos;re
-              here to help and would love to hear from you.
+              {t('contact_desc')}
             </p>
           </div>
         </div>
@@ -125,11 +124,10 @@ export default function Contact() {
               <Card>
                 <CardHeader>
                   <CardTitle className="text-2xl font-bold text-foreground">
-                    Send us a message
+                    {t('contact_send_message')}
                   </CardTitle>
                   <p className="text-muted-foreground">
-                    Fill out the form below and we&apos;ll get back to you as
-                    soon as possible.
+                    {t('contact_form_desc')}
                   </p>
                 </CardHeader>
                 <CardContent>
@@ -140,7 +138,7 @@ export default function Contact() {
                           htmlFor="name"
                           className="text-sm font-medium text-foreground"
                         >
-                          Your Name
+                          {t('contact_name_label')}
                         </label>
                         <Input
                           id="name"
@@ -159,7 +157,7 @@ export default function Contact() {
                           htmlFor="email"
                           className="text-sm font-medium text-foreground"
                         >
-                          Your Email
+                          {t('contact_email_label')}
                         </label>
                         <Input
                           id="email"
@@ -179,7 +177,7 @@ export default function Contact() {
                         htmlFor="subject"
                         className="text-sm font-medium text-foreground"
                       >
-                        Subject
+                        {t('contact_subject_label')}
                       </label>
                       <Input
                         id="subject"
@@ -198,7 +196,7 @@ export default function Contact() {
                         htmlFor="message"
                         className="text-sm font-medium text-foreground"
                       >
-                        Your Message
+                        {t('contact_message_label')}
                       </label>
                       <Textarea
                         id="message"
@@ -221,17 +219,17 @@ export default function Contact() {
                       {isSubmitting ? (
                         <div className="flex items-center gap-2">
                           <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                          Sending...
+                          {t('contact_sending_btn')}
                         </div>
                       ) : isSubmitted ? (
                         <div className="flex items-center gap-2">
                           <CheckCircle className="h-4 w-4" />
-                          Message Sent!
+                          {t('contact_sent_btn')}
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <Send className="h-4 w-4" />
-                          Send Message
+                          <MessageCircle className="h-4 w-4" />
+                          {t('contact_send_btn')}
                         </div>
                       )}
                     </Button>
@@ -244,7 +242,7 @@ export default function Contact() {
               <Card>
                 <CardHeader>
                   <CardTitle className="text-xl font-semibold">
-                    Contact Information
+                    {t('contact_info_title')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -277,7 +275,7 @@ export default function Contact() {
               <Card>
                 <CardHeader>
                   <CardTitle className="text-xl font-semibold">
-                    Why Contact Us?
+                    {t('contact_why_contact_us')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -315,35 +313,30 @@ export default function Contact() {
               FAQ
             </Badge>
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Frequently Asked Questions
+              {t('contact_faq_title')}
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Find quick answers to common questions about our products and
-              services.
+              {t('contact_faq_desc')}
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {[
               {
-                question: "What are your shipping policies?",
-                answer:
-                  "We offer free shipping on orders over $50. Standard shipping takes 3-5 business days.",
+                question: t('faq_q1'),
+                answer: t('faq_a1'),
               },
               {
-                question: "How can I track my order?",
-                answer:
-                  "Once your order ships, you'll receive a tracking number via email to monitor your package.",
+                question: t('faq_q2'),
+                answer: t('faq_a2'),
               },
               {
-                question: "What is your return policy?",
-                answer:
-                  "We accept returns within 30 days of purchase. Items must be in original condition.",
+                question: t('faq_q3'),
+                answer: t('faq_a3'),
               },
               {
-                question: "Do you offer international shipping?",
-                answer:
-                  "Yes, we ship worldwide. International shipping rates vary by destination.",
+                question: t('faq_q4'),
+                answer: t('faq_a4'),
               },
             ].map((faq, index) => (
               <Card key={index} className="hover:shadow-md transition-shadow">
@@ -364,26 +357,25 @@ export default function Contact() {
           <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
             <CardContent className="p-12 text-center">
               <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-                Still have questions?
+                {t('contact_still_questions')}
               </h2>
               <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Can&apos;t find what you&apos;re looking for? Our customer
-                support team is here to help.
+                {t('contact_still_desc')}
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button
-                  size="lg"
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
-                >
-                  <Phone className="h-4 w-4 mr-2" />
-                  Call Us Now
-                </Button>
+                  <Button
+                    size="lg"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    <Phone className="h-4 w-4 mr-2" />
+                    {t('contact_call_now')}
+                  </Button>
 
-                <Button size="lg" variant="outline">
-                  <Mail className="h-4 w-4 mr-2" />
-                  Live Chat
-                </Button>
+                  <Button size="lg" variant="outline">
+                    <Mail className="h-4 w-4 mr-2" />
+                    {t('contact_live_chat')}
+                  </Button>
               </div>
             </CardContent>
           </Card>

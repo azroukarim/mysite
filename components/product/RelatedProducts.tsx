@@ -25,7 +25,7 @@ export default function RelatedProducts({ product }: RelatedProductsProps) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {products
-          .filter((p) => p.id !== product.id)
+          .filter((p) => p.id !== product.id && !p.category?.startsWith('HIDDEN:'))
           .slice(0, 4)
           .map((relatedProduct) => (
             <Card

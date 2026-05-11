@@ -3,13 +3,15 @@
 import { useEffect, useState } from 'react';
 import { Timer } from 'lucide-react';
 import { parseSaleDate } from '@/lib/dateUtils';
+import { cn } from '@/lib/utils';
 
 interface CountdownTimerProps {
   endDate: string;
   onEnd?: () => void;
+  className?: string;
 }
 
-export default function CountdownTimer({ endDate, onEnd }: CountdownTimerProps) {
+export default function CountdownTimer({ endDate, onEnd, className }: CountdownTimerProps) {
   const [timeLeft, setTimeLeft] = useState<{
     days: number;
     hours: number;
@@ -51,17 +53,27 @@ export default function CountdownTimer({ endDate, onEnd }: CountdownTimerProps) 
 
   if (!timeLeft) return null;
 
+  const TimeUnit = ({ value, label }: { value: number, label: string }) => (
+    <div className="flex flex-col items-center">
+      <span className="text-[9px] sm:text-[11px] font-black leading-none">{value.toString().padStart(2, '0')}</span>
+      <span className="text-[5px] sm:text-[7px] uppercase opacity-70 font-bold leading-none mt-0.5">{label}</span>
+    </div>
+  );
+
   return (
-    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white rounded-full text-[11px] font-bold shadow-lg animate-pulse">
-      <Timer size={14} className="animate-spin-slow" />
-      <div className="flex items-center gap-1 uppercase tracking-wider">
-        <span>{timeLeft.days}d</span>
-        <span>:</span>
-        <span>{timeLeft.hours}h</span>
-        <span>:</span>
-        <span>{timeLeft.minutes}m</span>
-        <span>:</span>
-        <span>{timeLeft.seconds}s</span>
+    <div className={cn(
+      "inline-flex items-center gap-1 sm:gap-2 px-1.5 sm:px-3 py-1 bg-gradient-to-r from-red-600 to-amber-500 text-white rounded-lg sm:rounded-full shadow-md border border-white/20 backdrop-blur-sm",
+      className
+    )}>
+      <Timer size={10} className="animate-pulse hidden sm:block" />
+      <div className="flex items-center gap-1 sm:gap-1.5">
+        <TimeUnit value={timeLeft.days} label="d" />
+        <span className="text-[8px] opacity-50 font-bold">:</span>
+        <TimeUnit value={timeLeft.hours} label="h" />
+        <span className="text-[8px] opacity-50 font-bold">:</span>
+        <TimeUnit value={timeLeft.minutes} label="m" />
+        <span className="text-[8px] opacity-50 font-bold">:</span>
+        <TimeUnit value={timeLeft.seconds} label="s" />
       </div>
     </div>
   );

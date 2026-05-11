@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react';
 import { 
   Plus, Edit, Trash2, Save, X, Lock, LogOut, 
   ChevronLeft, Package, Image as ImageIcon, 
-  Euro, Tag, Search, CheckCircle2, Shield, ShieldAlert
+  Euro, Tag, Search, CheckCircle2, Shield, ShieldAlert,
+  Eye, EyeOff, Copy, ChevronUp, ChevronDown, LayoutGrid, List
 } from 'lucide-react';
 import Link from 'next/link';
 import CountdownTimer from '@/components/product/CountdownTimer';
 import { parseSaleDate } from '@/lib/dateUtils';
+import { supabase } from '@/lib/supabase';
 
 interface Product {
   id: number;
@@ -41,8 +43,12 @@ const CATEGORIES = [
 
 export default function AdminDashboard() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isResetMode, setIsResetMode] = useState(false);
+  const [isRecoveryFlow, setIsRecoveryFlow] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [newProduct, setNewProduct] = useState<Partial<Product>>({ 
@@ -62,17 +68,30 @@ export default function AdminDashboard() {
 
   const [status, setStatus] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [protectionEnabled, setProtectionEnabled] = useState<boolean | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [bulkSaleDate, setBulkSaleDate] = useState<string | null>(null);
 
   // Load session and products on load
   useEffect(() => {
+    // Check for reset mode in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasRecoveryToken = window.location.hash.includes('type=recovery') || 
+                            window.location.hash.includes('access_token=') ||
+                            urlParams.get('mode') === 'reset';
+                            
+    if (hasRecoveryToken) {
+      setIsResetMode(true);
+      setIsRecoveryFlow(true);
+    }
+
     const savedSession = localStorage.getItem('adminSession');
     if (savedSession) {
-      const { loggedIn, user, pass } = JSON.parse(savedSession);
+      const { loggedIn, email: savedEmail, pass } = JSON.parse(savedSession);
       if (loggedIn) {
-        setUsername(user);
+        setEmail(savedEmail);
         setPassword(pass);
         setIsLoggedIn(true);
       }
@@ -96,27 +115,118 @@ export default function AdminDashboard() {
       const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await res.json();
 
       if (data.success) {
         setIsLoggedIn(true);
-        localStorage.setItem('adminSession', JSON.stringify({ loggedIn: true, user: username, pass: password }));
+        localStorage.setItem('adminSession', JSON.stringify({ loggedIn: true, email: email, pass: password }));
       } else {
-        alert(data.error || 'بيانات الدخول غير صحيحة!');
+        alert(data.error || 'Invalid credentials!');
       }
     } catch (error) {
-      alert('حدث خطأ أثناء محاولة الدخول');
+      alert('An error occurred during login');
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus('Sending reset link...');
+    try {
+      const res = await fetch('/api/admin/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: resetEmail }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Password reset link has been sent to your email!');
+        setIsResetMode(false);
+      } else {
+        alert(data.error || 'Failed to send reset link');
+      }
+    } catch (error) {
+      alert('Error sending reset link');
+    } finally {
+      setStatus('');
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      alert('Passwords do not match!');
+      return;
+    }
+    setStatus('Updating password...');
+    try {
+      const { data, error } = await supabase.auth.updateUser({ password: password });
+      if (error) throw error;
+      
+      alert('Password updated successfully! You can now login.');
+      setIsResetMode(false);
+      setPassword('');
+      setConfirmPassword('');
+      window.location.hash = ''; // Clear the recovery token from URL
+    } catch (error: any) {
+      alert('Error updating password: ' + error.message);
+    } finally {
+      setStatus('');
     }
   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
-    setUsername('');
+    setEmail('');
     setPassword('');
     localStorage.removeItem('adminSession');
+  };
+
+  const handleDuplicate = async (product: Product) => {
+    setStatus('Duplicating...');
+    
+    // Create a new ID
+    const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+    
+    // Create the cloned product object
+    const clonedProduct: Product = {
+      ...product,
+      id: newId,
+      name: `${product.name} (Copy)`,
+      // Ensure the category logic is preserved
+    };
+
+    // Find the index of the original product to insert the clone right after it
+    const originalIndex = products.findIndex(p => p.id === product.id);
+    const newProducts = [...products];
+    newProducts.splice(originalIndex + 1, 0, clonedProduct);
+    
+    // Save to database immediately
+    const success = await handleSave(newProducts);
+    
+    if (success) {
+      setStatus('Product Duplicated!');
+      setTimeout(() => setStatus(''), 2000);
+    } else {
+      setStatus('Failed to duplicate');
+    }
+  };
+
+  const moveProduct = async (index: number, direction: 'up' | 'down') => {
+    const newProducts = [...products];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    if (targetIndex < 0 || targetIndex >= newProducts.length) return;
+    
+    [newProducts[index], newProducts[targetIndex]] = [newProducts[targetIndex], newProducts[index]];
+    
+    const success = await handleSave(newProducts);
+    if (success) {
+      setStatus('Order updated');
+      setTimeout(() => setStatus(''), 1000);
+    }
   };
 
   const toggleProtection = async () => {
@@ -232,6 +342,43 @@ export default function AdminDashboard() {
     }
   };
 
+  const toggleVisibility = async (id: number) => {
+    const updated = products.map((p) => {
+      if (p.id === id) {
+        const currentlyHidden = p.category?.startsWith('HIDDEN:');
+        return {
+          ...p,
+          category: currentlyHidden 
+            ? p.category?.replace('HIDDEN:', '') 
+            : `HIDDEN:${p.category || ''}`
+        };
+      }
+      return p;
+    });
+    handleSave(updated);
+  };
+
+  const applyBulkVisibility = async (hide: boolean) => {
+    if (selectedIds.length === 0) return;
+    
+    const updated = products.map((p) => {
+      if (selectedIds.includes(p.id)) {
+        const currentlyHidden = p.category?.startsWith('HIDDEN:');
+        if (hide && !currentlyHidden) {
+          return { ...p, category: `HIDDEN:${p.category || ''}` };
+        } else if (!hide && currentlyHidden) {
+          return { ...p, category: p.category?.replace('HIDDEN:', '') };
+        }
+      }
+      return p;
+    });
+    
+    const success = await handleSave(updated);
+    if (success) {
+      setSelectedIds([]);
+    }
+  };
+
   const startEdit = (product: Product) => {
     setEditingProduct({ ...product });
     setEditSelectedDurations(parseDurationString(product.duration || ''));
@@ -268,12 +415,165 @@ export default function AdminDashboard() {
     }
   };
 
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.category?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const removeBulkSaleDate = async () => {
+    if (selectedIds.length === 0) return;
+    
+    const updated = products.map(p => 
+      selectedIds.includes(p.id) ? { ...p, sale_end_date: null } : p
+    );
+    
+    const success = await handleSave(updated);
+    if (success) {
+      setSelectedIds([]);
+      setStatus('Countdown removed from selected items');
+      setTimeout(() => setStatus(''), 2000);
+    }
+  };
 
-  // Dashboard is now directly accessible
+  // Filter products without automatic sorting to allow manual order
+  const adminCategories = ['All', ...Array.from(new Set(products.map(p => p.category?.replace('HIDDEN:', '')).filter(Boolean)))];
+
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const cleanCategory = p.category?.replace('HIDDEN:', '') || '';
+    const matchesCategory = selectedCategory === 'All' || cleanCategory === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          <div className="text-center mb-10">
+            <div className="inline-flex p-4 bg-blue-600 text-white rounded-3xl shadow-xl shadow-blue-500/20 mb-6">
+              <Lock size={32} />
+            </div>
+            <h1 className="text-3xl font-black text-slate-900 mb-2">Admin Portal</h1>
+            <p className="text-slate-500">Secure access to Stream TV management</p>
+          </div>
+
+          <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100">
+            {!isResetMode ? (
+              <form onSubmit={handleLogin} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
+                  <div className="relative">
+                    <input
+                      type="email"
+                      required
+                      placeholder="admin@example.com"
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center ml-1">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Password</label>
+                    <button 
+                      type="button"
+                      onClick={() => setIsResetMode(true)}
+                      className="text-xs font-bold text-blue-600 hover:text-blue-700"
+                    >
+                      Forgot?
+                    </button>
+                  </div>
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-5 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-[0.98]"
+                >
+                  Enter Dashboard
+                </button>
+              </form>
+            ) : (
+              <form 
+                onSubmit={isRecoveryFlow ? handleUpdatePassword : handleResetPassword} 
+                className="space-y-6"
+              >
+                {isRecoveryFlow ? (
+                  <>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">New Password</label>
+                      <input
+                        type="password"
+                        required
+                        placeholder="••••••••"
+                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Confirm Password</label>
+                      <input
+                        type="password"
+                        required
+                        placeholder="••••••••"
+                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Reset Password</label>
+                    <p className="text-sm text-slate-500 mb-4 ml-1">Enter your email to receive a password reset link.</p>
+                    <input
+                      type="email"
+                      required
+                      placeholder="admin@example.com"
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                    />
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-3">
+                  <button
+                    type="submit"
+                    className="w-full py-5 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg"
+                  >
+                    {isRecoveryFlow ? 'Update Password' : 'Send Reset Link'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsResetMode(false);
+                      setIsRecoveryFlow(false);
+                    }}
+                    className="w-full py-3 text-slate-500 font-bold hover:text-slate-700 transition-all"
+                  >
+                    Back to Login
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+
+          <div className="text-center mt-10">
+            <Link href="/" className="text-sm font-bold text-slate-400 hover:text-blue-600 transition-colors">
+              ← Return to Storefront
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans pb-20">
       <nav className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200">
@@ -349,138 +649,156 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-5 space-y-6">
-            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm sticky top-28">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="p-2.5 bg-blue-600 text-white rounded-xl shadow-md shadow-blue-200">
-                  <Plus size={20} />
-                </div>
-                <h3 className="text-lg font-bold">Create New Package</h3>
+        <div className="space-y-10">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-2 bg-blue-600 text-white rounded-lg shadow-sm">
+                <Plus size={16} />
               </div>
-              
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">Package Name</label>
+              <h3 className="text-base font-bold">Create New Package</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Package Name</label>
                   <input
                     type="text"
                     placeholder="e.g. Premium 4K IPTV"
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all"
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition-all text-sm"
                     value={newProduct.name}
                     onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">Category</label>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Category</label>
                   <input
                     type="text"
-                    placeholder="e.g. PREMIUM IPTV, RESELLER..."
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all"
-                    value={newProduct.category}
-                    onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
+                    placeholder="e.g. PREMIUM IPTV..."
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition-all text-sm"
+                    value={newProduct.category?.replace('HIDDEN:', '') || ''}
+                    onChange={(e) => {
+                      const isCurrentlyHidden = newProduct.category?.startsWith('HIDDEN:');
+                      setNewProduct({ 
+                        ...newProduct, 
+                        category: isCurrentlyHidden ? `HIDDEN:${e.target.value}` : e.target.value 
+                      });
+                    }}
                   />
                 </div>
 
-                <div className="space-y-3">
-                  <label className="text-sm font-bold text-slate-700 block">Subscription Durations & Prices</label>
-                  
-                  {/* Flash Sale Date Picker for New Product */}
-                  <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 space-y-3 mb-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Tag size={16} className="text-amber-600" />
-                        <label className="text-xs font-bold text-amber-700 uppercase tracking-wider">Flash Sale End Date</label>
-                      </div>
-                      <input 
-                        type="checkbox"
-                        checked={!!newProduct.sale_end_date}
-                        onChange={(e) => {
-                          setNewProduct({
-                            ...newProduct, 
-                            sale_end_date: e.target.checked ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null
-                          });
-                        }}
-                        className="w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
-                      />
-                    </div>
-                    {newProduct.sale_end_date && (
-                      <input 
-                        type="date"
-                        className="w-full p-2 text-sm bg-white border border-amber-200 rounded-xl outline-none text-amber-900"
-                        value={newProduct.sale_end_date.split('T')[0]}
-                        onChange={(e) => setNewProduct({ ...newProduct, sale_end_date: e.target.value })}
-                      />
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-3">
-                    {PREDEFINED_DURATIONS.map(dur => (
-                      <div key={dur} className="flex items-center gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-200 transition-colors flex-wrap">
-                        <div className="flex items-center gap-2 flex-1 min-w-[120px]">
-                          <input 
-                            type="checkbox"
-                            id={`dur-${dur}`}
-                            className="w-5 h-5 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500"
-                            checked={!!selectedDurations[dur]}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedDurations({ ...selectedDurations, [dur]: { price: '0', oldPrice: '' } });
-                              } else {
-                                const next = { ...selectedDurations };
-                                delete next[dur];
-                                setSelectedDurations(next);
-                              }
-                            }}
-                          />
-                          <label htmlFor={`dur-${dur}`} className="text-sm font-medium text-slate-600 cursor-pointer">{dur}</label>
-                        </div>
-                        {selectedDurations[dur] !== undefined && (
-                          <div className="flex items-center gap-2">
-                            <div className="relative w-24">
-                              <Euro className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" size={13} />
-                              <input 
-                                type="number"
-                                placeholder="Price"
-                                className="w-full pl-6 pr-2 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-blue-500 outline-none"
-                                value={selectedDurations[dur].price}
-                                onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], price: e.target.value } })}
-                              />
-                            </div>
-                            <div className="relative w-24">
-                              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-red-300 text-xs font-bold line-through">€</span>
-                              <input 
-                                type="number"
-                                placeholder="Old"
-                                className="w-full pl-5 pr-2 py-2 bg-red-50 border border-red-100 rounded-xl text-sm focus:border-red-300 outline-none text-red-400"
-                                value={selectedDurations[dur].oldPrice}
-                                onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], oldPrice: e.target.value } })}
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">Image URL</label>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Image URL</label>
                   <input
                     type="text"
                     placeholder="https://..."
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all"
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition-all text-sm"
                     value={newProduct.image}
                     onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
                   />
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">Description</label>
+              <div className="space-y-3">
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Durations & Prices</label>
+                
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Tag size={14} className="text-amber-600" />
+                      <span className="text-[10px] font-bold text-amber-700 uppercase tracking-tight">Sale</span>
+                    </div>
+                    <input 
+                      type="checkbox"
+                      checked={!!newProduct.sale_end_date}
+                      onChange={(e) => {
+                        setNewProduct({
+                          ...newProduct, 
+                          sale_end_date: e.target.checked ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null
+                        });
+                      }}
+                      className="w-3.5 h-3.5 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Eye size={14} className="text-slate-600" />
+                      <span className="text-[10px] font-bold text-slate-700 uppercase tracking-tight">Visible</span>
+                    </div>
+                    <input 
+                      type="checkbox"
+                      checked={!newProduct.category?.startsWith('HIDDEN:')}
+                      onChange={(e) => {
+                        const isCurrentlyHidden = newProduct.category?.startsWith('HIDDEN:');
+                        if (e.target.checked && isCurrentlyHidden) {
+                          setNewProduct({ ...newProduct, category: newProduct.category?.replace('HIDDEN:', '') });
+                        } else if (!e.target.checked && !isCurrentlyHidden) {
+                          setNewProduct({ ...newProduct, category: `HIDDEN:${newProduct.category || ''}` });
+                        }
+                      }}
+                      className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-1.5 max-h-40 overflow-y-auto pr-2 custom-scrollbar border border-slate-100 p-2 rounded-xl bg-white">
+                  {PREDEFINED_DURATIONS.map(dur => (
+                    <div key={dur} className="flex items-center gap-2 p-2 bg-slate-50/50 rounded-lg border border-slate-100 hover:border-blue-100 transition-colors flex-wrap sm:flex-nowrap">
+                      <div className="flex items-center gap-2 min-w-[100px]">
+                        <input 
+                          type="checkbox"
+                          id={`dur-${dur}`}
+                          className="w-4 h-4 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500"
+                          checked={!!selectedDurations[dur]}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedDurations({ ...selectedDurations, [dur]: { price: '0', oldPrice: '' } });
+                            } else {
+                              const next = { ...selectedDurations };
+                              delete next[dur];
+                              setSelectedDurations(next);
+                            }
+                          }}
+                        />
+                        <label htmlFor={`dur-${dur}`} className="text-[11px] font-bold text-slate-600 cursor-pointer">{dur}</label>
+                      </div>
+                      
+                      {selectedDurations[dur] !== undefined && (
+                        <div className="flex items-center gap-1.5 flex-1">
+                          <div className="relative flex-1">
+                            <Euro className="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400" size={10} />
+                            <input 
+                              type="number"
+                              className="w-full pl-4 pr-1 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-bold outline-none"
+                              value={selectedDurations[dur].price}
+                              onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], price: e.target.value } })}
+                            />
+                          </div>
+                          <div className="relative flex-1">
+                            <input 
+                              type="number"
+                              placeholder="Old"
+                              className="w-full p-1 bg-red-50/30 border border-red-50 rounded-lg text-[10px] outline-none text-red-400 line-through"
+                              value={selectedDurations[dur].oldPrice}
+                              onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], oldPrice: e.target.value } })}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-4 flex flex-col">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Description</label>
                   <textarea
-                    placeholder="Enter package details..."
-                    rows={4}
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all resize-none"
+                    placeholder="Package details..."
+                    rows={3}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition-all resize-none text-sm"
                     value={newProduct.description}
                     onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
                   />
@@ -488,19 +806,67 @@ export default function AdminDashboard() {
 
                 <button
                   onClick={addProduct}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98] flex items-center justify-center gap-2"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-sm active:scale-[0.98] flex items-center justify-center gap-2 text-sm mt-auto"
                 >
-                  <CheckCircle2 size={20} />
-                  Save Package
+                  <CheckCircle2 size={16} />
+                  Add New Package
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="lg:col-span-7">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            {/* View Switcher */}
+            <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
+                title="List View"
+              >
+                <List size={18} />
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
+                title="Grid View"
+              >
+                <LayoutGrid size={18} />
+              </button>
+            </div>
+
+            {/* Category Filter for List */}
+            <div className="flex items-center gap-2 pb-2 overflow-x-auto no-scrollbar scroll-smooth flex-1">
+              {adminCategories.map((category: any) => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-5 py-2 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all duration-300 border ${
+                    selectedCategory === category
+                      ? "bg-slate-900 text-white border-slate-900 shadow-md"
+                      : "bg-white border-slate-200 text-slate-500 hover:border-slate-900 hover:text-slate-900 shadow-sm"
+                  }`}
+                >
+                  {category === 'All' ? 'ALL PRODUCTS' : category.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {viewMode === 'list' ? (
             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-slate-900 text-white rounded-xl">
+                  <Package size={20} />
+                </div>
+                <h3 className="text-lg font-bold">Product Catalog</h3>
+              </div>
+              <div className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-white px-3 py-1.5 rounded-full border border-slate-100">
+                {products.length} Products Total
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50/50 border-b border-slate-100">
                       <th className="px-6 py-5 w-12">
@@ -523,7 +889,8 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {filteredProducts.map((product) => (
+                    {filteredProducts.length > 0 ? (
+                      filteredProducts.map((product) => (
                       <tr key={product.id} className={`group hover:bg-blue-50/30 transition-colors ${selectedIds.includes(product.id) ? 'bg-blue-50/50' : ''}`}>
                         <td className="px-6 py-5 align-top">
                           <input 
@@ -540,10 +907,13 @@ export default function AdminDashboard() {
                           />
                         </td>
                         <td className="px-6 py-5 align-top">
-                          <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-slate-50 border border-slate-200">
-                            {product.image && (
-                              <img src={product.image} alt="" className="w-full h-full object-contain p-1" />
-                            )}
+                          <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-slate-50 border border-slate-200 shadow-inner">
+                            <img 
+                              src={editingProduct?.id === product.id ? editingProduct.image : product.image} 
+                              alt="" 
+                              className="w-full h-full object-contain p-1 transition-all" 
+                              onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/150?text=Logo')}
+                            />
                           </div>
                         </td>
                         <td className="px-6 py-5 align-top">
@@ -559,8 +929,21 @@ export default function AdminDashboard() {
                                 type="text"
                                 placeholder="Category"
                                 className="w-full p-3 text-sm border border-slate-200 rounded-xl outline-none"
-                                value={editingProduct.category}
-                                onChange={(e) => setEditingProduct({...editingProduct, category: e.target.value})}
+                                value={editingProduct.category?.replace('HIDDEN:', '') || ''}
+                                onChange={(e) => {
+                                  const isCurrentlyHidden = editingProduct.category?.startsWith('HIDDEN:');
+                                  setEditingProduct({
+                                    ...editingProduct, 
+                                    category: isCurrentlyHidden ? `HIDDEN:${e.target.value}` : e.target.value
+                                  });
+                                }}
+                              />
+                              <input
+                                type="text"
+                                placeholder="Image URL (Logo)"
+                                className="w-full p-3 text-sm border border-slate-200 rounded-xl outline-none"
+                                value={editingProduct.image || ''}
+                                onChange={(e) => setEditingProduct({...editingProduct, image: e.target.value})}
                               />
 
                               <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 space-y-3">
@@ -643,9 +1026,16 @@ export default function AdminDashboard() {
                           ) : (
                             <div className="space-y-2">
                               <div className="flex items-center gap-2">
-                                <span className="font-bold text-slate-900">{product.name}</span>
+                                <span className="font-bold text-slate-900 flex items-center gap-2">
+                                  {product.name}
+                                  {product.category?.startsWith('HIDDEN:') && (
+                                    <span className="px-1.5 py-0.5 bg-slate-200 text-slate-500 rounded text-[10px] font-bold uppercase tracking-tight flex items-center gap-1">
+                                      <EyeOff size={10} /> Hidden
+                                    </span>
+                                  )}
+                                </span>
                                 <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold uppercase tracking-tight">
-                                  {product.category}
+                                  {product.category?.replace('HIDDEN:', '') || 'PREMIUM IPTV'}
                                 </span>
                                 {product.sale_end_date && (() => {
                                   const target = parseSaleDate(product.sale_end_date);
@@ -659,11 +1049,19 @@ export default function AdminDashboard() {
                               <p className="text-sm text-slate-500 line-clamp-2">{product.description}</p>
                               {product.duration && (
                                 <div className="flex flex-wrap gap-1.5">
-                                  {product.duration.split(',').map((opt, i) => (
-                                    <span key={i} className="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-bold border border-slate-200">
-                                      {opt.trim()}
-                                    </span>
-                                  ))}
+                                  {product.duration.split(',').map((opt, i) => {
+                                    const [label, price, oldPrice] = opt.split('|').map(s => s.trim());
+                                    return (
+                                      <div key={i} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg shadow-sm text-[11px]">
+                                        <span className="font-bold text-slate-800">{label}</span>
+                                        <div className="w-[1px] h-3 bg-slate-200" />
+                                        <span className="font-black text-blue-600 text-xs">{price}€</span>
+                                        {oldPrice && (
+                                          <span className="text-slate-400 line-through decoration-red-400/50 font-medium">{oldPrice}€</span>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               )}
                             </div>
@@ -672,22 +1070,161 @@ export default function AdminDashboard() {
                         <td className="px-6 py-5 align-top">
                           {!editingProduct && (
                             <div className="flex items-center justify-end gap-2">
-                              <button onClick={() => startEdit(product)} className="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
-                                <Edit size={18} />
+                              {/* Sorting Group */}
+                              <div className="flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200">
+                                <button 
+                                  onClick={() => moveProduct(products.findIndex(p => p.id === product.id), 'up')}
+                                  disabled={products.findIndex(p => p.id === product.id) === 0}
+                                  className="p-2 text-slate-600 hover:text-blue-600 hover:bg-white rounded-lg disabled:opacity-20 transition-all"
+                                  title="Move Up"
+                                >
+                                  <ChevronUp size={20} />
+                                </button>
+                                <div className="w-[1px] h-4 bg-slate-200 mx-1" />
+                                <button 
+                                  onClick={() => moveProduct(products.findIndex(p => p.id === product.id), 'down')}
+                                  disabled={products.findIndex(p => p.id === product.id) === products.length - 1}
+                                  className="p-2 text-slate-600 hover:text-blue-600 hover:bg-white rounded-lg disabled:opacity-20 transition-all"
+                                  title="Move Down"
+                                >
+                                  <ChevronDown size={20} />
+                                </button>
+                              </div>
+
+                              {/* Visibility Toggle */}
+                              <button 
+                                onClick={() => toggleVisibility(product.id)} 
+                                className="p-2.5 bg-amber-50 text-amber-600 hover:bg-amber-100 rounded-xl border border-amber-200 transition-all" 
+                                title={product.category?.startsWith('HIDDEN:') ? "Show Product" : "Hide Product"}
+                              >
+                                {product.category?.startsWith('HIDDEN:') ? <EyeOff size={20} /> : <Eye size={20} />}
                               </button>
-                              <button onClick={() => deleteProduct(product.id)} className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
-                                <Trash2 size={18} />
+
+                              {/* Duplicate Button */}
+                              <button 
+                                onClick={() => handleDuplicate(product)}
+                                className="p-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl border border-blue-200 transition-all"
+                                title="Duplicate Product"
+                              >
+                                <Copy size={20} />
+                              </button>
+
+                              {/* Edit Button */}
+                              <button 
+                                onClick={() => startEdit(product)} 
+                                className="p-2.5 bg-slate-50 text-slate-600 hover:bg-slate-200 rounded-xl border border-slate-200 transition-all" 
+                                title="Edit"
+                              >
+                                <Edit size={20} />
+                              </button>
+
+                              {/* Delete Button */}
+                              <button 
+                                onClick={() => deleteProduct(product.id)} 
+                                className="p-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl border border-red-200 transition-all" 
+                                title="Delete"
+                              >
+                                <Trash2 size={20} />
                               </button>
                             </div>
                           )}
                         </td>
                       </tr>
-                    ))}
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={4} className="px-10 py-20 text-center">
+                          <div className="flex flex-col items-center justify-center space-y-4">
+                            <div className="p-4 bg-slate-50 rounded-full text-slate-300">
+                              <Search size={40} />
+                            </div>
+                            <div className="space-y-1">
+                              <h3 className="text-lg font-bold text-slate-800">Product Not Found</h3>
+                              <p className="text-sm text-slate-500 max-w-[300px] mx-auto">
+                                You can contact us on WhatsApp to provide this product:
+                                <br />
+                                <a 
+                                  href="https://wa.me/212670965351" 
+                                  target="_blank" 
+                                  className="font-bold text-green-600 hover:underline"
+                                >
+                                  +212 670 965 351
+                                </a>
+                              </p>
+                            </div>
+                            <button 
+                              onClick={() => setSearchTerm('')}
+                              className="px-6 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-colors"
+                            >
+                              Clear search
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+              {filteredProducts.map((product) => (
+                <div key={product.id} className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden group hover:shadow-lg transition-all flex flex-col">
+                  <div className="relative aspect-square overflow-hidden bg-slate-50 p-10 flex items-center justify-center">
+                    <img 
+                      src={product.image} 
+                      alt={product.name} 
+                      className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute top-4 left-4 z-10">
+                      <input 
+                        type="checkbox"
+                        checked={selectedIds.includes(product.id)}
+                        onChange={() => {
+                          if (selectedIds.includes(product.id)) {
+                            setSelectedIds(selectedIds.filter(id => id !== product.id));
+                          } else {
+                            setSelectedIds([...selectedIds, product.id]);
+                          }
+                        }}
+                        className="w-5 h-5 rounded-lg border-slate-300 text-blue-600 focus:ring-blue-500 bg-white/90 backdrop-blur shadow-sm cursor-pointer"
+                      />
+                    </div>
+                    <div className="absolute top-4 right-4 flex gap-2">
+                      <button onClick={() => toggleVisibility(product.id)} className="p-2 bg-white/90 backdrop-blur shadow-sm rounded-xl text-slate-600 hover:text-blue-600 transition-colors">
+                        {product.category?.startsWith('HIDDEN:') ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-5 flex-grow space-y-3">
+                    <div className="flex justify-between items-start gap-2">
+                      <div>
+                        <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{product.category?.replace('HIDDEN:', '')}</span>
+                        <h4 className="font-bold text-slate-900 line-clamp-1">{product.name}</h4>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-lg font-black text-slate-900">{product.price}€</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500 line-clamp-2">{product.description}</p>
+                  </div>
+                  <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => startEdit(product)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Edit">
+                        <Edit size={16} />
+                      </button>
+                      <button onClick={() => handleDuplicate(product)} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Duplicate">
+                        <Copy size={16} />
+                      </button>
+                    </div>
+                    <button onClick={() => deleteProduct(product.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Delete">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 
@@ -721,6 +1258,34 @@ export default function AdminDashboard() {
                   className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:hover:bg-blue-600 px-4 py-1.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2"
                 >
                   Apply to All
+                </button>
+              </div>
+
+              <div className="h-6 w-[1px] bg-slate-700 mx-2" />
+
+              <button 
+                onClick={removeBulkSaleDate}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-red-900/40 text-slate-300 hover:text-red-400 border border-slate-700 rounded-xl transition-all text-sm font-bold"
+                title="Remove Countdown from selected items"
+              >
+                <Trash2 size={16} />
+                <span>Remove Countdown</span>
+              </button>
+              
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => applyBulkVisibility(true)}
+                  className="p-2 hover:bg-slate-800 rounded-xl text-slate-400 hover:text-amber-400 transition-colors"
+                  title="Hide Selected"
+                >
+                  <EyeOff size={20} />
+                </button>
+                <button 
+                  onClick={() => applyBulkVisibility(false)}
+                  className="p-2 hover:bg-slate-800 rounded-xl text-slate-400 hover:text-green-400 transition-colors"
+                  title="Show Selected"
+                >
+                  <Eye size={20} />
                 </button>
               </div>
 

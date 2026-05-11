@@ -4,14 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 type Language = 'en' | 'fr';
 
-interface Translations {
-  [key: string]: {
-    en: string;
-    fr: string;
-  };
-}
-
-const translations: Translations = {
+const translations: any = {
   // Header & Nav
   home: { en: 'Home', fr: 'Accueil' },
   contact: { en: 'Contact', fr: 'Contact' },
@@ -19,8 +12,14 @@ const translations: Translations = {
   cart: { en: 'Cart', fr: 'Panier' },
   
   // Home Page
-  hero_title: { en: 'Beyond Streaming: The Ultimate IPTV & App Store Experience', fr: 'Au-delà du Streaming : L\'Expérience Ultime de l\'IPTV et de l\'App Store' },
-  hero_desc: { en: 'Discover a wide selection of premium IPTV packages and entertainment apps with 4K quality, 24/7 support, and instant activation. Shop now!', fr: 'Découvrez une large sélection de forfaits IPTV premium et d\'applications de divertissement avec une qualité 4K, un support 24/7 et une activation instantanée. Achetez maintenant !' },
+  hero_title: { 
+    en: 'STREAMTV STORE', 
+    fr: 'STREAMTV STORE' 
+  },
+  hero_desc: { 
+    en: 'Discover a wide selection of premium IPTV packages and entertainment apps with 4K quality, 24/7 support, and instant activation. Shop now!', 
+    fr: 'Découvrez une large sélection de forfaits IPTV premium et d\'applications de divertissement avec une qualité 4K, un support 24/7 et une activation instantanée. Achetez maintenant !' 
+  },
   
   // Product Page
   add_to_cart: { en: 'Add to Cart', fr: 'Ajouter au panier' },
@@ -30,6 +29,9 @@ const translations: Translations = {
   subscription_duration: { en: 'Subscription Duration', fr: 'Durée d\'abonnement' },
   quantity: { en: 'Quantity', fr: 'Quantité' },
   related_products: { en: 'Related Products', fr: 'Produits associés' },
+  quick_view: { en: 'Quick View', fr: 'Aperçu' },
+  sale: { en: 'Sale', fr: 'Promo' },
+  order_now: { en: 'Order Now', fr: 'Commander' },
   
   // Footer
   stay_loop: { en: 'Stay in the loop', fr: 'Restez informé' },
@@ -37,6 +39,65 @@ const translations: Translations = {
   all_rights: { en: '© 2025 Stream TV™. All Rights Reserved.', fr: '© 2025 Stream TV™. Tous droits réservés.' },
   developed_by: { en: 'Developed by', fr: 'Développé par' },
   distributed_by: { en: 'Distributed by', fr: 'Distribué par' },
+
+  // Footer Links
+  footer_installation: { en: 'Installation Guide', fr: 'Guide d\'installation' },
+  footer_supported_devices: { en: 'Supported Devices', fr: 'Appareils supportés' },
+  footer_refund_policy: { en: 'Refund Policy', fr: 'Politique de remboursement' },
+  footer_whatsapp: { en: 'WhatsApp Support', fr: 'Support WhatsApp' },
+  footer_desc_iptv: { 
+    en: 'Your #1 source for premium IPTV worldwide. Enjoy 20,000+ channels and VOD in 4K/UHD quality.', 
+    fr: 'Votre source n°1 pour l\'IPTV premium dans le monde. Profitez de plus de 20 000 chaînes et VOD en qualité 4K/UHD.' 
+  },
+
+  // Contact Page
+  contact_get_in_touch: { en: 'Get in Touch', fr: 'Contactez-nous' },
+  contact_hear_from_you_title: { en: "We'd love to hear from you", fr: "Nous serions ravis de vous entendre" },
+  contact_desc: { 
+    en: "Have a question, suggestion, or just want to say hello? We're here to help and would love to hear from you.", 
+    fr: "Vous avez une question, une suggestion ou vous voulez simplement nous dire bonjour ? Nous sommes là pour vous aider et serions ravis de vous entendre." 
+  },
+  contact_send_message: { en: 'Send us a message', fr: 'Envoyez-nous un message' },
+  contact_form_desc: { 
+    en: "Fill out the form below and we'll get back to you as soon as possible.", 
+    fr: "Remplissez le formulaire ci-dessous et nous vous répondrons dans les plus brefs délais." 
+  },
+  contact_name_label: { en: 'Your Name', fr: 'Votre Nom' },
+  contact_email_label: { en: 'Your Email', fr: 'Votre Email' },
+  contact_subject_label: { en: 'Subject', fr: 'Sujet' },
+  contact_message_label: { en: 'Your Message', fr: 'Votre Message' },
+  contact_send_btn: { en: 'Send Message', fr: 'Envoyer le message' },
+  contact_sending_btn: { en: 'Sending...', fr: 'Envoi en cours...' },
+  contact_sent_btn: { en: 'Message Sent!', fr: 'Message envoyé !' },
+  contact_info_title: { en: 'Contact Information', fr: 'Informations de contact' },
+  contact_email_us: { en: 'Email Us', fr: 'Envoyez-nous un email' },
+  contact_call_us: { en: 'Call Us', fr: 'Appelez-nous' },
+  contact_visit_us: { en: 'Visit Us', fr: 'Visitez-nous' },
+  contact_working_hours: { en: 'Working Hours', fr: 'Heures de travail' },
+  contact_open_all_week: { en: 'Open all week', fr: 'Ouvert toute la semaine' },
+  contact_why_contact_us: { en: 'Why Contact Us?', fr: 'Pourquoi nous contacter ?' },
+  contact_faq_title: { en: 'Frequently Asked Questions', fr: 'Questions fréquemment posées' },
+  contact_faq_desc: { 
+    en: "Find quick answers to common questions about our products and services.", 
+    fr: "Trouvez des réponses rapides aux questions courantes sur nos produits et services." 
+  },
+  contact_still_questions: { en: 'Still have questions?', fr: 'Vous avez encore des questions ?' },
+  contact_still_desc: { 
+    en: "Can't find what you're looking for? Our customer support team is here to help.", 
+    fr: "Vous ne trouvez pas ce que vous cherchez ? Notre équipe de support client est là pour vous aider." 
+  },
+  contact_call_now: { en: 'Call Us Now', fr: 'Appelez-nous maintenant' },
+  contact_live_chat: { en: 'Live Chat', fr: 'Chat en direct' },
+
+  // IPTV FAQs
+  faq_q1: { en: 'How do I receive my subscription?', fr: 'Comment vais-je recevoir mon abonnement ?' },
+  faq_a1: { en: 'Your login details will be sent immediately via WhatsApp or Email after payment confirmation.', fr: 'Vos identifiants seront envoyés immédiatement via WhatsApp ou Email après confirmation du paiement.' },
+  faq_q2: { en: 'Which devices are supported?', fr: 'Quels appareils sont supportés ?' },
+  faq_a2: { en: 'We support all devices: Smart TVs, Android, iOS, Firestick, MAG, and PC.', fr: 'Nous supportons tous les appareils : Smart TVs, Android, iOS, Firestick, MAG et PC.' },
+  faq_q3: { en: 'How long does activation take?', fr: 'Combien de temps prend l\'activation ?' },
+  faq_a3: { en: 'Activation is usually instant, but it can take up to 15 minutes during peak hours.', fr: 'L\'activation est généralement instantanée, mais cela peut prendre jusqu\'à 15 minutes pendant les heures de pointe.' },
+  faq_q4: { en: 'Do you offer a free trial?', fr: 'Proposez-vous un essai gratuit ?' },
+  faq_a4: { en: 'Yes, contact us on WhatsApp to get a 24-hour free trial to test our service quality.', fr: 'Oui, contactez-nous sur WhatsApp pour obtenir un essai gratuit de 24 heures afin de tester la qualité de notre service.' },
 };
 
 interface LanguageContextType {
@@ -45,36 +106,40 @@ interface LanguageContextType {
   t: (key: string) => string;
 }
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+const LanguageContext = createContext<LanguageContextType>({
+  language: 'en',
+  setLanguage: () => {},
+  t: (key: string) => key,
+});
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>('en');
+  const [language, setLanguageState] = useState<Language>('en');
 
   useEffect(() => {
     const savedLang = localStorage.getItem('language') as Language;
-    if (savedLang) setLanguage(savedLang);
+    if (savedLang && (savedLang === 'en' || savedLang === 'fr')) {
+      setLanguageState(savedLang);
+    }
   }, []);
 
-  const handleSetLanguage = (lang: Language) => {
-    setLanguage(lang);
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
     localStorage.setItem('language', lang);
   };
 
   const t = (key: string) => {
-    return translations[key]?.[language] || key;
+    const translation = translations[key];
+    if (!translation) return key;
+    return translation[language] || translation['en'] || key;
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );
 }
 
 export function useLanguage() {
-  const context = useContext(LanguageContext);
-  if (context === undefined) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
-  }
-  return context;
+  return useContext(LanguageContext);
 }

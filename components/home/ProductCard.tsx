@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import CountdownTimer from "@/components/product/CountdownTimer";
 import { parseSaleDate } from "@/lib/dateUtils";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface Product {
   id: number;
@@ -37,6 +38,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
   const { addToCart } = useCart();
   const { formatPrice } = useCurrency();
+  const { t } = useLanguage();
 
   // Parse the first duration to get an old price if it exists
   const getOldPrice = () => {
@@ -98,14 +100,15 @@ export default function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <Card className="group overflow-hidden bg-card border-border hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+    <Card className="group overflow-hidden bg-card border-slate-100 rounded-xl sm:rounded-3xl hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
       <div className="relative overflow-hidden">
         {/* Flash Sale Countdown */}
         {product.sale_end_date && !saleEnded && (
-          <div className="absolute top-3 left-3 z-10">
+          <div className="absolute top-1 left-1 sm:top-3 sm:left-3 z-10">
             <CountdownTimer 
               endDate={product.sale_end_date} 
               onEnd={() => setSaleEnded(true)}
+              className="scale-[0.8] sm:scale-100 origin-top-left"
             />
           </div>
         )}
@@ -127,7 +130,7 @@ export default function ProductCard({ product }: { product: Product }) {
         </Button>
 
         <Link href={`/product/${product.id}`} className="block relative">
-          <div className="aspect-square overflow-hidden bg-white flex items-center justify-center p-4">
+          <div className="aspect-square overflow-hidden bg-slate-50 flex items-center justify-center p-3 sm:p-6">
             {!imageError ? (
               <Image
                 src={product.image}
@@ -152,40 +155,54 @@ export default function ProductCard({ product }: { product: Product }) {
               className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
               <Eye className="h-4 w-4 mr-2" />
-              Quick View
+              {t('quick_view')}
             </Button>
           </div>
         </Link>
       </div>
 
-      <CardContent className="p-4 space-y-3">
+      <CardContent className="p-1 sm:p-4 space-y-1 sm:space-y-3">
         <Link href={`/product/${product.id}`}>
           <div className="flex items-center justify-between mb-1">
             {product.category && (
-              <span className="text-[10px] font-bold text-primary uppercase tracking-widest block">
-                {product.category}
+              <span className="text-[7px] sm:text-[10px] font-bold text-primary uppercase tracking-tight sm:tracking-widest block truncate">
+                {product.category.replace('HIDDEN:', '')}
               </span>
             )}
             {isSaleActive && (
-              <span className="text-[9px] font-black bg-red-100 text-red-600 px-1.5 py-0.5 rounded uppercase animate-bounce">
-                Flash Sale
+              <span className="text-[8px] sm:text-[9px] font-black bg-red-100 text-red-600 px-1 py-0.5 rounded uppercase animate-bounce">
+                {t('sale')}
               </span>
             )}
           </div>
-          <h2 className="font-semibold text-foreground line-clamp-1 hover:text-primary transition-colors">
+          <h2 className="font-bold text-foreground text-[10px] sm:text-base line-clamp-1 hover:text-primary transition-colors">
             {product.name}
+            {product.duration && !product.duration.includes(',') && (
+              <span className="ml-1 text-[8px] sm:text-[10px] text-slate-400 font-medium">
+                ({product.duration.split('|')[0].trim()})
+              </span>
+            )}
           </h2>
+          {product.duration && (
+            <div className="flex flex-wrap gap-0.5 sm:gap-1.5 mt-0.5 sm:mt-1.5">
+              {product.duration.split(',').slice(0, 2).map((opt, i) => (
+                <span key={i} className="px-1 py-0.5 bg-slate-100 text-slate-500 rounded sm:rounded-md text-[8px] sm:text-[9px] font-bold border border-slate-200">
+                  {opt.split('|')[0].trim()}
+                </span>
+              ))}
+            </div>
+          )}
         </Link>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           <span className={cn(
-            "text-lg font-bold transition-colors",
+            "text-[12px] sm:text-lg font-bold transition-colors",
             isSaleActive ? "text-red-600" : "text-foreground"
           )}>
             {formatPrice(currentPrice)}
           </span>
           {strikethroughPrice && (
-            <span className="text-sm text-slate-400 line-through">
+            <span className="text-[9px] sm:text-sm text-slate-400 line-through">
               {formatPrice(strikethroughPrice)}
             </span>
           )}
@@ -193,7 +210,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
         <Button
           className={cn(
-            "w-full transition-all duration-300",
+            "w-full h-7 sm:h-10 p-1 sm:p-4 transition-all duration-300",
             justAdded
               ? "bg-green-600 text-white hover:bg-green-600"
               : isSaleActive 
@@ -204,24 +221,15 @@ export default function ProductCard({ product }: { product: Product }) {
           disabled={isAdding}
         >
           {isAdding ? (
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              Processing...
-            </div>
+            <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
           ) : justAdded ? (
-            <div className="flex items-center gap-2">
-              <Check className="h-4 w-4" />
-              Success!
-            </div>
-          ) : product.link ? (
-            <div className="flex items-center gap-2">
-              <ShoppingCart className="h-4 w-4" />
-              Order Now
-            </div>
+            <Check className="h-3 w-3 sm:h-4 sm:w-4" />
           ) : (
-            <div className="flex items-center gap-2">
-              <ShoppingCart className="h-4 w-4" />
-              Add to Cart
+            <div className="flex items-center gap-1 sm:gap-2">
+              <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">
+                {product.link ? t('order_now') : t('add_to_cart')}
+              </span>
             </div>
           )}
         </Button>

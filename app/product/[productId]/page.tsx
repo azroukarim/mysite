@@ -23,6 +23,9 @@ import {
   ShoppingCart,
   Star,
   Package,
+  Zap,
+  MonitorPlay,
+  ShieldCheck,
 } from "lucide-react";
 import CountdownTimer from "@/components/product/CountdownTimer";
 import { parseSaleDate } from "@/lib/dateUtils";
@@ -79,7 +82,8 @@ export default function Product() {
         const allProducts = await res.json();
         const idInt = parseInt(productId as string);
         const found = allProducts.find((p: any) => 
-          p.id === idInt || p.name.toLowerCase().replace(/\s+/g, '-') === (productId as string).toLowerCase()
+          (p.id === idInt || p.name.toLowerCase().replace(/\s+/g, '-') === (productId as string).toLowerCase()) &&
+          !p.category?.startsWith('HIDDEN:')
         );
         setProduct(found);
       } catch (error) {
@@ -241,9 +245,7 @@ export default function Product() {
             )}
           </div>
 
-          <p className="text-muted-foreground leading-relaxed">
-            {product.description}
-          </p>
+
 
           <Separator />
 
@@ -447,9 +449,64 @@ export default function Product() {
       </div>
     </div>
 
-    <Features />
+      {/* New Detailed Description Section */}
+      <div className="grid lg:grid-cols-3 gap-12 mb-16">
+        <div className="lg:col-span-2 space-y-8">
+          <div className="bg-white p-8 sm:p-10 rounded-[2.5rem] border border-slate-100 shadow-sm">
+            <h2 className="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
+              <div className="w-1.5 h-8 bg-primary rounded-full" />
+              Product Description
+            </h2>
+            <div className="prose prose-slate max-w-none">
+              <p className="text-slate-600 leading-relaxed text-lg whitespace-pre-wrap">
+                {product.description || "No detailed description available for this product."}
+              </p>
+            </div>
+          </div>
 
-    <RelatedProducts product={product} />
-  </div>
+
+        </div>
+
+        <div className="space-y-6">
+          <div className="bg-primary/5 p-8 rounded-[2.5rem] border border-primary/10">
+            <h3 className="text-lg font-black text-primary mb-4 flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5" />
+              Our Guarantee
+            </h3>
+            <ul className="space-y-4">
+              {[
+                "24/7 Premium Support",
+                "99.9% Server Uptime",
+                "Full Money Back Guarantee",
+                "Secure Payment Method",
+                "Antifreeze Technology"
+              ].map((item, i) => (
+                <li key={i} className="flex items-center gap-3 text-sm font-bold text-slate-700">
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          
+          <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-200">
+            <h3 className="text-lg font-black text-slate-900 mb-4">Need Help?</h3>
+            <p className="text-sm text-slate-500 mb-6 font-medium">
+              If you have any questions about this product, feel free to contact our support team.
+            </p>
+            <Button 
+              className="w-full bg-white text-slate-900 border border-slate-200 hover:bg-slate-50 font-bold"
+              onClick={() => window.open('https://wa.me/212670965351', '_blank')}
+            >
+              Contact Support
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <Features />
+
+
+    </div>
   );
 }

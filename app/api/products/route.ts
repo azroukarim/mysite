@@ -9,7 +9,7 @@ export async function GET() {
     const { data: products, error } = await supabase
       .from('products')
       .select('*')
-      .order('id', { ascending: true });
+      .order('created_at', { ascending: true });
 
     if (error) throw error;
     
@@ -43,11 +43,16 @@ export async function POST(request: Request) {
       await supabase.from('products').delete().in('id', idsToDelete);
     }
 
-    // Step 3: Sanitize data and ensure created_at is not null
-    const sanitizedProducts = products.map(p => ({
-      ...p,
-      created_at: p.created_at || new Date().toISOString()
-    }));
+    // Step 3: Sanitize data and assign sequential created_at to preserve order
+    const now = new Date();
+    const sanitizedProducts = products.map((p, index) => {
+      // Create a sequence of dates: each item is 1 second after the previous one
+      const sequentialDate = new Date(now.getTime() + index * 1000).toISOString();
+      return {
+        ...p,
+        created_at: sequentialDate
+      };
+    });
 
     // Step 4: Upsert (Update or Insert) the products
     const { error: upsertError } = await supabase

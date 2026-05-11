@@ -1,33 +1,45 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { useCurrency } from "@/context/CurrencyContext";
-import { RotateCcw, Shield, Truck } from "lucide-react";
+import { Zap, ShieldCheck, Headphones, MonitorPlay } from "lucide-react";
 
 export default function Features() {
-  const { formatPrice } = useCurrency();
   const features = [
-    { icon: Truck, title: "Free Shipping", desc: `On orders over ${formatPrice(50)}` },
-    { icon: Shield, title: "Warranty", desc: "1 year guarantee" },
-    { icon: RotateCcw, title: "Easy Returns", desc: "30-day return policy" },
+    { 
+      icon: Zap, 
+      title: "Instant Activation", 
+      desc: "Get your account details immediately after payment." 
+    },
+    { 
+      icon: MonitorPlay, 
+      title: "4K Quality", 
+      desc: "Enjoy your favorite channels in crystal clear resolution." 
+    },
+    { 
+      icon: ShieldCheck, 
+      title: "99.9% Uptime", 
+      desc: "Stable servers for a buffer-free viewing experience." 
+    },
+    { 
+      icon: Headphones, 
+      title: "24/7 Support", 
+      desc: "Our team is always here to help you with any issues." 
+    },
   ];
+
   return (
-    <Card className="mb-16">
-      <CardContent className="p-8">
-        <div className="grid md:grid-cols-3 gap-8">
-          {features.map((feature, index) => (
-            <div key={index} className="flex items-start gap-4">
-              <div className="p-3 bg-primary/10 rounded-lg">
-                <feature.icon className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h2 className="font-semibold text-foreground mb-1">
-                  {feature.title}
-                </h2>
-                <p className="text-sm text-muted-foreground">{feature.desc}</p>
-              </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+      {features.map((feature, index) => (
+        <Card key={index} className="border-none bg-slate-50/50 hover:bg-white hover:shadow-xl transition-all duration-300 group">
+          <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
+            <div className="p-3 bg-white rounded-2xl shadow-sm group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+              <feature.icon className="h-6 w-6 text-primary group-hover:text-white" />
             </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+            <h3 className="font-bold text-slate-900">{feature.title}</h3>
+            <p className="text-xs text-slate-500 font-medium leading-relaxed">
+              {feature.desc}
+            </p>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 }

@@ -34,28 +34,27 @@ export default function Footer() {
     {
       title: "Shop",
       links: [
-        { href: "/shop", label: "All Products" },
-        { href: "/shop", label: "New Arrivals" },
-        { href: "/shop", label: "Sale" },
-        { href: "/shop", label: "Featured" },
+        { href: "/#products", label: "All Products" },
+        { href: "/#products", label: "New Arrivals" },
+        { href: "/#products", label: "Sale" },
+        { href: "/#products", label: "Featured" },
       ],
     },
     {
       title: "Customer Care",
       links: [
         { href: "/contact", label: "Contact Us" },
-        { href: "/", label: "Help Center" },
-        { href: "/", label: "Shipping Info" },
-        { href: "/", label: "Returns & Exchanges" },
+        { href: "#", label: t('footer_installation') },
+        { href: "#", label: t('footer_supported_devices') },
+        { href: "#", label: t('footer_refund_policy') },
       ],
     },
     {
       title: "Company",
       links: [
         { href: "/about", label: "About Us" },
-        { href: "/", label: "Careers" },
-        { href: "/", label: "Blog" },
-        { href: "/", label: "Press" },
+        { href: "https://wa.me/212670965351", label: t('footer_whatsapp') },
+        { href: "#", label: "Blog" },
       ],
     },
     {
@@ -121,17 +120,17 @@ export default function Footer() {
                 STREAM<span className="text-blue-600 italic">TV</span>
               </Link>
               <p className="text-muted-foreground mb-6 max-w-sm">
-                The ultimate destination for premium entertainment. Best IPTV packages with 99.9% uptime and 4K quality.
+                {t('footer_desc_iptv')}
               </p>
 
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <MapPin className="h-4 w-4 text-primary" />
-                  <span>123 Fashion Street, Style City, SC 12345</span>
+                  <span>ifrane . maroc</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <Phone className="h-4 w-4 text-primary" />
-                  <span>+1 (555) 123-4567</span>
+                  <span>+212 670965351</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <Mail className="h-4 w-4 text-blue-600" />
@@ -186,9 +185,11 @@ export default function Footer() {
         <div className="py-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>{t('all_rights')}</span>
+              <Link href="/admin" className="hover:text-muted-foreground cursor-default decoration-transparent">
+                <span>{t('all_rights')}</span>
+              </Link>
             </div>
-            <p className="text-sm text-muted-foreground">{t('developed_by')} <a href="https://github.com/bloomtpl" target="_blank" rel="noopener noreferrer" className="font-bold hover:text-primary transition-colors">Bloomtpl</a> • {t('distributed_by')} <a href="https://themewagon.com" target="_blank" rel="noopener noreferrer" className="font-bold hover:text-primary transition-colors">ThemeWagon</a></p>
+            <p className="text-sm text-muted-foreground">Developed by <span className="font-bold text-slate-900">karim Abu rida</span> • enjoy</p>
           </div>
 
           <div className="flex items-center gap-6 text-sm">
@@ -210,6 +211,13 @@ export default function Footer() {
             >
               Cookies
             </Link>
+          </div>
+
+          <div className="flex items-center gap-4 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+            <div className="px-2 py-1 border border-slate-300 rounded text-[10px] font-bold">VISA</div>
+            <div className="px-2 py-1 border border-slate-300 rounded text-[10px] font-bold">MASTERCARD</div>
+            <div className="px-2 py-1 border border-slate-300 rounded text-[10px] font-bold">PAYPAL</div>
+            <div className="px-2 py-1 border border-slate-300 rounded text-[10px] font-bold">BITCOIN</div>
           </div>
         </div>
       </div>
