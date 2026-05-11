@@ -165,26 +165,7 @@ export default function Footer() {
             <p className="text-sm text-muted-foreground">Developed by <span className="font-bold text-slate-900">karim Abu rida</span> • enjoy</p>
           </div>
 
-          <div className="flex items-center gap-6 text-sm">
-            <Link
-              href="/privacy"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Privacy
-            </Link>
-            <Link
-              href="/terms"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Terms
-            </Link>
-            <Link
-              href="/cookies"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Cookies
-            </Link>
-          </div>
+
 
           <div className="flex flex-wrap items-center justify-center md:justify-end gap-2 opacity-60 hover:opacity-100 transition-all duration-500 max-w-lg">
             {['BINANCE', 'CASHPLUS', 'WAFACASH', 'REMITLY', 'MONEYGRAM', 'CIH BANK', 'BARID CASH', 'DAMAN CASH', 'WESTERN UNION', 'RIA', 'MONEYTRANS', 'SENDWAVE'].map((method) => (
