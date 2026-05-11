@@ -970,7 +970,7 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Duration Selectors in one line */}
-                <div className="flex flex-wrap gap-2 mb-2 p-2 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="flex flex-wrap gap-1 mb-2 p-1 bg-slate-50 rounded-xl border border-slate-100">
                   {PREDEFINED_DURATIONS.map(dur => (
                     <button
                       key={dur}
@@ -984,7 +984,7 @@ export default function AdminDashboard() {
                           setSelectedDurations({ ...selectedDurations, [dur]: { price: '0', oldPrice: '' } });
                         }
                       }}
-                      className={`flex-1 py-1.5 px-1 rounded-lg text-[10px] font-black transition-all border ${
+                      className={`flex-1 py-1 px-1 rounded-lg text-[9px] font-black transition-all border ${
                         selectedDurations[dur]
                           ? "bg-blue-600 text-white border-blue-600 shadow-sm"
                           : "bg-white text-slate-500 border-slate-200 hover:border-blue-300"
@@ -1215,7 +1215,7 @@ export default function AdminDashboard() {
                               <div className="space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                 <label className="text-xs font-bold text-slate-500 uppercase">Durations & Prices</label>
                                 {/* Edit Duration Selectors in one line */}
-                                <div className="flex flex-wrap gap-1.5 mb-2 p-1.5 bg-white rounded-xl border border-slate-200">
+                                <div className="flex flex-wrap gap-1 mb-2 p-1 bg-white rounded-xl border border-slate-200">
                                   {PREDEFINED_DURATIONS.map(dur => (
                                     <button
                                       key={dur}
@@ -1229,7 +1229,7 @@ export default function AdminDashboard() {
                                           setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { price: '0', oldPrice: '' } });
                                         }
                                       }}
-                                      className={`flex-1 py-1 px-0.5 rounded-lg text-[9px] font-black transition-all border ${
+                                      className={`flex-1 py-0.5 px-0.5 rounded-lg text-[8px] font-black transition-all border ${
                                         (editSelectedDurations || {})[dur]
                                           ? "bg-blue-600 text-white border-blue-600 shadow-sm"
                                           : "bg-white text-slate-500 border-slate-200 hover:border-blue-300"
