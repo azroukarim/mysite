@@ -1004,7 +1004,7 @@ export default function AdminDashboard() {
                         
                         <div className="flex items-center gap-2 flex-1">
                           <div className="relative flex-1">
-                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">€</span>
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">{symbol}</span>
                             <input 
                               type="number"
                               placeholder="Price"
@@ -1016,7 +1016,7 @@ export default function AdminDashboard() {
                           <div className="relative flex-1">
                             <input 
                               type="number"
-                              placeholder="Old Price €"
+                              placeholder={`Old Price ${symbol}`}
                               className="w-full p-1.5 bg-red-50/30 border border-red-50 rounded-lg text-[10px] outline-none text-red-400 line-through placeholder:text-red-200"
                               value={selectedDurations[dur].oldPrice}
                               onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], oldPrice: e.target.value } })}
@@ -1257,7 +1257,7 @@ export default function AdminDashboard() {
                                         <span className="text-[10px] font-black text-slate-900 w-6">{dur}</span>
                                         <div className="flex items-center gap-1.5 flex-1">
                                           <div className="relative flex-1">
-                                            <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">€</span>
+                                            <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">{symbol}</span>
                                             <input 
                                               type="number"
                                               className="w-full pl-4 pr-1 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[10px] font-bold outline-none focus:border-blue-500 focus:bg-white transition-all"
@@ -1268,7 +1268,7 @@ export default function AdminDashboard() {
                                           <div className="relative flex-1">
                                             <input 
                                               type="number"
-                                              placeholder="Old Price"
+                                              placeholder={`Old ${symbol}`}
                                               className="w-full p-1 bg-red-50/30 border border-red-50 rounded-lg text-[9px] outline-none text-red-400 line-through placeholder:text-red-200"
                                               value={(editSelectedDurations || {})[dur]?.oldPrice || ''}
                                               onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], oldPrice: e.target.value } })}
@@ -1328,12 +1328,12 @@ export default function AdminDashboard() {
                                       <div key={i} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg shadow-sm text-[11px]">
                                         <span className="font-bold text-slate-800">{label}</span>
                                         <div className="w-[1px] h-3 bg-slate-200" />
-                                        <span className="font-black text-blue-600 text-xs">
-                                          {currency === 'MAD' ? `${Math.round(Number(price) * 11)} DH` : `€${price}`}
+                                        <span className="font-black text-blue-600 text-sm">
+                                          {formatPrice(Number(price))}
                                         </span>
                                         {oldPrice && (
                                           <span className="text-slate-400 line-through decoration-red-400/50 font-medium">
-                                            {currency === 'MAD' ? `${Math.round(Number(oldPrice) * 11)} DH` : `€${oldPrice}`}
+                                            {formatPrice(Number(oldPrice))}
                                           </span>
                                         )}
                                       </div>
@@ -1480,8 +1480,8 @@ export default function AdminDashboard() {
                         <h4 className="font-bold text-slate-900 line-clamp-1">{product.name}</h4>
                       </div>
                       <div className="text-right">
-                        <span className="text-lg font-black text-slate-900">
-                          {currency === 'MAD' ? `${Math.round(product.price * 11)} DH` : `€${product.price}`}
+                        <span className="text-xl font-black text-slate-900">
+                          {formatPrice(product.price)}
                         </span>
                       </div>
                     </div>
