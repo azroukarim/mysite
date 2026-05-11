@@ -452,7 +452,7 @@ export default function Product() {
               {language === 'en' ? 'Guaranteed Safe Checkout' : 'Paiement Sécurisé Garanti'}
             </p>
             <div className="flex flex-wrap items-center justify-center gap-2 opacity-80">
-              {['BINANCE', 'CASHPLUS', 'WAFACASH', 'REMITLY', 'MONEYGRAM', 'CIH BANK', 'BARID CASH', 'DAMAN CASH', 'WESTERN UNION', 'RIA', 'MONEYTRANS', 'SENDWAVE'].map((method) => (
+              {['BINANCE', 'CASHPLUS', 'WAFACASH', 'REMITLY', 'MONEYGRAM', 'CIH BANK', 'BARID CASH', 'DAMAN CASH', 'WESTERN UNION', 'RIA MONEYTRANS', 'SENDWAVE'].map((method) => (
                 <div key={method} className="px-2 py-1 bg-slate-50 border border-slate-100 text-slate-500 rounded text-[9px] font-bold tracking-wider">
                   {method}
                 </div>

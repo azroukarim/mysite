@@ -168,7 +168,7 @@ export default function Footer() {
 
 
           <div className="flex flex-wrap items-center justify-center md:justify-end gap-2 opacity-60 hover:opacity-100 transition-all duration-500 max-w-lg">
-            {['BINANCE', 'CASHPLUS', 'WAFACASH', 'REMITLY', 'MONEYGRAM', 'CIH BANK', 'BARID CASH', 'DAMAN CASH', 'WESTERN UNION', 'RIA', 'MONEYTRANS', 'SENDWAVE'].map((method) => (
+            {['BINANCE', 'CASHPLUS', 'WAFACASH', 'REMITLY', 'MONEYGRAM', 'CIH BANK', 'BARID CASH', 'DAMAN CASH', 'WESTERN UNION', 'RIA MONEYTRANS', 'SENDWAVE'].map((method) => (
               <div key={method} className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-[9px] font-bold tracking-wider">{method}</div>
             ))}
           </div>
