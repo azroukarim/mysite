@@ -462,6 +462,7 @@ export default function Product() {
 
         </div>
       </div>
+    </div>
 
       {/* New Detailed Description Section */}
       <div className="grid lg:grid-cols-3 gap-12 mb-16">
