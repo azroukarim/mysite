@@ -1008,7 +1008,7 @@ export default function AdminDashboard() {
                             <input 
                               type="number"
                               placeholder="Price"
-                              className="w-full pl-5 pr-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-bold outline-none focus:border-blue-500 focus:bg-white transition-all"
+                              className="w-full pl-5 pr-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-blue-500 focus:bg-white transition-all"
                               value={selectedDurations[dur].price}
                               onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], price: e.target.value } })}
                             />
@@ -1260,7 +1260,7 @@ export default function AdminDashboard() {
                                             <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">{symbol}</span>
                                             <input 
                                               type="number"
-                                              className="w-full pl-4 pr-1 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[10px] font-bold outline-none focus:border-blue-500 focus:bg-white transition-all"
+                                              className="w-full pl-4 pr-1 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold outline-none focus:border-blue-500 focus:bg-white transition-all"
                                               value={(editSelectedDurations || {})[dur]?.price || ''}
                                               onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], price: e.target.value } })}
                                             />
