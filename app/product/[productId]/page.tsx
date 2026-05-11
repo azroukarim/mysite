@@ -445,7 +445,6 @@ export default function Product() {
               {showCopied ? "Link Copied!" : "Share"}
             </Button>
           </div>
-          </div>
 
           {/* Safe Payment Methods */}
           <div className="pt-6 mt-6 border-t border-slate-100">
@@ -463,7 +462,6 @@ export default function Product() {
 
         </div>
       </div>
-    </div>
 
       {/* New Detailed Description Section */}
       <div className="grid lg:grid-cols-3 gap-12 mb-16">
