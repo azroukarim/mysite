@@ -1,4 +1,5 @@
 'use client';
+// Force re-deploy for action bar updates
 
 import { useState, useEffect } from 'react';
 import { 
