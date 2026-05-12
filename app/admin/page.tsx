@@ -1601,7 +1601,12 @@ export default function AdminDashboard() {
                                           placeholder="24"
                                           className="w-full p-2 pl-6 text-sm bg-white border border-amber-200 rounded-xl outline-none text-amber-900"
                                           onChange={(e) => {
-                                            const hrs = parseInt(e.target.value);
+                                            const val = e.target.value;
+                                            if (!val) {
+                                              setEditingProduct({ ...editingProduct, sale_end_date: null });
+                                              return;
+                                            }
+                                            const hrs = parseInt(val);
                                             if (hrs > 0) {
                                               const expiry = Date.now() + hrs * 60 * 60 * 1000;
                                               setEditingProduct({ ...editingProduct, sale_end_date: expiry.toString() });
@@ -1775,24 +1780,24 @@ export default function AdminDashboard() {
                               />
                             </div>
                           ) : (
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xl font-black text-slate-900 flex items-center gap-3">
-                                  {product.name}
-                                  {product.category?.startsWith('HIDDEN:') && (
-                                    <span className="px-3 py-1 bg-slate-200 text-slate-600 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-1.5">
-                                      <EyeOff size={14} /> Hidden
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xl font-black text-slate-900 flex items-center gap-3">
+                                    {product.name}
+                                    {product.category?.startsWith('HIDDEN:') && (
+                                      <span className="px-3 py-1 bg-slate-200 text-slate-600 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-1.5">
+                                        <EyeOff size={14} /> Hidden
+                                      </span>
+                                    )}
+                                    <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-black uppercase tracking-widest">
+                                      {product.category?.replace('HIDDEN:', '') || 'PREMIUM STREAMING'}
                                     </span>
-                                  )}
-                                  <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-black uppercase tracking-widest">
-                                    {product.category?.replace('HIDDEN:', '') || 'PREMIUM STREAMING'}
                                   </span>
-                                </span>
-                                {product.sale_end_date && (() => {
-                                  const target = parseSaleDate(product.sale_end_date);
-                                  return target && target > Date.now();
-                                })() && (
-                                  <div className="w-full max-w-[320px]">
+                                </div>
+                                
+                                {/* Countdown Timer below the name */}
+                                {product.sale_end_date && (
+                                  <div className="w-fit scale-[0.8] origin-left">
                                     <CountdownTimer endDate={product.sale_end_date} />
                                   </div>
                                 )}
