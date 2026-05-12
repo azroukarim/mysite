@@ -618,18 +618,15 @@ export default function AdminDashboard() {
     // Convert EUR prices to current currency for display in edit form
     const parsed = parseDurationString(product.duration || '');
     const converted: Record<string, { price: string; normalPrice: string; oldPrice: string }> = {};
-    Object.entries(parsed).forEach(([label, v]) => {
-      // Smart Fallback for Legacy Data:
-      // If we only have 2 prices in DB (Label|P|S), v.normalPrice might be empty or same as Strike.
-      // We want: 
-      // - price (Promo)
-      // - normalPrice (Regular price after sale)
-      // - oldPrice (Fixed Strike Price)
-      converted[label] = {
-        price: fromStoragePrice(v.price),
-        normalPrice: fromStoragePrice(v.normalPrice || v.price),
-        oldPrice: fromStoragePrice(v.oldPrice || '')
-      };
+    Object.entries(parsed).forEach(([rawLabel, v]) => {
+      const label = normalizeDurationLabel(rawLabel);
+      if (label) {
+        converted[label] = {
+          price: fromStoragePrice(v.price),
+          normalPrice: fromStoragePrice(v.normalPrice || v.price),
+          oldPrice: fromStoragePrice(v.oldPrice || '')
+        };
+      }
     });
     setEditSelectedDurations(converted);
   };
