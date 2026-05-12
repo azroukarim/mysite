@@ -225,15 +225,6 @@ export default function ProductCard({ product, isReadOnly = false }: { product: 
               </div>
             )}
 
-            {/* Live Countdown Timer in Card */}
-            {isSaleActive && product.sale_end_date && (
-              <div className="mt-2 scale-[0.85] origin-left">
-                <CountdownTimer 
-                  endDate={product.sale_end_date} 
-                  onEnd={() => setSaleEnded(true)}
-                />
-              </div>
-            )}
           </div>
 
           <div className="flex items-center gap-1 sm:gap-3">

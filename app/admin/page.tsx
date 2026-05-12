@@ -11,7 +11,7 @@ import {
 import Link from 'next/link';
 import ProductCard from '@/components/home/ProductCard';
 import CountdownTimer from '@/components/product/CountdownTimer';
-import { parseSaleDate } from '@/lib/dateUtils';
+import { parseSaleDate, formatToGMTPlus1Date } from '@/lib/dateUtils';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { useCurrency } from '@/context/CurrencyContext';
@@ -1265,7 +1265,7 @@ export default function AdminDashboard() {
                         onChange={(e) => {
                           setNewProduct({
                             ...newProduct, 
-                            sale_end_date: e.target.checked ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null
+                            sale_end_date: e.target.checked ? formatToGMTPlus1Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : null
                           });
                         }}
                         className="w-3.5 h-3.5 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
@@ -1276,7 +1276,7 @@ export default function AdminDashboard() {
                         <input 
                           type="date"
                           className="flex-[2] p-1.5 text-[10px] bg-white border border-amber-200 rounded-lg outline-none text-amber-900"
-                          value={/^\d+$/.test(newProduct.sale_end_date) ? new Date(parseInt(newProduct.sale_end_date)).toISOString().split('T')[0] : newProduct.sale_end_date.split('T')[0]}
+                          value={formatToGMTPlus1Date(newProduct.sale_end_date)}
                           onChange={(e) => setNewProduct({ ...newProduct, sale_end_date: e.target.value })}
                         />
                         <div className="flex-1 relative">
@@ -1576,7 +1576,7 @@ export default function AdminDashboard() {
                                     onChange={(e) => {
                                       setEditingProduct({
                                         ...editingProduct, 
-                                        sale_end_date: e.target.checked ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null
+                                        sale_end_date: e.target.checked ? formatToGMTPlus1Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : null
                                       });
                                     }}
                                     className="w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
@@ -1589,7 +1589,7 @@ export default function AdminDashboard() {
                                       <input 
                                         type="date"
                                         className="w-full p-2 text-sm bg-white border border-amber-200 rounded-xl outline-none text-amber-900"
-                                        value={/^\d+$/.test(editingProduct.sale_end_date) ? new Date(parseInt(editingProduct.sale_end_date)).toISOString().split('T')[0] : editingProduct.sale_end_date.split('T')[0]}
+                                        value={formatToGMTPlus1Date(editingProduct.sale_end_date)}
                                         onChange={(e) => setEditingProduct({ ...editingProduct, sale_end_date: e.target.value })}
                                       />
                                     </div>
@@ -1801,8 +1801,7 @@ export default function AdminDashboard() {
                                     <CountdownTimer endDate={product.sale_end_date} />
                                   </div>
                                 )}
-                              </div>
-                              <p className="text-base text-slate-500 font-medium leading-relaxed line-clamp-2">{product.description}</p>
+                                <p className="text-base text-slate-500 font-medium leading-relaxed line-clamp-2">{product.description}</p>
                               {product.duration && (
                                 <div className="flex flex-wrap gap-1.5">
                                   {product.duration.split(',').map((opt, i) => {
@@ -1977,6 +1976,11 @@ export default function AdminDashboard() {
                       <div>
                         <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{product.category?.replace('HIDDEN:', '')}</span>
                         <h4 className="font-bold text-slate-900 line-clamp-1">{product.name}</h4>
+                        {product.sale_end_date && (
+                          <div className="mt-1 scale-[0.7] origin-left">
+                            <CountdownTimer endDate={product.sale_end_date} />
+                          </div>
+                        )}
                       </div>
                       <div className="text-right">
                         <span className="text-xl font-black text-slate-900">
