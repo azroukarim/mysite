@@ -1661,7 +1661,16 @@ export default function AdminDashboard() {
                                 {/* Price Inputs for Selected Edit Durations */}
                                 <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
                                   {Object.keys(editSelectedDurations || {}).length > 0 ? (
-                                    PREDEFINED_DURATIONS.filter(dur => (editSelectedDurations || {})[dur]).map(dur => (
+                                    Object.keys(editSelectedDurations || {})
+                                      .sort((a, b) => {
+                                        const idxA = PREDEFINED_DURATIONS.indexOf(a);
+                                        const idxB = PREDEFINED_DURATIONS.indexOf(b);
+                                        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                                        if (idxA !== -1) return -1;
+                                        if (idxB !== -1) return 1;
+                                        return a.localeCompare(b);
+                                      })
+                                      .map(dur => (
                                       <div key={dur} className="flex items-center gap-3 p-2 bg-white rounded-xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-1 duration-200">
                                         <span className="text-xs font-black text-slate-900 w-8">{dur}</span>
                                         <div className="flex items-center gap-2 flex-1">
