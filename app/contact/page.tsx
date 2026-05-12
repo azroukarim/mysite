@@ -352,35 +352,7 @@ export default function Contact() {
         </div>
       </section>
 
-      <section className="py-16 lg:py-24">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
-            <CardContent className="p-12 text-center">
-              <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-                {t('contact_still_questions')}
-              </h2>
-              <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                {t('contact_still_desc')}
-              </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button
-                    size="lg"
-                    className="bg-primary text-primary-foreground hover:bg-primary/90"
-                  >
-                    <Phone className="h-4 w-4 mr-2" />
-                    {t('contact_call_now')}
-                  </Button>
-
-                  <Button size="lg" variant="outline">
-                    <Mail className="h-4 w-4 mr-2" />
-                    {t('contact_live_chat')}
-                  </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
     </div>
   );
 }
