@@ -100,15 +100,15 @@ export default function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <Card className="group overflow-hidden bg-card border-slate-100 rounded-xl sm:rounded-3xl hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+    <Card className="group overflow-hidden bg-white border-slate-200 rounded-xl sm:rounded-3xl hover:shadow-2xl hover:border-primary/40 transition-all duration-500 hover:-translate-y-2 shadow-xl shadow-slate-200/50">
       <div className="relative overflow-hidden">
         {/* Flash Sale Countdown */}
         {product.sale_end_date && !saleEnded && (
-          <div className="absolute top-1 left-1 sm:top-3 sm:left-3 z-10">
+          <div className="absolute top-0 left-0 right-0 z-10 px-2 pt-2">
             <CountdownTimer 
               endDate={product.sale_end_date} 
               onEnd={() => setSaleEnded(true)}
-              className="scale-[0.8] sm:scale-100 origin-top-left"
+              className="w-full shadow-lg"
             />
           </div>
         )}
@@ -130,7 +130,7 @@ export default function ProductCard({ product }: { product: Product }) {
         </Button>
 
         <Link href={`/product/${product.id}`} className="block relative">
-          <div className="aspect-square overflow-hidden bg-slate-50 flex items-center justify-center p-3 sm:p-6">
+          <div className="aspect-square overflow-hidden bg-slate-50/40 flex items-center justify-center p-3 sm:p-6 group-hover:bg-slate-50/80 transition-colors duration-500">
             {!imageError ? (
               <Image
                 src={product.image}

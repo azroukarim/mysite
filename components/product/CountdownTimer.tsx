@@ -1,7 +1,6 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from 'react';
-import { Timer } from 'lucide-react';
 import { parseSaleDate } from '@/lib/dateUtils';
 import { cn } from '@/lib/utils';
 
@@ -54,25 +53,24 @@ export default function CountdownTimer({ endDate, onEnd, className }: CountdownT
   if (!timeLeft) return null;
 
   const TimeUnit = ({ value, label }: { value: number, label: string }) => (
-    <div className="flex flex-col items-center">
-      <span className="text-[9px] sm:text-[11px] font-black leading-none">{value.toString().padStart(2, '0')}</span>
-      <span className="text-[5px] sm:text-[7px] uppercase opacity-70 font-bold leading-none mt-0.5">{label}</span>
+    <div className="flex items-center gap-1">
+      <span className="text-sm sm:text-base font-black tracking-tighter">{value.toString().padStart(2, '0')}</span>
+      <span className="text-[8px] sm:text-[10px] uppercase font-bold opacity-70">{label}</span>
     </div>
   );
 
   return (
     <div className={cn(
-      "inline-flex items-center gap-1 sm:gap-2 px-1.5 sm:px-3 py-1 bg-gradient-to-r from-red-600 to-amber-500 text-white rounded-lg sm:rounded-full shadow-md border border-white/20 backdrop-blur-sm",
+      "w-full h-8 sm:h-11 flex items-center justify-center gap-3 sm:gap-4 bg-gradient-to-r from-red-600 via-red-500 to-amber-500 text-white rounded-full shadow-lg shadow-red-500/20 border border-white/20 transition-all hover:scale-[1.01]",
       className
     )}>
-      <Timer size={10} className="animate-pulse hidden sm:block" />
-      <div className="flex items-center gap-1 sm:gap-1.5">
+      <div className="flex items-center gap-2 sm:gap-3">
         <TimeUnit value={timeLeft.days} label="d" />
-        <span className="text-[8px] opacity-50 font-bold">:</span>
+        <span className="text-white/40 font-bold">:</span>
         <TimeUnit value={timeLeft.hours} label="h" />
-        <span className="text-[8px] opacity-50 font-bold">:</span>
+        <span className="text-white/40 font-bold">:</span>
         <TimeUnit value={timeLeft.minutes} label="m" />
-        <span className="text-[8px] opacity-50 font-bold">:</span>
+        <span className="text-white/40 font-bold">:</span>
         <TimeUnit value={timeLeft.seconds} label="s" />
       </div>
     </div>

@@ -215,14 +215,12 @@ export default function Product() {
           </div>
 
           {product.sale_end_date && !saleEnded && (
-            <div className="flex items-center gap-3 mb-2">
+            <div className="w-full py-4">
               <CountdownTimer 
                 endDate={product.sale_end_date} 
                 onEnd={() => setSaleEnded(true)}
+                className="shadow-2xl"
               />
-              <span className="text-[10px] font-black bg-red-600 text-white px-2 py-1 rounded-lg uppercase tracking-wider animate-pulse">
-                {t('flash_sale_active')}
-              </span>
             </div>
           )}
 

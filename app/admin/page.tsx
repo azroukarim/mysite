@@ -1314,7 +1314,7 @@ export default function AdminDashboard() {
                                   const target = parseSaleDate(product.sale_end_date);
                                   return target && target > Date.now();
                                 })() && (
-                                  <div className="scale-75 origin-left">
+                                  <div className="w-full max-w-[320px]">
                                     <CountdownTimer endDate={product.sale_end_date} />
                                   </div>
                                 )}
