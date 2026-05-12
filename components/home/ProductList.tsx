@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
+import { parseSaleDate } from "@/lib/dateUtils";
 import ProductCard from "./ProductCard";
-
 import NewsTicker from "./NewsTicker";
 
 export default function ProductList() {
@@ -36,12 +36,25 @@ export default function ProductList() {
     fetchProducts();
   }, []);
 
-  const categories = ['All', ...Array.from(new Set(products.map(p => p.category).filter(Boolean)))];
+  const isProductOnSale = (p: any) => {
+    if (!p.sale_end_date) return false;
+    const target = parseSaleDate(p.sale_end_date);
+    return target ? target > Date.now() : false;
+  };
+
+  const categories = [
+    'All', 
+    'Promos',
+    ...Array.from(new Set(products.map(p => p.category).filter(Boolean)))
+  ];
 
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    
+    if (selectedCategory === 'All') return matchesSearch;
+    if (selectedCategory === 'Promos') return matchesSearch && isProductOnSale(p);
+    
+    return matchesSearch && p.category === selectedCategory;
   });
 
   if (loading) {
@@ -85,13 +98,27 @@ export default function ProductList() {
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-6 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all duration-300 ${
+              className={`px-6 py-2.5 rounded-2xl text-xs font-black whitespace-nowrap transition-all duration-300 flex items-center gap-2 ${
                 selectedCategory === category
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
-                  : "bg-white border border-slate-100 text-slate-500 hover:border-blue-200 hover:text-blue-600 shadow-sm"
-              }`}
+                  ? (category === 'Promos' 
+                      ? "bg-gradient-to-r from-red-600 to-amber-500 text-white shadow-lg shadow-red-500/20" 
+                      : "bg-blue-600 text-white shadow-lg shadow-blue-500/20")
+                  : (category === 'Promos'
+                      ? "bg-red-50 text-red-600 border border-red-100 hover:border-red-200"
+                      : "bg-white border border-slate-100 text-slate-500 hover:border-blue-200 hover:text-blue-600")
+              } shadow-sm`}
             >
-              {category === 'All' ? (language === 'fr' ? 'Tous' : 'All') : category}
+              {category === 'Promos' && (
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                </span>
+              )}
+              {category === 'All' 
+                ? (language === 'fr' ? 'Tous' : 'All') 
+                : category === 'Promos'
+                  ? (language === 'fr' ? 'En Promos' : 'PROMOS')
+                  : category}
             </button>
           ))}
         </div>
@@ -103,7 +130,7 @@ export default function ProductList() {
             <ProductCard key={product.id} product={product} />
           ))
         ) : (
-        <div className="col-span-full flex flex-col items-center justify-center py-20 text-center bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+        <div className="col-span-full flex flex-col items-center justify-center py-20 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
           <div className="text-6xl mb-6 opacity-20">🔍</div>
           <h3 className="text-2xl font-bold text-slate-900 mb-2">
             Product Not Found

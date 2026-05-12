@@ -99,11 +99,20 @@ export default function Product() {
   const durationOptions = useMemo(() => {
     if (!product?.duration?.includes('|')) return null;
     return product.duration.split(',').map((opt: string) => {
-      const parts = opt.split('|');
-      const label = parts[0]?.trim();
-      const price = parseFloat(parts[1]?.trim());
-      const oldPrice = parts[2] ? parseFloat(parts[2].trim()) : null;
-      return { label, price, oldPrice };
+      const parts = opt.split('|').map(s => s.trim());
+      const label = parts[0];
+      
+      if (parts.length >= 4) {
+        const promo = parseFloat(parts[1]) || 0;
+        const normal = parseFloat(parts[2]) || promo;
+        const strike = parseFloat(parts[3]) || null;
+        return { label, promo, normal, strike };
+      } else {
+        const promo = parseFloat(parts[1]) || 0;
+        const strike = parseFloat(parts[2]) || null;
+        const normal = strike || promo;
+        return { label, promo, normal, strike };
+      }
     });
   }, [product?.duration]);
 
@@ -112,27 +121,22 @@ export default function Product() {
       if (durationOptions && durationOptions.length > 0) {
         setSelectedDuration(durationOptions[0]);
       } else if (product?.duration) {
-        setSelectedDuration({ label: product.duration, price: product.price });
+        // Fallback for non-multi-price strings (though unlikely now)
+        setSelectedDuration({ label: product.duration, promo: product.price, normal: product.price, strike: null });
       }
     }
   }, [product, durationOptions, selectedDuration]);
-
-  const currentPrice = selectedDuration ? selectedDuration.price : (product?.price || 0);
-  const currentOldPrice = selectedDuration?.oldPrice ?? null;
 
   const hasSaleEndDate = !!product?.sale_end_date;
   const isSaleActive = hasSaleEndDate && !saleEnded && (() => {
     const target = parseSaleDate(product.sale_end_date);
     return target ? target > Date.now() : false;
   })();
-  
-  const finalPrice = hasSaleEndDate
-    ? (isSaleActive ? currentPrice : (currentOldPrice || currentPrice))
-    : currentPrice;
 
-  const finalOldPrice = hasSaleEndDate
-    ? (isSaleActive ? currentOldPrice : null)
-    : currentOldPrice;
+  const currentPrices = selectedDuration || { promo: product?.price || 0, normal: product?.price || 0, strike: null };
+  
+  const finalPrice = isSaleActive ? currentPrices.promo : currentPrices.normal;
+  const finalOldPrice = currentPrices.strike;
 
   if (loading) {
     return (
@@ -182,17 +186,27 @@ export default function Product() {
       <ProductBreadcrumb />
 
       <div className="grid lg:grid-cols-2 gap-12 mb-16">
-        {/* Left Column: Image */}
-        <div className="space-y-4">
-          <div className="w-full max-w-[500px] mx-auto flex flex-col items-center px-4">
-            <div className="relative aspect-square sm:aspect-auto sm:h-[450px] w-full rounded-3xl overflow-hidden bg-white border border-slate-100 shadow-sm flex items-center justify-center p-6">
+        {/* Left Column: Image Gallery Style */}
+        <div className="space-y-6">
+          <div className="relative group">
+            <div className="relative aspect-square sm:h-[550px] w-full rounded-[2.5rem] overflow-hidden bg-white border border-slate-100 shadow-2xl flex items-center justify-center p-8 transition-all duration-700 hover:shadow-primary/10">
               <Image
                 src={product.image}
                 alt={product.name}
                 fill
                 priority
-                className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                className="object-contain p-8 transition-transform duration-700 group-hover:scale-105"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/5 to-transparent pointer-events-none" />
+            </div>
+            
+            {/* Trust Badges on Image */}
+            <div className="absolute bottom-6 left-6 right-6 flex gap-2 overflow-x-auto no-scrollbar">
+              {['4K QUALITY', 'INSTANT ACTIVATION', '24/7 SUPPORT'].map((tag) => (
+                <div key={tag} className="px-3 py-1.5 bg-white/90 backdrop-blur-md rounded-full text-[9px] font-black tracking-widest text-slate-900 shadow-xl whitespace-nowrap border border-white/20">
+                  {tag}
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -224,22 +238,22 @@ export default function Product() {
             </div>
           )}
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-baseline gap-4 flex-wrap">
             <span className={cn(
-              "text-4xl font-black transition-colors",
-              isSaleActive ? "text-red-600" : "text-primary"
+              "text-5xl font-black transition-all tracking-tighter",
+              isSaleActive ? "text-red-600 drop-shadow-[0_0_20px_rgba(220,38,38,0.2)]" : "text-slate-900"
             )}>
               {formatPrice(finalPrice)}
             </span>
             {finalOldPrice && (
-              <>
-                <span className="text-2xl font-semibold text-slate-400 line-through">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl font-bold text-slate-300 line-through decoration-slate-300/50">
                   {formatPrice(finalOldPrice)}
                 </span>
-                <span className="px-2 py-1 bg-red-500 text-white text-xs font-black rounded-lg">
+                <span className="px-3 py-1 bg-gradient-to-r from-red-600 to-amber-500 text-white text-xs font-black rounded-full shadow-lg shadow-red-500/20">
                   -{Math.round(((finalOldPrice - finalPrice) / finalOldPrice) * 100)}%
                 </span>
-              </>
+              </div>
             )}
           </div>
 
@@ -254,7 +268,7 @@ export default function Product() {
               </label>
               
               {durationOptions ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {durationOptions.map((opt: any, idx: number) => {
                     const isLifetime = opt.label.toLowerCase().includes('lifetime');
                     const isSelected = selectedDuration?.label === opt.label;
@@ -264,38 +278,31 @@ export default function Product() {
                         key={idx}
                         onClick={() => setSelectedDuration(opt)}
                         className={cn(
-                          "relative group px-5 py-4 rounded-2xl border-2 transition-all duration-300 flex items-center justify-between overflow-hidden",
+                          "relative group px-5 py-5 rounded-[1.5rem] border-2 transition-all duration-300 flex items-center justify-between overflow-hidden",
                           isSelected
-                            ? "border-primary bg-primary/5 shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)] scale-[1.02]"
-                            : "border-slate-200 bg-white hover:border-primary/40 hover:bg-slate-50 hover:translate-y-[-2px]"
+                            ? "border-primary bg-primary/5 shadow-xl shadow-primary/10 translate-y-[-2px]"
+                            : "border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50"
                         )}
                       >
-                        <div className="flex items-center gap-3 z-10">
+                        <div className="flex items-center gap-4 z-10">
                           <div className={cn(
-                            "p-2 rounded-xl transition-colors",
-                            isSelected ? "bg-primary text-white" : "bg-slate-100 text-slate-400 group-hover:text-primary group-hover:bg-primary/10"
+                            "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500",
+                            isSelected ? "bg-primary text-white rotate-6" : "bg-slate-50 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary"
                           )}>
                             {isLifetime ? (
-                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                <path d="M8.586 10l-2.293-2.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l7-7a1 1 0 00-1.414-1.414L8.586 10z" className={isSelected ? "hidden" : ""} />
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8V12L15 15" className={isSelected ? "hidden" : ""} />
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636a9 9 0 11-12.728 0m12.728 0L12 12m6.364-6.364l-6.364 6.364" className={!isLifetime ? "hidden" : ""} />
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12c0-2.209 1.791-4 4-4 1.105 0 2.105.448 2.828 1.172L12 10.5l.672-.672C13.395 9.112 14.395 8.664 15.5 8.664c2.209 0 4 1.791 4 4 0 2.209-1.791 4-4 4-1.105 0-2.105-.448-2.828-1.172L12 14.828l-.672.672c-.723.724-1.723 1.172-2.828 1.172-2.209 0-4-1.791-4-4z" />
-                              </svg>
+                              <Zap className="w-6 h-6 fill-current" />
                             ) : (
-                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
+                              <MonitorPlay className="w-6 h-6" />
                             )}
                           </div>
                           <div className="text-left">
                             <div className={cn(
-                              "font-bold text-sm tracking-tight",
+                              "font-black text-base tracking-tight leading-none mb-1",
                               isSelected ? "text-slate-900" : "text-slate-600"
                             )}>
                               {opt.label}
                             </div>
-                            <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">
+                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
                               {t('full_access')}
                             </div>
                           </div>
@@ -303,20 +310,18 @@ export default function Product() {
                         
                         <div className="text-right z-10">
                           <div className={cn(
-                            "text-lg font-black",
+                            "text-xl font-black tracking-tighter",
                             isSelected ? "text-primary" : "text-slate-900"
                           )}>
-                            {formatPrice(opt.price)}
+                            {formatPrice(isSaleActive ? opt.promo : opt.normal)}
                           </div>
-                          {opt.oldPrice && (
-                            <div className="text-xs text-slate-400 line-through">{formatPrice(opt.oldPrice)}</div>
+                          {opt.strike && (
+                            <div className="text-xs text-slate-300 line-through font-bold">{formatPrice(opt.strike)}</div>
                           )}
                         </div>
 
                         {isSelected && (
-                          <div className="absolute top-0 right-0 w-8 h-8 bg-primary text-white flex items-center justify-center rounded-bl-2xl shadow-md">
-                            <Check className="w-4 h-4 stroke-[3]" />
-                          </div>
+                          <div className="absolute -bottom-1 -right-1 w-12 h-12 bg-primary/10 rounded-full blur-2xl animate-pulse" />
                         )}
                       </button>
                     );
@@ -325,7 +330,7 @@ export default function Product() {
               ) : (
                 <div className="flex items-center gap-3">
                   {product.duration ? (
-                    <div className="px-6 py-3 bg-blue-50 text-blue-700 font-bold rounded-2xl border border-blue-100 flex items-center gap-2">
+                    <div className="px-6 py-3 bg-blue-50 text-blue-700 font-bold rounded-xl border border-blue-100 flex items-center gap-2">
                       <Package className="h-5 w-5" />
                       {product.duration}
                     </div>
@@ -361,7 +366,7 @@ export default function Product() {
               <Button
                 size="lg"
                 className={cn(
-                  "flex-1 h-14 text-lg font-bold transition-all duration-300 rounded-2xl shadow-lg",
+                  "flex-1 h-14 text-lg font-bold transition-all duration-300 rounded-xl shadow-lg",
                   justAdded
                     ? "bg-green-600 text-white hover:bg-green-700 shadow-green-500/20"
                     : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/20"
@@ -391,7 +396,7 @@ export default function Product() {
                 size="lg"
                 variant="outline"
                 onClick={handleBuyNow}
-                className="flex-1 h-14 text-lg font-bold rounded-2xl border-2"
+                className="flex-1 h-14 text-lg font-bold rounded-xl border-2"
               >
                 {t('buy_now')}
               </Button>
@@ -399,11 +404,15 @@ export default function Product() {
 
             <Button
               size="lg"
-              className="w-full h-14 bg-[#25D366] text-white hover:bg-[#128C7E] flex items-center justify-center gap-2 font-black text-lg rounded-2xl shadow-xl shadow-green-500/20 mt-2"
+              className="w-full h-14 bg-[#25D366] text-white hover:bg-[#128C7E] flex items-center justify-center gap-2 font-black text-lg rounded-xl shadow-xl shadow-green-500/20 mt-2"
               onClick={() => {
                 const WHATSAPP_NUMBER = "212670965351";
-                const durationText = selectedDuration ? `نوع الاشتراك: ${selectedDuration.label}` : (product.duration ? `نوع الاشتراك: ${product.duration}` : `الكمية: ${quantity}`);
-                const message = `مرحباً، أود طلب منتج: ${product.name}\n${durationText}\nالسعر الإجمالي: ${formatPrice(finalPrice * quantity)}`;
+                const typeLabel = language === 'en' ? 'Type' : "Type d'abonnement";
+                const qtyLabel = language === 'en' ? 'Quantity' : "Quantité";
+                const durationText = selectedDuration ? `${typeLabel}: ${selectedDuration.label}` : (product.duration ? `${typeLabel}: ${product.duration}` : `${qtyLabel}: ${quantity}`);
+                const greeting = language === 'en' ? 'Hello, I would like to order:' : "Bonjour, je souhaite commander le produit :";
+                const totalLabel = language === 'en' ? 'Total Price' : "Prix total :";
+                const message = `${greeting} ${product.name}\n${durationText}\n${totalLabel} ${formatPrice(finalPrice * quantity)}`;
                 const encodedMessage = encodeURIComponent(message);
                 window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
               }}
@@ -465,7 +474,7 @@ export default function Product() {
       {/* New Detailed Description Section */}
       <div className="grid lg:grid-cols-3 gap-12 mb-16">
         <div className="lg:col-span-2 space-y-8">
-          <div className="bg-white p-8 sm:p-10 rounded-[2.5rem] border border-slate-100 shadow-sm">
+          <div className="bg-white p-8 sm:p-10 rounded-2xl border border-slate-100 shadow-sm">
             <h2 className="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
               <div className="w-1.5 h-8 bg-primary rounded-full" />
               {t('product_desc_title')}
@@ -481,7 +490,7 @@ export default function Product() {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-primary/5 p-8 rounded-[2.5rem] border border-primary/10">
+          <div className="bg-primary/5 p-8 rounded-2xl border border-primary/10">
             <h3 className="text-lg font-black text-primary mb-4 flex items-center gap-2">
               <ShieldCheck className="h-5 w-5" />
               {t('our_guarantee')}
@@ -502,7 +511,7 @@ export default function Product() {
             </ul>
           </div>
           
-          <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-200">
+          <div className="bg-slate-50 p-8 rounded-2xl border border-slate-200">
             <h3 className="text-lg font-black text-slate-900 mb-4">{t('need_help')}</h3>
             <p className="text-sm text-slate-500 mb-6 font-medium">
               {t('need_help_desc')}

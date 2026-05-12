@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import { Inter, Montserrat } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
+import LayoutWrapper from "@/components/layout/LayoutWrapper";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -67,9 +68,9 @@ export default function RootLayout({
         <LanguageProvider>
           <CurrencyProvider>
             <CartProvider>
-              <Header />
-              <main className="flex-grow">{children}</main>
-              <Footer />
+              <LayoutWrapper>
+                {children}
+              </LayoutWrapper>
               <ScrollToTop />
             </CartProvider>
           </CurrencyProvider>

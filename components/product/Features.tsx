@@ -1,40 +1,43 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Zap, ShieldCheck, Headphones, MonitorPlay } from "lucide-react";
+import { Zap, ShieldCheck, Headphones, MonitorPlay, Globe, PlayCircle } from "lucide-react";
 
 export default function Features() {
   const features = [
     { 
       icon: Zap, 
-      title: "Instant Activation", 
-      desc: "Get your account details immediately after payment." 
+      title: "Activation Instantanée", 
+      desc: "Recevez vos accès par WhatsApp/Email immédiatement." 
     },
     { 
       icon: MonitorPlay, 
-      title: "4K Quality", 
-      desc: "Enjoy your favorite channels in crystal clear resolution." 
+      title: "Qualité 4K/UHD", 
+      desc: "Vivez une expérience immersive en haute résolution." 
     },
     { 
       icon: ShieldCheck, 
-      title: "99.9% Uptime", 
-      desc: "Stable servers for a buffer-free viewing experience." 
+      title: "Serveurs Stables", 
+      desc: "Garantie de 99.9% de disponibilité sans coupures." 
     },
     { 
       icon: Headphones, 
-      title: "24/7 Support", 
-      desc: "Our team is always here to help you with any issues." 
+      title: "Support 24/7", 
+      desc: "Une équipe dédiée pour vous accompagner à tout moment." 
     },
   ];
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
       {features.map((feature, index) => (
-        <Card key={index} className="border-none bg-slate-50/50 hover:bg-white hover:shadow-xl transition-all duration-300 group">
-          <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
-            <div className="p-3 bg-white rounded-2xl shadow-sm group-hover:bg-primary group-hover:text-white transition-colors duration-300">
-              <feature.icon className="h-6 w-6 text-primary group-hover:text-white" />
+        <Card key={index} className="border-none bg-white shadow-xl shadow-slate-200/50 hover:shadow-primary/10 hover:translate-y-[-5px] transition-all duration-500 group rounded-[2rem] overflow-hidden">
+          <CardContent className="p-8 flex flex-col items-center text-center space-y-4">
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full scale-0 group-hover:scale-150 transition-transform duration-700" />
+              <div className="relative p-4 bg-slate-50 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all duration-500 group-hover:rotate-[15deg]">
+                <feature.icon className="h-8 w-8 text-primary group-hover:text-white transition-colors" />
+              </div>
             </div>
-            <h3 className="font-bold text-slate-900">{feature.title}</h3>
-            <p className="text-xs text-slate-500 font-medium leading-relaxed">
+            <h3 className="font-black text-slate-900 tracking-tight">{feature.title}</h3>
+            <p className="text-xs text-slate-400 font-bold leading-relaxed uppercase tracking-widest">
               {feature.desc}
             </p>
           </CardContent>

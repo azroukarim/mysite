@@ -8,8 +8,10 @@ import {
   Eye, EyeOff, Copy, ChevronUp, ChevronDown, LayoutGrid, List, Megaphone
 } from 'lucide-react';
 import Link from 'next/link';
+import ProductCard from '@/components/home/ProductCard';
 import CountdownTimer from '@/components/product/CountdownTimer';
 import { parseSaleDate } from '@/lib/dateUtils';
+import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { useCurrency } from '@/context/CurrencyContext';
 
@@ -60,8 +62,8 @@ export default function AdminDashboard() {
   
   // State for duration checkboxes and prices
   // { label: { price, oldPrice } }
-  const [selectedDurations, setSelectedDurations] = useState<Record<string, { price: string; oldPrice: string }>>({});
-  const [editSelectedDurations, setEditSelectedDurations] = useState<Record<string, { price: string; oldPrice: string }>>({});
+  const [selectedDurations, setSelectedDurations] = useState<Record<string, { price: string; normalPrice?: string; oldPrice: string }>>({});
+  const [editSelectedDurations, setEditSelectedDurations] = useState<Record<string, { price: string; normalPrice?: string; oldPrice: string }>>({});
 
   const [status, setStatus] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -70,12 +72,18 @@ export default function AdminDashboard() {
   const [protectionEnabled, setProtectionEnabled] = useState<boolean | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [bulkSaleDate, setBulkSaleDate] = useState<string | null>(null);
+  const [bulkSaleHours, setBulkSaleHours] = useState<number>(0);
   
   const [activeTab, setActiveTab] = useState<'products' | 'news'>('products');
   const [news, setNews] = useState<string[]>([]);
   const [newsSpeed, setNewsSpeed] = useState(30);
   const [newsDirection, setNewsDirection] = useState<'left' | 'right'>('left');
   const [newNewsItem, setNewNewsItem] = useState('');
+
+  // Preview States
+  const [showAddPreview, setShowAddPreview] = useState(false);
+  const [showEditPreview, setShowEditPreview] = useState(false);
+  const [quickPreviewProduct, setQuickPreviewProduct] = useState<Product | null>(null);
 
   // Load session and products on load
   useEffect(() => {
@@ -151,12 +159,18 @@ export default function AdminDashboard() {
         // Actually, it's better to just use the base EUR value if we had it, 
         // but since we are mid-input, we'll just do a simple toggle conversion.
         const priceVal = Number(next[dur].price);
+        const normalPriceVal = next[dur].normalPrice ? Number(next[dur].normalPrice) : null;
         const oldPriceVal = next[dur].oldPrice ? Number(next[dur].oldPrice) : null;
         
         if (!isNaN(priceVal)) {
           next[dur].price = currency === 'MAD' 
             ? Math.round(priceVal * EUR_TO_MAD).toString()
             : (priceVal / EUR_TO_MAD).toFixed(2);
+        }
+        if (normalPriceVal !== null && !isNaN(normalPriceVal)) {
+          next[dur].normalPrice = currency === 'MAD'
+            ? Math.round(normalPriceVal * EUR_TO_MAD).toString()
+            : (normalPriceVal / EUR_TO_MAD).toFixed(2);
         }
         if (oldPriceVal !== null && !isNaN(oldPriceVal)) {
           next[dur].oldPrice = currency === 'MAD'
@@ -172,12 +186,18 @@ export default function AdminDashboard() {
       const next = { ...editSelectedDurations };
       Object.keys(next).forEach(dur => {
         const priceVal = Number(next[dur].price);
+        const normalPriceVal = next[dur].normalPrice ? Number(next[dur].normalPrice) : null;
         const oldPriceVal = next[dur].oldPrice ? Number(next[dur].oldPrice) : null;
         
         if (!isNaN(priceVal)) {
           next[dur].price = currency === 'MAD' 
             ? Math.round(priceVal * EUR_TO_MAD).toString()
             : (priceVal / EUR_TO_MAD).toFixed(2);
+        }
+        if (normalPriceVal !== null && !isNaN(normalPriceVal)) {
+          next[dur].normalPrice = currency === 'MAD'
+            ? Math.round(normalPriceVal * EUR_TO_MAD).toString()
+            : (normalPriceVal / EUR_TO_MAD).toFixed(2);
         }
         if (oldPriceVal !== null && !isNaN(oldPriceVal)) {
           next[dur].oldPrice = currency === 'MAD'
@@ -188,6 +208,81 @@ export default function AdminDashboard() {
       setEditSelectedDurations(next);
     }
   }, [currency]);
+
+  // Helper to render Preview Modal with Before/After Toggle
+  const PreviewModal = ({ isOpen, onClose, originalData, updatedData }: { 
+    isOpen: boolean, 
+    onClose: () => void, 
+    originalData?: Product | null, 
+    updatedData: Product 
+  }) => {
+    const [viewMode, setViewMode] = useState<'after' | 'before'>('after');
+    
+    if (!isOpen) return null;
+    
+    // If no original data (like adding new), always show updated
+    const activeData = (viewMode === 'before' && originalData) ? originalData : updatedData;
+
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="bg-white rounded-[1.5rem] p-3 shadow-2xl relative max-w-[220px] w-full animate-in zoom-in-95 duration-300 border border-slate-100 flex flex-col gap-3">
+          <button 
+            onClick={onClose}
+            className="absolute -top-3 -right-3 w-10 h-10 bg-white text-slate-900 rounded-full shadow-2xl flex items-center justify-center hover:bg-slate-50 transition-all border border-slate-100 z-10 hover:rotate-90 duration-300"
+          >
+            <X size={20} />
+          </button>
+          
+          <div className="space-y-4 text-center">
+            {/* Compact Header */}
+            <div className="flex items-center justify-center gap-2 border-b border-slate-50 pb-2">
+              <Eye size={16} className="text-blue-600" />
+              <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-tight">Aperçu</h4>
+            </div>
+
+            {/* Before/After Toggle Buttons - Only show if data is different */}
+            {originalData && updatedData && JSON.stringify(originalData) !== JSON.stringify(updatedData) && (
+              <div className="flex p-1 bg-slate-100 rounded-2xl gap-1">
+                <button 
+                  onClick={() => setViewMode('before')}
+                  className={cn(
+                    "flex-1 py-2.5 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5",
+                    viewMode === 'before' ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                  )}
+                >
+                  <ShieldAlert size={12} className={viewMode === 'before' ? "text-red-500" : "text-slate-300"} />
+                  ORIGINAL
+                </button>
+                <button 
+                  onClick={() => setViewMode('after')}
+                  className={cn(
+                    "flex-1 py-2.5 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5",
+                    viewMode === 'after' ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20" : "text-slate-400 hover:text-slate-600"
+                  )}
+                >
+                  <CheckCircle2 size={12} className={viewMode === 'after' ? "text-green-400" : "text-slate-300"} />
+                  MODIFIÉ
+                </button>
+              </div>
+            )}
+
+            {/* The Product Card Preview - Scaled for smaller modal */}
+            <div className="relative group perspective-1000 transform scale-[0.7] origin-top mb-[-70px]">
+               <ProductCard product={activeData} isReadOnly={true} />
+            </div>
+
+            <button 
+              onClick={onClose}
+              className="w-full py-2 bg-slate-900 text-white rounded-xl font-black text-[10px] hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20 active:scale-[0.98] flex items-center justify-center gap-2"
+            >
+              <Save size={14} className="text-blue-400" />
+              Retour
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -343,9 +438,21 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleSave = async (updatedProducts: Product[]) => {
+  const handleSave = async (allProducts: Product[]) => {
     setStatus('Saving...');
     try {
+      const updatedProducts = allProducts.map(p => {
+        // Ensure sale_end_date is always a valid ISO string if it's a timestamp
+        if (p.sale_end_date && /^\d+$/.test(p.sale_end_date)) {
+          try {
+            return { ...p, sale_end_date: new Date(parseInt(p.sale_end_date)).toISOString() };
+          } catch (e) {
+            return p;
+          }
+        }
+        return p;
+      });
+
       const res = await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -369,23 +476,24 @@ export default function AdminDashboard() {
   };
 
   // Helper to format duration string from object
-  const formatDurationString = (durMap: Record<string, { price: string; oldPrice: string }>) => {
+  const formatDurationString = (durMap: Record<string, { price: string; normalPrice?: string; oldPrice: string }>) => {
     return Object.entries(durMap)
       .filter(([_, v]) => v.price !== '')
-      .map(([label, v]) => v.oldPrice ? `${label}|${v.price}|${v.oldPrice}` : `${label}|${v.price}`)
+      .map(([label, v]) => `${label}|${v.price}|${v.normalPrice || v.price}|${v.oldPrice}`)
       .join(', ');
   };
 
   // Helper to parse duration string to object
-  const parseDurationString = (durStr: string): Record<string, { price: string; oldPrice: string }> => {
-    const res: Record<string, { price: string; oldPrice: string }> = {};
+  const parseDurationString = (durStr: string): Record<string, { price: string; normalPrice?: string; oldPrice: string }> => {
+    const res: Record<string, { price: string; normalPrice?: string; oldPrice: string }> = {};
     if (!durStr) return res;
     durStr.split(',').forEach(opt => {
       const parts = opt.split('|');
       const label = parts[0]?.trim();
       const price = parts[1]?.trim() || '';
-      const oldPrice = parts[2]?.trim() || '';
-      if (label && price) res[label] = { price, oldPrice };
+      const normalPrice = parts[2]?.trim() || '';
+      const oldPrice = parts[3]?.trim() || '';
+      if (label && price) res[label] = { price, normalPrice, oldPrice };
     });
     return res;
   };
@@ -407,7 +515,7 @@ export default function AdminDashboard() {
 
   const addProduct = async () => {
     if (!newProduct.name) {
-      alert('يرجى إدخال اسم المنتج');
+      alert('Veuillez entrer le nom du produit');
       return;
     }
 
@@ -415,13 +523,14 @@ export default function AdminDashboard() {
       .filter(([_, v]) => v.price !== '')
       .map(([label, v]) => {
         const p = toStoragePrice(v.price);
-        const op = v.oldPrice ? toStoragePrice(v.oldPrice) : null;
-        return op ? `${label}|${p}|${op}` : `${label}|${p}`;
+        const np = toStoragePrice(v.normalPrice || v.price);
+        const op = toStoragePrice(v.oldPrice || '0');
+        return `${label}|${p}|${np}|${op}`;
       })
       .join(', ');
 
     const firstVal = Object.values(selectedDurations)[0];
-    const mainPrice = firstVal ? toStoragePrice(firstVal.price) : 0;
+    const mainPrice = firstVal ? toStoragePrice(firstVal.normalPrice || firstVal.price) : 0;
 
     const id = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
     const productToAdd = { 
@@ -439,7 +548,7 @@ export default function AdminDashboard() {
   };
 
   const deleteProduct = (id: number) => {
-    if (confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
       const updated = products.filter((p) => p.id !== id);
       handleSave(updated);
     }
@@ -486,11 +595,18 @@ export default function AdminDashboard() {
     setEditingProduct({ ...product });
     // Convert EUR prices to current currency for display in edit form
     const parsed = parseDurationString(product.duration || '');
-    const converted: Record<string, { price: string; oldPrice: string }> = {};
+    const converted: Record<string, { price: string; normalPrice: string; oldPrice: string }> = {};
     Object.entries(parsed).forEach(([label, v]) => {
+      // Smart Fallback for Legacy Data:
+      // If we only have 2 prices in DB (Label|P|S), v.normalPrice might be empty or same as Strike.
+      // We want: 
+      // - price (Promo)
+      // - normalPrice (Regular price after sale)
+      // - oldPrice (Fixed Strike Price)
       converted[label] = {
         price: fromStoragePrice(v.price),
-        oldPrice: v.oldPrice ? fromStoragePrice(v.oldPrice) : ''
+        normalPrice: fromStoragePrice(v.normalPrice || v.price),
+        oldPrice: fromStoragePrice(v.oldPrice || '')
       };
     });
     setEditSelectedDurations(converted);
@@ -503,13 +619,14 @@ export default function AdminDashboard() {
       .filter(([_, v]) => v.price !== '')
       .map(([label, v]) => {
         const p = toStoragePrice(v.price);
-        const op = v.oldPrice ? toStoragePrice(v.oldPrice) : null;
-        return op ? `${label}|${p}|${op}` : `${label}|${p}`;
+        const np = toStoragePrice(v.normalPrice || v.price);
+        const op = toStoragePrice(v.oldPrice || '0');
+        return `${label}|${p}|${np}|${op}`;
       })
       .join(', ');
 
     const firstVal = Object.values(editSelectedDurations || {})[0];
-    const mainPrice = firstVal ? toStoragePrice(firstVal.price) : editingProduct.price;
+    const mainPrice = firstVal ? toStoragePrice(firstVal.normalPrice || firstVal.price) : (editingProduct?.price || 0);
 
     const updated = products.map((p) => 
       p.id === editingProduct.id ? { ...editingProduct, price: mainPrice, duration: durationStr } : p
@@ -524,14 +641,32 @@ export default function AdminDashboard() {
   const applyBulkSaleDate = async () => {
     if (selectedIds.length === 0) return;
     
+    const expiry = bulkSaleHours > 0 
+      ? (Date.now() + bulkSaleHours * 60 * 60 * 1000).toString()
+      : bulkSaleDate;
+
     const updated = products.map(p => 
-      selectedIds.includes(p.id) ? { ...p, sale_end_date: bulkSaleDate } : p
+      selectedIds.includes(p.id) ? { ...p, sale_end_date: expiry } : p
     );
     
     const success = await handleSave(updated);
     if (success) {
       setSelectedIds([]);
       setBulkSaleDate(null);
+      setBulkSaleHours(0);
+    }
+  };
+
+  const applyBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer ${selectedIds.length} produits ?`)) return;
+    
+    const updated = products.filter(p => !selectedIds.includes(p.id));
+    const success = await handleSave(updated);
+    if (success) {
+      setSelectedIds([]);
+      setStatus(`${updated.length} items restants`);
+      setTimeout(() => setStatus(''), 2000);
     }
   };
 
@@ -583,13 +718,24 @@ export default function AdminDashboard() {
   };
 
   // Filter products without automatic sorting to allow manual order
-  const adminCategories = ['All', ...Array.from(new Set(products.map(p => p.category?.replace('HIDDEN:', '')).filter(Boolean)))];
+  const adminCategories = [
+    'All', 
+    'Promos',
+    ...Array.from(new Set(products.map(p => p.category?.replace('HIDDEN:', '')).filter(Boolean)))
+  ];
 
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
     const cleanCategory = p.category?.replace('HIDDEN:', '') || '';
-    const matchesCategory = selectedCategory === 'All' || cleanCategory === selectedCategory;
-    return matchesSearch && matchesCategory;
+    
+    if (selectedCategory === 'All') return matchesSearch;
+    if (selectedCategory === 'Promos') {
+      if (!p.sale_end_date) return false;
+      const target = parseSaleDate(p.sale_end_date);
+      return matchesSearch && target && target > Date.now();
+    }
+    
+    return matchesSearch && cleanCategory === selectedCategory;
   });
 
   if (!isLoggedIn) {
@@ -597,7 +743,7 @@ export default function AdminDashboard() {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="max-w-md w-full">
           <div className="text-center mb-10">
-            <div className="inline-flex p-4 bg-blue-600 text-white rounded-3xl shadow-xl shadow-blue-500/20 mb-6">
+            <div className="inline-flex p-4 bg-blue-600 text-white rounded-xl shadow-xl shadow-blue-500/20 mb-6">
               <Lock size={32} />
             </div>
             <h1 className="text-3xl font-black text-slate-900 mb-2">Admin Portal</h1>
@@ -614,7 +760,7 @@ export default function AdminDashboard() {
                       type="email"
                       required
                       placeholder="admin@example.com"
-                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                     />
@@ -636,7 +782,7 @@ export default function AdminDashboard() {
                     type="password"
                     required
                     placeholder="••••••••"
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
@@ -644,7 +790,7 @@ export default function AdminDashboard() {
 
                 <button
                   type="submit"
-                  className="w-full py-5 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-[0.98]"
+                  className="w-full py-5 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-[0.98]"
                 >
                   Enter Dashboard
                 </button>
@@ -662,7 +808,7 @@ export default function AdminDashboard() {
                         type="password"
                         required
                         placeholder="••••••••"
-                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
+                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                       />
@@ -673,7 +819,7 @@ export default function AdminDashboard() {
                         type="password"
                         required
                         placeholder="••••••••"
-                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
+                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                       />
@@ -687,7 +833,7 @@ export default function AdminDashboard() {
                       type="email"
                       required
                       placeholder="admin@example.com"
-                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
                       value={resetEmail}
                       onChange={(e) => setResetEmail(e.target.value)}
                     />
@@ -697,7 +843,7 @@ export default function AdminDashboard() {
                 <div className="flex flex-col gap-3">
                   <button
                     type="submit"
-                    className="w-full py-5 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg"
+                    className="w-full py-5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg"
                   >
                     {isRecoveryFlow ? 'Update Password' : 'Send Reset Link'}
                   </button>
@@ -740,13 +886,30 @@ export default function AdminDashboard() {
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             {status && (
               <span className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-full text-sm font-medium border border-emerald-100">
                 <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                 {status}
               </span>
             )}
+
+            {/* Currency Switcher */}
+            <div className="hidden sm:flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200">
+              <button 
+                onClick={() => setCurrency('EUR')}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${currency === 'EUR' ? 'bg-white text-blue-600 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                EUR
+              </button>
+              <button 
+                onClick={() => setCurrency('MAD')}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${currency === 'MAD' ? 'bg-white text-blue-600 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                MAD
+              </button>
+            </div>
+
             <button 
               onClick={toggleProtection}
               disabled={protectionEnabled === null}
@@ -791,7 +954,7 @@ export default function AdminDashboard() {
             </div>
             
             {/* Tabs */}
-            <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-2xl w-fit border border-slate-200">
+            <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-xl w-fit border border-slate-200">
               <button 
                 onClick={() => setActiveTab('products')}
                 className={`flex items-center gap-2 px-8 py-3.5 rounded-xl text-base font-black transition-all ${
@@ -823,7 +986,7 @@ export default function AdminDashboard() {
               <input 
                 type="text" 
                 placeholder="Search packages..."
-                className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none shadow-sm"
+                className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl outline-none shadow-sm"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -834,9 +997,9 @@ export default function AdminDashboard() {
         {activeTab === 'news' ? (
           /* News Management View */
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm max-w-4xl mx-auto">
+            <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm max-w-4xl mx-auto">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-blue-600 text-white rounded-2xl shadow-lg shadow-blue-500/20">
+                <div className="p-3 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20">
                   <Megaphone size={24} />
                 </div>
                 <div>
@@ -849,14 +1012,14 @@ export default function AdminDashboard() {
                 <input 
                   type="text"
                   placeholder="Type a new announcement here..."
-                  className="flex-1 px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
+                  className="flex-1 px-5 py-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
                   value={newNewsItem}
                   onChange={(e) => setNewNewsItem(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && addNewsItem()}
                 />
                 <button 
                   onClick={addNewsItem}
-                  className="px-8 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg active:scale-95"
+                  className="px-8 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg active:scale-95"
                 >
                   Post News
                 </button>
@@ -876,7 +1039,7 @@ export default function AdminDashboard() {
                         <button
                           key={s.value}
                           onClick={() => handleSaveNews(news, s.value, newsDirection)}
-                          className={`flex-1 py-3 px-4 rounded-2xl text-xs font-bold transition-all border ${
+                          className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold transition-all border ${
                             newsSpeed === s.value
                             ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200'
                             : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300 hover:bg-blue-50'
@@ -898,7 +1061,7 @@ export default function AdminDashboard() {
                         <button
                           key={d.value}
                           onClick={() => handleSaveNews(news, newsSpeed, d.value as 'left' | 'right')}
-                          className={`flex-1 py-3 px-4 rounded-2xl text-xs font-bold transition-all border ${
+                          className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold transition-all border ${
                             newsDirection === d.value
                             ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200'
                             : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300 hover:bg-blue-50'
@@ -914,13 +1077,13 @@ export default function AdminDashboard() {
                 <div className="space-y-4">
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Current Announcements</h4>
                   {news.length === 0 ? (
-                    <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-400">
+                    <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-400">
                       No active news. Post something above to show it on your store!
                     </div>
                   ) : (
                     <div className="grid gap-3">
                       {news.map((item, i) => (
-                        <div key={i} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:border-blue-200 hover:shadow-md transition-all group">
+                        <div key={i} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-xl hover:border-blue-200 hover:shadow-md transition-all group">
                           <div className="flex items-center gap-4">
                             <div className="w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-600 rounded-full text-xs font-bold">
                               {i + 1}
@@ -942,11 +1105,11 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <div className="bg-blue-600 p-8 rounded-3xl text-white max-w-4xl mx-auto shadow-2xl shadow-blue-500/20 relative overflow-hidden">
+            <div className="bg-blue-600 p-8 rounded-xl text-white max-w-4xl mx-auto shadow-2xl shadow-blue-500/20 relative overflow-hidden">
               <div className="relative z-10">
                 <h3 className="text-xl font-bold mb-2">Live Preview</h3>
                 <p className="text-blue-100 text-sm mb-6">This is how your news ticker looks on the home page:</p>
-                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
+                <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
                    <div className="w-full py-2 overflow-hidden whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="px-3 bg-white text-blue-600 text-[10px] font-bold uppercase tracking-widest rounded-lg mr-4">
@@ -967,7 +1130,7 @@ export default function AdminDashboard() {
           </div>
         ) : (
           <div className="space-y-10">
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20">
                 <Plus size={20} />
@@ -975,68 +1138,145 @@ export default function AdminDashboard() {
               <h3 className="text-xl font-black">Create New Package</h3>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Package Name</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Premium 4K Streaming"
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all text-base font-bold"
-                    value={newProduct.name}
-                    onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                  />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+              {/* Left Column: Details */}
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Package Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Premium 4K Streaming"
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition-all text-base font-bold"
+                      value={newProduct.name}
+                      onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Category</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. PREMIUM STREAMING..."
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition-all text-base font-bold"
+                      value={newProduct.category?.replace('HIDDEN:', '') || ''}
+                      onChange={(e) => {
+                        const isCurrentlyHidden = newProduct.category?.startsWith('HIDDEN:');
+                        setNewProduct({ 
+                          ...newProduct, 
+                          category: isCurrentlyHidden ? `HIDDEN:${e.target.value}` : e.target.value 
+                        });
+                      }}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Image URL</label>
+                    <input
+                      type="text"
+                      placeholder="https://..."
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition-all text-base font-bold"
+                      value={newProduct.image}
+                      onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Description</label>
+                    <textarea
+                      placeholder="Package details..."
+                      rows={4}
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition-all resize-none text-base font-medium"
+                      value={newProduct.description}
+                      onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Category</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. PREMIUM STREAMING..."
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all text-base font-bold"
-                    value={newProduct.category?.replace('HIDDEN:', '') || ''}
-                    onChange={(e) => {
-                      const isCurrentlyHidden = newProduct.category?.startsWith('HIDDEN:');
-                      setNewProduct({ 
-                        ...newProduct, 
-                        category: isCurrentlyHidden ? `HIDDEN:${e.target.value}` : e.target.value 
-                      });
-                    }}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Image URL</label>
-                  <input
-                    type="text"
-                    placeholder="https://..."
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all text-base font-bold"
-                    value={newProduct.image}
-                    onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={addProduct}
+                    className="flex-[2] bg-blue-600 hover:bg-blue-700 text-white font-black py-4.5 rounded-xl transition-all shadow-xl shadow-blue-500/20 active:scale-[0.98] flex items-center justify-center gap-3 text-lg"
+                  >
+                    <CheckCircle2 size={22} />
+                    Add Package
+                  </button>
+                  <button
+                    onClick={() => setShowAddPreview(true)}
+                    className="flex-1 bg-white hover:bg-slate-50 text-blue-600 border-2 border-blue-100 font-black py-4.5 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-3 text-lg"
+                  >
+                    <Eye size={22} />
+                    Aperçu
+                  </button>
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <PreviewModal 
+                isOpen={showAddPreview} 
+                onClose={() => setShowAddPreview(false)} 
+                updatedData={{
+                  ...newProduct,
+                  price: Number(toStoragePrice(Object.values(selectedDurations)[0]?.normalPrice || Object.values(selectedDurations)[0]?.price || newProduct.price?.toString() || '0')),
+                  duration: Object.entries(selectedDurations)
+                    .filter(([_, v]) => v.price !== '')
+                    .map(([label, v]) => {
+                      const p = toStoragePrice(v.price);
+                      const np = toStoragePrice(v.normalPrice || v.price);
+                      const op = toStoragePrice(v.oldPrice || '0');
+                      return `${label}|${p}|${np}|${op}`;
+                    })
+                    .join(', ')
+                } as Product} 
+              />
+
+              {/* Right Column: Pricing */}
+              <div className="space-y-6">
                 <label className="text-xs font-black text-slate-500 uppercase tracking-widest block ml-1">Durations & Prices</label>
                 
                 <div className="grid grid-cols-2 gap-2 mb-2">
-                  <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Tag size={14} className="text-amber-600" />
-                      <span className="text-[10px] font-bold text-amber-700 uppercase tracking-tight">Sale</span>
+                  <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Tag size={14} className="text-amber-600" />
+                        <span className="text-[10px] font-bold text-amber-700 uppercase tracking-tight">Sale</span>
+                      </div>
+                      <input 
+                        type="checkbox"
+                        checked={!!newProduct.sale_end_date}
+                        onChange={(e) => {
+                          setNewProduct({
+                            ...newProduct, 
+                            sale_end_date: e.target.checked ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null
+                          });
+                        }}
+                        className="w-3.5 h-3.5 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                      />
                     </div>
-                    <input 
-                      type="checkbox"
-                      checked={!!newProduct.sale_end_date}
-                      onChange={(e) => {
-                        setNewProduct({
-                          ...newProduct, 
-                          sale_end_date: e.target.checked ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null
-                        });
-                      }}
-                      className="w-3.5 h-3.5 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
-                    />
+                    {newProduct.sale_end_date && (
+                      <div className="flex gap-2">
+                        <input 
+                          type="date"
+                          className="flex-[2] p-1.5 text-[10px] bg-white border border-amber-200 rounded-lg outline-none text-amber-900"
+                          value={/^\d+$/.test(newProduct.sale_end_date) ? new Date(parseInt(newProduct.sale_end_date)).toISOString().split('T')[0] : newProduct.sale_end_date.split('T')[0]}
+                          onChange={(e) => setNewProduct({ ...newProduct, sale_end_date: e.target.value })}
+                        />
+                        <div className="flex-1 relative">
+                          <input 
+                            type="number"
+                            placeholder="Hours"
+                            className="w-full p-1.5 pl-5 text-[10px] bg-white border border-amber-200 rounded-lg outline-none text-amber-900"
+                            onChange={(e) => {
+                              const hrs = parseInt(e.target.value);
+                              if (hrs > 0) {
+                                const expiry = Date.now() + hrs * 60 * 60 * 1000;
+                                setNewProduct({ ...newProduct, sale_end_date: expiry.toString() });
+                              }
+                            }}
+                          />
+                          <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[8px] font-bold text-amber-600">H:</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
@@ -1090,62 +1330,63 @@ export default function AdminDashboard() {
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
                   {Object.keys(selectedDurations).length > 0 ? (
                     PREDEFINED_DURATIONS.filter(dur => selectedDurations[dur]).map(dur => (
-                      <div key={dur} className="flex items-center gap-4 p-3 bg-white rounded-2xl border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-1 duration-200">
+                      <div key={dur} className="flex items-center gap-4 p-3 bg-white rounded-xl border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-1 duration-200">
                         <span className="text-sm font-black text-slate-900 w-10">{dur}</span>
                         
                         <div className="flex items-center gap-3 flex-1">
-                          <div className="relative flex-1">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-black">{symbol}</span>
-                            <input 
-                              type="number"
-                              placeholder="Price"
-                              className="w-full pl-7 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:border-blue-500 focus:bg-white transition-all"
-                              value={selectedDurations[dur].price}
-                              onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], price: e.target.value } })}
-                            />
+                          <div className="flex-1 space-y-1">
+                            <label className="text-[10px] font-black text-blue-600 uppercase tracking-tighter ml-1">Promo Price</label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-black">{symbol}</span>
+                              <input 
+                                type="number"
+                                placeholder="0.00"
+                                className="w-full pl-7 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:border-blue-500 focus:bg-white transition-all"
+                                value={selectedDurations[dur].price}
+                                onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], price: e.target.value } })}
+                              />
+                            </div>
                           </div>
-                          <div className="relative flex-1">
-                            <input 
-                              type="number"
-                              placeholder={`Old ${symbol}`}
-                              className="w-full p-2.5 bg-red-50/30 border border-red-50 rounded-xl text-sm font-bold outline-none text-red-400 line-through placeholder:text-red-300"
-                              value={selectedDurations[dur].oldPrice}
-                              onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], oldPrice: e.target.value } })}
-                            />
+                          <div className="flex-1 space-y-1">
+                            <label className="text-[10px] font-black text-slate-900 uppercase tracking-tighter ml-1">Normal Price</label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-black">{symbol}</span>
+                              <input 
+                                type="number"
+                                placeholder="0.00"
+                                className="w-full pl-7 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:border-blue-500 focus:bg-white transition-all"
+                                value={selectedDurations[dur].normalPrice || ''}
+                                onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], normalPrice: e.target.value } })}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <label className="text-[10px] font-black text-red-500 uppercase tracking-tighter ml-1">Strike Price</label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-black">{symbol}</span>
+                              <input 
+                                type="number"
+                                placeholder="0.00"
+                                className="w-full pl-7 pr-3 py-2.5 bg-red-50/20 border border-red-100 rounded-xl text-sm font-bold outline-none text-red-400 line-through placeholder:text-red-300"
+                                value={selectedDurations[dur].oldPrice}
+                                onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], oldPrice: e.target.value } })}
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-6 border border-dashed border-slate-200 rounded-2xl text-xs font-black text-slate-400 uppercase tracking-widest">
+                    <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl text-xs font-black text-slate-400 uppercase tracking-widest">
                       Select durations above
                     </div>
                   )}
                 </div>
-              </div>
 
-              <div className="space-y-4 flex flex-col">
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Description</label>
-                  <textarea
-                    placeholder="Package details..."
-                    rows={4}
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all resize-none text-base font-medium"
-                    value={newProduct.description}
-                    onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                  />
-                </div>
-
-                <button
-                  onClick={addProduct}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4.5 rounded-2xl transition-all shadow-xl shadow-blue-500/20 active:scale-[0.98] flex items-center justify-center gap-3 text-lg mt-auto"
-                >
-                  <CheckCircle2 size={22} />
-                  Add New Package
-                </button>
               </div>
             </div>
-          </div>
+            </div>
+
 
           <div className="flex items-center justify-between gap-4 flex-wrap">
             {/* View Switcher */}
@@ -1172,20 +1413,30 @@ export default function AdminDashboard() {
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
-                  className={`px-6 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-300 border ${
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-300 border flex items-center gap-2 ${
                     selectedCategory === category
-                      ? "bg-slate-900 text-white border-slate-900 shadow-md"
-                      : "bg-white border-slate-200 text-slate-500 hover:border-slate-900 hover:text-slate-900 shadow-sm"
+                      ? (category === 'Promos' 
+                          ? "bg-gradient-to-r from-red-600 to-amber-500 text-white border-red-600 shadow-md" 
+                          : "bg-slate-900 text-white border-slate-900 shadow-md")
+                      : (category === 'Promos'
+                          ? "bg-red-50 text-red-600 border-red-100 hover:border-red-600"
+                          : "bg-white border-slate-200 text-slate-500 hover:border-slate-900 hover:text-slate-900 shadow-sm")
                   }`}
                 >
-                  {category === 'All' ? 'ALL PRODUCTS' : category.toUpperCase()}
+                  {category === 'Promos' && (
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    </span>
+                  )}
+                  {category === 'All' ? 'ALL PRODUCTS' : category === 'Promos' ? 'EN PROMOS' : category.toUpperCase()}
                 </button>
               ))}
             </div>
           </div>
 
           {viewMode === 'list' ? (
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-slate-900 text-white rounded-xl">
@@ -1239,7 +1490,7 @@ export default function AdminDashboard() {
                           />
                         </td>
                         <td className="px-6 py-5 align-top">
-                          <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-slate-50 border border-slate-200 shadow-inner">
+                          <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-slate-50 border border-slate-200 shadow-inner">
                             <img 
                               src={editingProduct?.id === product.id ? editingProduct.image : product.image} 
                               alt="" 
@@ -1248,9 +1499,10 @@ export default function AdminDashboard() {
                             />
                           </div>
                         </td>
-                        <td className="px-6 py-5 align-top">
+                        <td colSpan={4} className="px-6 py-8 align-top bg-slate-50/50">
                           {editingProduct?.id === product.id ? (
-                            <div className="space-y-3">
+                            <div className="flex flex-col gap-6 max-w-4xl mx-auto">
+                            <div className="space-y-6">
                               <div className="space-y-1">
                                 <label className="text-xs font-bold text-slate-400 uppercase ml-1">Package Name</label>
                                 <input
@@ -1287,32 +1539,58 @@ export default function AdminDashboard() {
                                 />
                               </div>
 
-                              <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 space-y-3">
+                              <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 space-y-3">
                                 <div className="flex items-center justify-between">
-                                  <label className="text-xs font-bold text-amber-700 uppercase tracking-wider">Flash Sale Countdown</label>
+                                  <div className="flex items-center gap-2 text-amber-600">
+                                    <Tag size={16} />
+                                    <span className="text-[11px] font-black uppercase tracking-widest">Flash Sale</span>
+                                  </div>
                                   <input 
                                     type="checkbox"
                                     checked={!!editingProduct.sale_end_date}
                                     onChange={(e) => {
                                       setEditingProduct({
                                         ...editingProduct, 
-                                        sale_end_date: e.target.checked ? new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null
+                                        sale_end_date: e.target.checked ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null
                                       });
                                     }}
                                     className="w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
                                   />
                                 </div>
                                 {editingProduct.sale_end_date && (
-                                  <input 
-                                    type="date"
-                                    className="w-full p-2 text-sm bg-white border border-amber-200 rounded-xl outline-none text-amber-900"
-                                    value={editingProduct.sale_end_date.split('T')[0]}
-                                    onChange={(e) => setEditingProduct({ ...editingProduct, sale_end_date: e.target.value })}
-                                  />
+                                  <div className="flex gap-2">
+                                    <div className="flex-[2] space-y-1">
+                                      <label className="text-[8px] font-black text-amber-700 uppercase ml-1">Expiry Date</label>
+                                      <input 
+                                        type="date"
+                                        className="w-full p-2 text-sm bg-white border border-amber-200 rounded-xl outline-none text-amber-900"
+                                        value={/^\d+$/.test(editingProduct.sale_end_date) ? new Date(parseInt(editingProduct.sale_end_date)).toISOString().split('T')[0] : editingProduct.sale_end_date.split('T')[0]}
+                                        onChange={(e) => setEditingProduct({ ...editingProduct, sale_end_date: e.target.value })}
+                                      />
+                                    </div>
+                                    <div className="flex-1 space-y-1">
+                                      <label className="text-[8px] font-black text-amber-700 uppercase ml-1">Quick Hours</label>
+                                      <div className="relative">
+                                        <input 
+                                          type="number"
+                                          placeholder="24"
+                                          className="w-full p-2 pl-6 text-sm bg-white border border-amber-200 rounded-xl outline-none text-amber-900"
+                                          onChange={(e) => {
+                                            const hrs = parseInt(e.target.value);
+                                            if (hrs > 0) {
+                                              const expiry = Date.now() + hrs * 60 * 60 * 1000;
+                                              setEditingProduct({ ...editingProduct, sale_end_date: expiry.toString() });
+                                            }
+                                          }}
+                                        />
+                                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-amber-600">H:</span>
+                                      </div>
+                                    </div>
+                                  </div>
                                 )}
                               </div>
                               
-                              <div className="space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                              <div className="space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-100">
                                 <label className="text-xs font-bold text-slate-500 uppercase">Durations & Prices</label>
                                 {/* Edit Duration Selectors in one line */}
                                 <div className="flex flex-wrap gap-1.5 mb-2 p-1.5 bg-white rounded-xl border border-slate-200">
@@ -1321,12 +1599,24 @@ export default function AdminDashboard() {
                                       key={dur}
                                       type="button"
                                       onClick={() => {
-                                        if ((editSelectedDurations || {})[dur]) {
-                                          const next = { ...(editSelectedDurations || {}) };
+                                        const currentMap = editSelectedDurations || {};
+                                        if (currentMap[dur]) {
+                                          const next = { ...currentMap };
                                           delete next[dur];
                                           setEditSelectedDurations(next);
                                         } else {
-                                          setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { price: '0', oldPrice: '' } });
+                                          // Check if this duration exists in the original product data
+                                          const originalParsed = parseDurationString(product.duration || '');
+                                          const original = originalParsed[dur];
+                                          
+                                          setEditSelectedDurations({ 
+                                            ...currentMap, 
+                                            [dur]: original ? {
+                                              price: fromStoragePrice(original.price),
+                                              normalPrice: fromStoragePrice(original.normalPrice || original.price),
+                                              oldPrice: fromStoragePrice(original.oldPrice || '')
+                                            } : { price: '0', normalPrice: '0', oldPrice: '' }
+                                          });
                                         }
                                       }}
                                       className={`flex-1 py-1 px-0.5 rounded-lg text-[10px] font-black transition-all border ${
@@ -1347,23 +1637,43 @@ export default function AdminDashboard() {
                                       <div key={dur} className="flex items-center gap-3 p-2 bg-white rounded-xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-1 duration-200">
                                         <span className="text-xs font-black text-slate-900 w-8">{dur}</span>
                                         <div className="flex items-center gap-2 flex-1">
-                                          <div className="relative flex-1">
-                                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-black">{symbol}</span>
-                                            <input 
-                                              type="number"
-                                              className="w-full pl-6 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black outline-none focus:border-blue-500 focus:bg-white transition-all"
-                                              value={(editSelectedDurations || {})[dur]?.price || ''}
-                                              onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], price: e.target.value } })}
-                                            />
+                                          <div className="flex-1 space-y-1">
+                                            <label className="text-[9px] font-black text-blue-600 uppercase tracking-tighter ml-1">Promo</label>
+                                            <div className="relative">
+                                              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-black">{symbol}</span>
+                                              <input 
+                                                type="number"
+                                                placeholder="0.0"
+                                                className="w-full pl-6 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black outline-none focus:border-blue-500 focus:bg-white transition-all"
+                                                value={(editSelectedDurations || {})[dur]?.price || ''}
+                                                onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], price: e.target.value } })}
+                                              />
+                                            </div>
                                           </div>
-                                          <div className="relative flex-1">
-                                            <input 
-                                              type="number"
-                                              placeholder={`Old ${symbol}`}
-                                              className="w-full p-2 bg-red-50/30 border border-red-50 rounded-lg text-xs font-bold outline-none text-red-400 line-through placeholder:text-red-200"
-                                              value={(editSelectedDurations || {})[dur]?.oldPrice || ''}
-                                              onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], oldPrice: e.target.value } })}
-                                            />
+                                          <div className="flex-1 space-y-1">
+                                            <label className="text-[9px] font-black text-slate-900 uppercase tracking-tighter ml-1">Normal</label>
+                                            <div className="relative">
+                                              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-black">{symbol}</span>
+                                              <input 
+                                                type="number"
+                                                placeholder="0.0"
+                                                className="w-full pl-6 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black outline-none focus:border-blue-500 focus:bg-white transition-all"
+                                                value={(editSelectedDurations || {})[dur]?.normalPrice || ''}
+                                                onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], normalPrice: e.target.value } })}
+                                              />
+                                            </div>
+                                          </div>
+                                          <div className="flex-1 space-y-1">
+                                            <label className="text-[9px] font-black text-red-400 uppercase tracking-tighter ml-1">Strike</label>
+                                            <div className="relative">
+                                              <input 
+                                                type="number"
+                                                placeholder="0.0"
+                                                className="w-full p-2 bg-red-50/20 border border-red-50 rounded-lg text-xs font-bold outline-none text-red-400 line-through placeholder:text-red-200"
+                                                value={(editSelectedDurations || {})[dur]?.oldPrice || ''}
+                                                onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], oldPrice: e.target.value } })}
+                                              />
+                                            </div>
                                           </div>
                                         </div>
                                       </div>
@@ -1382,10 +1692,41 @@ export default function AdminDashboard() {
                                 value={editingProduct.description}
                                 onChange={(e) => setEditingProduct({...editingProduct, description: e.target.value})}
                               />
-                              <div className="flex gap-2">
-                                <button onClick={saveEdit} className="flex-1 bg-emerald-600 text-white py-2 rounded-xl text-sm font-bold">Save Changes</button>
-                                <button onClick={() => setEditingProduct(null)} className="flex-1 bg-slate-100 text-slate-600 py-2 rounded-xl text-sm font-bold">Cancel</button>
+                                <div className="flex gap-2 pt-4">
+                                  <button onClick={saveEdit} className="flex-[2] bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl text-base font-black transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
+                                    <Save size={18} />
+                                    Save Changes
+                                  </button>
+                                  <button 
+                                    onClick={() => setShowEditPreview(true)}
+                                    className="flex-1 bg-white hover:bg-slate-50 text-blue-600 border-2 border-blue-100 py-4 rounded-xl text-base font-black transition-all flex items-center justify-center gap-2"
+                                  >
+                                    <Eye size={18} />
+                                    Aperçu
+                                  </button>
+                                  <button onClick={() => setEditingProduct(null)} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-4 rounded-xl text-base font-black transition-all">Cancel</button>
+                                </div>
                               </div>
+
+                              {/* Edit Preview Modal */}
+                              <PreviewModal 
+                                isOpen={showEditPreview} 
+                                onClose={() => setShowEditPreview(false)} 
+                                originalData={products.find(p => p.id === editingProduct.id)}
+                                updatedData={{
+                                  ...editingProduct,
+                                  price: Number(toStoragePrice(Object.values(editSelectedDurations || {})[0]?.normalPrice || Object.values(editSelectedDurations || {})[0]?.price || editingProduct.price.toString())),
+                                  duration: Object.entries(editSelectedDurations || {})
+                                    .filter(([_, v]) => v.price !== '')
+                                    .map(([label, v]) => {
+                                      const p = toStoragePrice(v.price);
+                                      const np = toStoragePrice(v.normalPrice || v.price);
+                                      const op = toStoragePrice(v.oldPrice || '0');
+                                      return `${label}|${p}|${np}|${op}`;
+                                    })
+                                    .join(', ')
+                                } as Product}
+                              />
                             </div>
                           ) : (
                             <div className="space-y-2">
@@ -1414,17 +1755,22 @@ export default function AdminDashboard() {
                               {product.duration && (
                                 <div className="flex flex-wrap gap-1.5">
                                   {product.duration.split(',').map((opt, i) => {
-                                    const [label, price, oldPrice] = opt.split('|').map(s => s.trim());
+                                    const [label, promo, normal, strike] = opt.split('|').map(s => s.trim());
                                     return (
                                       <div key={i} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg shadow-sm text-[11px]">
                                         <span className="font-bold text-slate-800">{label}</span>
                                         <div className="w-[1px] h-3 bg-slate-200" />
-                                        <span className="font-black text-blue-600 text-sm">
-                                          {formatPrice(Number(price))}
+                                        <span className="font-black text-blue-600 text-sm" title="Promo Price">
+                                          {formatPrice(Number(promo))}
                                         </span>
-                                        {oldPrice && (
-                                          <span className="text-slate-400 line-through decoration-red-400/50 font-medium">
-                                            {formatPrice(Number(oldPrice))}
+                                        {normal && normal !== promo && (
+                                          <span className="text-slate-900 font-bold" title="Normal Price">
+                                            ({formatPrice(Number(normal))})
+                                          </span>
+                                        )}
+                                        {strike && Number(strike) > 0 && (
+                                          <span className="text-slate-400 line-through decoration-red-400/50 font-medium" title="Strike Price">
+                                            {formatPrice(Number(strike))}
                                           </span>
                                         )}
                                       </div>
@@ -1459,13 +1805,22 @@ export default function AdminDashboard() {
                                 </button>
                               </div>
 
+                              {/* Aperçu Quick Button */}
+                              <button 
+                                onClick={() => setQuickPreviewProduct(product)}
+                                className="p-2.5 bg-amber-50 text-amber-600 hover:bg-amber-100 rounded-xl border border-amber-200 transition-all"
+                                title="Aperçu rapide"
+                              >
+                                <Eye size={20} />
+                              </button>
+
                               {/* Visibility Toggle */}
                               <button 
                                 onClick={() => toggleVisibility(product.id)} 
-                                className="p-2.5 bg-amber-50 text-amber-600 hover:bg-amber-100 rounded-xl border border-amber-200 transition-all" 
+                                className="p-2.5 bg-slate-50 text-slate-600 hover:bg-slate-200 rounded-xl border border-slate-200 transition-all" 
                                 title={product.category?.startsWith('HIDDEN:') ? "Show Product" : "Hide Product"}
                               >
-                                {product.category?.startsWith('HIDDEN:') ? <EyeOff size={20} /> : <Eye size={20} />}
+                                {product.category?.startsWith('HIDDEN:') ? <EyeOff size={20} /> : <Eye size={20} className="opacity-40" />}
                               </button>
 
                               {/* Duplicate Button */}
@@ -1537,7 +1892,7 @@ export default function AdminDashboard() {
           ) : (
             <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
               {filteredProducts.map((product) => (
-                <div key={product.id} className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden group hover:shadow-lg transition-all flex flex-col">
+                <div key={product.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden group hover:shadow-lg transition-all flex flex-col">
                   <div className="relative aspect-square overflow-hidden bg-slate-50 p-10 flex items-center justify-center">
                     <img 
                       src={product.image} 
@@ -1572,7 +1927,15 @@ export default function AdminDashboard() {
                       </div>
                       <div className="text-right">
                         <span className="text-xl font-black text-slate-900">
-                          {formatPrice(product.price)}
+                          {(() => {
+                            const target = product.sale_end_date ? parseSaleDate(product.sale_end_date) : null;
+                            const isSale = target && target > Date.now();
+                            if (!product.duration) return formatPrice(product.price);
+                            const firstOpt = product.duration.split(',')[0];
+                            const [_, promo, normal] = firstOpt.split('|').map((s: string) => s.trim());
+                            const displayPrice = isSale ? Number(promo) : Number(normal || promo);
+                            return formatPrice(displayPrice);
+                          })()}
                         </span>
                       </div>
                     </div>
@@ -1602,7 +1965,7 @@ export default function AdminDashboard() {
       {/* Bulk Action Bar */}
       {selectedIds.length > 0 && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-8 duration-300">
-          <div className="bg-slate-900 text-white px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-6 border border-slate-800 backdrop-blur-md">
+          <div className="bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-6 border border-slate-800 backdrop-blur-md">
             <div className="flex items-center gap-3 pr-6 border-r border-slate-700">
               <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center font-bold text-sm">
                 {selectedIds.length}
@@ -1616,18 +1979,36 @@ export default function AdminDashboard() {
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Set Flash Sale</span>
               </div>
               
-              <div className="flex items-center gap-2 bg-slate-800 p-1.5 rounded-2xl border border-slate-700">
+              <div className="flex items-center gap-2 bg-slate-800 p-1.5 rounded-xl border border-slate-700">
                 <input 
                   type="date" 
                   className="bg-transparent border-none outline-none text-sm px-2 text-white [color-scheme:dark]"
                   value={bulkSaleDate || ''}
-                  onChange={(e) => setBulkSaleDate(e.target.value)}
+                  onChange={(e) => {
+                    setBulkSaleDate(e.target.value);
+                    setBulkSaleHours(0);
+                  }}
                 />
+                <div className="w-[1px] h-4 bg-slate-700 mx-1" />
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] font-black text-blue-400 ml-1">OR</span>
+                  <input 
+                    type="number" 
+                    placeholder="Hrs"
+                    className="bg-slate-900 border border-slate-700 rounded-lg outline-none text-[10px] px-2 py-1 text-white w-12"
+                    value={bulkSaleHours || ''}
+                    onChange={(e) => {
+                      setBulkSaleHours(parseInt(e.target.value) || 0);
+                      if (parseInt(e.target.value) > 0) setBulkSaleDate(null);
+                    }}
+                  />
+                </div>
                 <button 
                   onClick={applyBulkSaleDate}
-                  disabled={!bulkSaleDate}
-                  className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:hover:bg-blue-600 px-4 py-1.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2"
+                  disabled={!bulkSaleDate && !bulkSaleHours}
+                  className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:hover:bg-blue-600 px-4 py-1.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20"
                 >
+                  <CheckCircle2 size={16} />
                   Apply to All
                 </button>
               </div>
@@ -1663,6 +2044,14 @@ export default function AdminDashboard() {
               <div className="h-6 w-[1px] bg-slate-700 mx-2" />
 
               <button 
+                onClick={applyBulkDelete}
+                className="p-2 hover:bg-red-900/40 rounded-xl text-slate-400 hover:text-red-500 transition-colors"
+                title="Bulk Delete"
+              >
+                <Trash2 size={20} />
+              </button>
+
+              <button 
                 onClick={() => setSelectedIds([])}
                 className="p-2 hover:bg-slate-800 rounded-xl text-slate-400 hover:text-white transition-colors"
                 title="Clear selection"
@@ -1672,6 +2061,15 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+      )}
+      {/* Quick Preview Modal */}
+      {quickPreviewProduct && (
+        <PreviewModal 
+          isOpen={!!quickPreviewProduct}
+          onClose={() => setQuickPreviewProduct(null)}
+          originalData={quickPreviewProduct}
+          updatedData={quickPreviewProduct}
+        />
       )}
     </div>
   );

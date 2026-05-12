@@ -1,58 +1,61 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { useCurrency } from "@/context/CurrencyContext";
-import products from "@/data/products.json";
-import { Product } from "@/types/product";
-import Image from "next/image";
+import { useLanguage } from "@/context/LanguageContext";
+import ProductCard from "@/components/home/ProductCard";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 interface RelatedProductsProps {
-  product: Product;
+  product: any;
 }
 
 export default function RelatedProducts({ product }: RelatedProductsProps) {
-  const { formatPrice } = useCurrency();
+  const { t } = useLanguage();
+  const [related, setRelated] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          const filtered = data
+            .filter((p: any) => 
+              p.id !== product.id && 
+              p.category === product.category && 
+              !p.category?.startsWith('HIDDEN:')
+            )
+            .slice(0, 4);
+          
+          // Fallback if no products in same category
+          if (filtered.length === 0) {
+            setRelated(data.filter((p: any) => p.id !== product.id && !p.category?.startsWith('HIDDEN:')).slice(0, 4));
+          } else {
+            setRelated(filtered);
+          }
+        }
+      });
+  }, [product.id, product.category]);
+
+  if (related.length === 0) return null;
+
   return (
-    <div>
+    <div className="mb-16">
       <div className="flex items-center justify-between mb-8">
-        <h2 className="text-2xl font-bold text-foreground">Related Products</h2>
-        <Button variant="ghost" asChild>
-          <Link href="/" className="text-primary hover:text-primary/80">
-            View All
+        <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
+          <div className="w-1.5 h-8 bg-primary rounded-full" />
+          {t('related_products')}
+        </h2>
+        <Button variant="ghost" asChild className="font-bold text-primary hover:bg-primary/5">
+          <Link href="/">
+            {t('view_all') || 'View All'}
           </Link>
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {products
-          .filter((p) => p.id !== product.id && !p.category?.startsWith('HIDDEN:'))
-          .slice(0, 4)
-          .map((relatedProduct) => (
-            <Card
-              key={relatedProduct.id}
-              className="group overflow-hidden hover:shadow-lg transition-all duration-300"
-            >
-              <Link href={`/product/${relatedProduct.id}`}>
-                <div className="aspect-square overflow-hidden bg-muted">
-                  <Image
-                    src={relatedProduct.image}
-                    alt={relatedProduct.name}
-                    width={400}
-                    height={400}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-                <CardContent className="p-4">
-                  <h3 className="font-semibold text-foreground line-clamp-1 mb-2">
-                    {relatedProduct.name}
-                  </h3>
-                  <p className="text-lg font-bold text-primary">
-                    {formatPrice(relatedProduct.price)}
-                  </p>
-                </CardContent>
-              </Link>
-            </Card>
-          ))}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        {related.map((item) => (
+          <ProductCard key={item.id} product={item} />
+        ))}
       </div>
     </div>
   );
