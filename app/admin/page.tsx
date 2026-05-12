@@ -67,6 +67,35 @@ export default function AdminDashboard() {
   const [editSelectedDurations, setEditSelectedDurations] = useState<Record<string, { price: string; normalPrice?: string; oldPrice: string }>>({});
 
   const [status, setStatus] = useState('');
+
+  const CopyableDescription = ({ text }: { text: string }) => {
+    if (!text) return null;
+    const parts = text.split(/(\d{4,})/g); // Match 4 or more digits
+    return (
+      <>
+        {parts.map((part, i) => {
+          if (/^\d{4,}$/.test(part)) {
+            return (
+              <span 
+                key={i} 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigator.clipboard.writeText(part);
+                  setStatus(`Copied: ${part}`);
+                  setTimeout(() => setStatus(''), 2000);
+                }}
+                className="cursor-pointer font-black text-blue-600 hover:text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded-md border border-blue-100 transition-colors inline-flex items-center gap-1"
+                title="Click to copy code"
+              >
+                {part}
+              </span>
+            );
+          }
+          return part;
+        })}
+      </>
+    );
+  };
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -1822,7 +1851,9 @@ export default function AdminDashboard() {
                                     <CountdownTimer endDate={product.sale_end_date} />
                                   </div>
                                 )}
-                                <p className="text-base text-slate-500 font-medium leading-relaxed line-clamp-2">{product.description}</p>
+                                 <p className="text-base text-slate-500 font-medium leading-relaxed line-clamp-2">
+                                  <CopyableDescription text={product.description} />
+                                </p>
                               {product.duration && (
                                 <div className="flex flex-wrap gap-1.5">
                                   {product.duration.split(',').map((opt, i) => {
@@ -2017,7 +2048,9 @@ export default function AdminDashboard() {
                         </span>
                       </div>
                     </div>
-                    <p className="text-xs text-slate-500 line-clamp-2">{product.description}</p>
+                     <p className="text-xs text-slate-500 line-clamp-2">
+                      <CopyableDescription text={product.description} />
+                    </p>
                   </div>
                   <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1">
