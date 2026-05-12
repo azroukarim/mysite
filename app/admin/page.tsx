@@ -1257,6 +1257,20 @@ export default function AdminDashboard() {
                 News Ticker
               </button>
             </div>
+
+            {activeTab === 'products' && (
+              <div className="animate-in fade-in slide-in-from-top-2 duration-500">
+                <button 
+                  onClick={() => setIsAddProductModalOpen(true)}
+                  className="px-6 py-3.5 bg-blue-600 text-white font-black rounded-xl shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all hover:translate-y-[-2px] active:scale-95 flex items-center gap-2.5 text-sm"
+                >
+                  <div className="bg-white/20 p-1 rounded-lg">
+                      <Plus size={16} />
+                  </div>
+                  Create New Package
+                </button>
+              </div>
+            )}
           </div>
           
           {activeTab === 'products' && (
@@ -1409,18 +1423,6 @@ export default function AdminDashboard() {
           </div>
         ) : (
           <div className="space-y-10">
-            <div className="flex justify-end mb-2">
-               <button 
-                 onClick={() => setIsAddProductModalOpen(true)}
-                 className="px-6 py-3.5 bg-blue-600 text-white font-black rounded-xl shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all hover:translate-y-[-2px] active:scale-95 flex items-center gap-2.5 text-sm"
-               >
-                 <div className="bg-white/20 p-1 rounded-lg">
-                    <Plus size={16} />
-                 </div>
-                 Create New Package
-               </button>
-            </div>
-
             <AddProductModal 
               isOpen={isAddProductModalOpen} 
               onClose={() => setIsAddProductModalOpen(false)} 
