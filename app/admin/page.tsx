@@ -1673,26 +1673,26 @@ export default function AdminDashboard() {
                                         <div className="flex items-center gap-2 flex-1">
                                           <div className="flex-1 space-y-1">
                                             <label className="text-[9px] font-black text-blue-600 uppercase tracking-tighter ml-1">Promo</label>
-                                            <div className="relative">
-                                              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-black">{symbol}</span>
-                                              <input 
-                                                type="number"
-                                                placeholder="0.0"
-                                                className="w-full pl-6 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black outline-none focus:border-blue-500 focus:bg-white transition-all"
-                                                onFocus={(e) => e.target.select()}
-                                                value={(editSelectedDurations || {})[dur]?.price || ''}
-                                                onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], price: e.target.value } })}
-                                              />
-                                            </div>
+                                            <div className="relative group">
+                                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-black pointer-events-none group-focus-within:text-blue-500 transition-colors">{symbol}</span>
+                                               <input 
+                                                 type="number"
+                                                 placeholder="0.0"
+                                                 className="w-full pl-11 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black outline-none focus:border-blue-500 focus:bg-white transition-all"
+                                                 onFocus={(e) => e.target.select()}
+                                                 value={(editSelectedDurations || {})[dur]?.price || ''}
+                                                 onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], price: e.target.value } })}
+                                               />
+                                             </div>
                                           </div>
                                           <div className="flex-1 space-y-1">
                                             <label className="text-[9px] font-black text-slate-900 uppercase tracking-tighter ml-1">Normal</label>
-                                            <div className="relative">
-                                              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-black">{symbol}</span>
+                                            <div className="relative group">
+                                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-black pointer-events-none group-focus-within:text-blue-500 transition-colors">{symbol}</span>
                                               <input 
                                                 type="number"
                                                 placeholder="0.0"
-                                                className="w-full pl-6 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black outline-none focus:border-blue-500 focus:bg-white transition-all"
+                                                className="w-full pl-11 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black outline-none focus:border-blue-500 focus:bg-white transition-all"
                                                 onFocus={(e) => e.target.select()}
                                                 value={(editSelectedDurations || {})[dur]?.normalPrice || ''}
                                                 onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], normalPrice: e.target.value } })}
@@ -1701,16 +1701,17 @@ export default function AdminDashboard() {
                                           </div>
                                           <div className="flex-1 space-y-1">
                                             <label className="text-[9px] font-black text-red-400 uppercase tracking-tighter ml-1">Strike</label>
-                                            <div className="relative">
-                                              <input 
-                                                type="number"
-                                                placeholder="0.0"
-                                                className="w-full p-2 bg-red-50/20 border border-red-50 rounded-lg text-xs font-bold outline-none text-red-400 line-through placeholder:text-red-200"
-                                                onFocus={(e) => e.target.select()}
-                                                value={(editSelectedDurations || {})[dur]?.oldPrice || ''}
-                                                onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], oldPrice: e.target.value } })}
-                                              />
-                                            </div>
+                                            <div className="relative group">
+                                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-[10px] font-black pointer-events-none transition-colors">{symbol}</span>
+                                               <input 
+                                                 type="number"
+                                                 placeholder="0.0"
+                                                 className="w-full pl-11 pr-2 py-2 bg-red-50/20 border border-red-50 rounded-lg text-xs font-bold outline-none text-red-400 line-through placeholder:text-red-200"
+                                                 onFocus={(e) => e.target.select()}
+                                                 value={(editSelectedDurations || {})[dur]?.oldPrice || ''}
+                                                 onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], oldPrice: e.target.value } })}
+                                               />
+                                             </div>
                                           </div>
                                         </div>
                                       </div>
