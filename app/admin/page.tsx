@@ -1533,6 +1533,7 @@ export default function AdminDashboard() {
                                 <input
                                   type="text"
                                   className="w-full p-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-blue-500"
+                                  onFocus={(e) => e.target.select()}
                                   value={editingProduct.name}
                                   onChange={(e) => setEditingProduct({...editingProduct, name: e.target.value})}
                                 />
@@ -1543,6 +1544,7 @@ export default function AdminDashboard() {
                                   type="text"
                                   placeholder="Category"
                                   className="w-full p-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-blue-500"
+                                  onFocus={(e) => e.target.select()}
                                   value={editingProduct.category?.replace('HIDDEN:', '') || ''}
                                   onChange={(e) => {
                                     const isCurrentlyHidden = editingProduct.category?.startsWith('HIDDEN:');
@@ -1559,6 +1561,7 @@ export default function AdminDashboard() {
                                   type="text"
                                   placeholder="Image URL (Logo)"
                                   className="w-full p-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-blue-500"
+                                  onFocus={(e) => e.target.select()}
                                   value={editingProduct.image || ''}
                                   onChange={(e) => setEditingProduct({...editingProduct, image: e.target.value})}
                                 />
@@ -1717,6 +1720,7 @@ export default function AdminDashboard() {
                               <textarea
                                 className="w-full p-3 text-xs border border-slate-200 rounded-xl outline-none resize-none"
                                 rows={3}
+                                onFocus={(e) => e.target.select()}
                                 value={editingProduct.description}
                                 onChange={(e) => setEditingProduct({...editingProduct, description: e.target.value})}
                               />
