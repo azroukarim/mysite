@@ -1409,24 +1409,16 @@ export default function AdminDashboard() {
           </div>
         ) : (
           <div className="space-y-10">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white p-8 rounded-2xl border border-slate-200 shadow-xl overflow-hidden relative group">
-               <div className="flex items-center gap-6 relative z-10">
-                  <div className="p-4 bg-blue-600 text-white rounded-2xl shadow-2xl shadow-blue-500/40 group-hover:scale-110 transition-transform duration-500">
-                    <Plus size={32} />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-black text-slate-900">Catalogue Management</h3>
-                    <p className="text-slate-500 font-medium">Add new packages or manage your existing streaming offers.</p>
-                  </div>
-               </div>
+            <div className="flex justify-end mb-2">
                <button 
                  onClick={() => setIsAddProductModalOpen(true)}
-                 className="px-10 py-5 bg-blue-600 text-white font-black rounded-2xl shadow-2xl shadow-blue-500/20 hover:bg-blue-700 transition-all hover:translate-y-[-4px] active:scale-95 flex items-center gap-3 text-lg relative z-10"
+                 className="px-6 py-3.5 bg-blue-600 text-white font-black rounded-xl shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all hover:translate-y-[-2px] active:scale-95 flex items-center gap-2.5 text-sm"
                >
-                 <Package size={24} />
+                 <div className="bg-white/20 p-1 rounded-lg">
+                    <Plus size={16} />
+                 </div>
                  Create New Package
                </button>
-               <div className="absolute right-0 top-0 w-64 h-64 bg-blue-50 rounded-full -translate-y-1/2 translate-x-1/2 opacity-50" />
             </div>
 
             <AddProductModal 
