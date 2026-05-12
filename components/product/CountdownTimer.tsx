@@ -53,24 +53,24 @@ export default function CountdownTimer({ endDate, onEnd, className }: CountdownT
   if (!timeLeft) return null;
 
   const TimeUnit = ({ value, label }: { value: number, label: string }) => (
-    <div className="flex items-center gap-1">
-      <span className="text-sm sm:text-base font-black tracking-tighter">{value.toString().padStart(2, '0')}</span>
-      <span className="text-[8px] sm:text-[10px] uppercase font-bold opacity-70">{label}</span>
+    <div className="flex flex-col sm:flex-row items-center leading-none">
+      <span className="text-[10px] sm:text-base font-black tracking-tighter text-white">{value.toString().padStart(2, '0')}</span>
+      <span className="text-[5px] sm:text-[10px] uppercase font-bold opacity-80 text-white/80">{label}</span>
     </div>
   );
 
   return (
     <div className={cn(
-      "w-full h-8 sm:h-11 flex items-center justify-center gap-3 sm:gap-4 bg-gradient-to-r from-red-600 via-red-500 to-amber-500 text-white rounded-full shadow-lg shadow-red-500/20 border border-white/20 transition-all hover:scale-[1.01]",
+      "mx-auto w-fit px-2 h-6 sm:h-11 flex items-center justify-center bg-gradient-to-r from-red-600 via-red-500 to-amber-500 text-white rounded-md sm:rounded-full shadow-lg shadow-red-500/20 border border-white/20 transition-all",
       className
     )}>
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-1 sm:gap-3">
         <TimeUnit value={timeLeft.days} label="d" />
-        <span className="text-white/40 font-bold">:</span>
+        <span className="text-white font-black text-[10px] sm:text-base">/</span>
         <TimeUnit value={timeLeft.hours} label="h" />
-        <span className="text-white/40 font-bold">:</span>
+        <span className="text-white font-black text-[10px] sm:text-base">/</span>
         <TimeUnit value={timeLeft.minutes} label="m" />
-        <span className="text-white/40 font-bold">:</span>
+        <span className="text-white font-black text-[10px] sm:text-base">/</span>
         <TimeUnit value={timeLeft.seconds} label="s" />
       </div>
     </div>

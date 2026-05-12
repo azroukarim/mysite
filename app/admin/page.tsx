@@ -35,6 +35,8 @@ const CATEGORIES = [
   'RESELLER PANELS'
 ];
 
+const EUR_TO_MAD = 11; // Ensure consistency with context
+
 export default function AdminDashboard() {
   const { currency, symbol, formatPrice, convertPrice } = useCurrency();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -137,6 +139,55 @@ export default function AdminDashboard() {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Update existing input values when currency changes to keep them consistent
+  useEffect(() => {
+    // For New Product Durations
+    if (Object.keys(selectedDurations).length > 0) {
+      const next = { ...selectedDurations };
+      Object.keys(next).forEach(dur => {
+        // We need to know the PREVIOUS currency to convert correctly
+        // But since we only have two, we can infer: if current is MAD, previous was EUR, and vice versa.
+        // Actually, it's better to just use the base EUR value if we had it, 
+        // but since we are mid-input, we'll just do a simple toggle conversion.
+        const priceVal = Number(next[dur].price);
+        const oldPriceVal = next[dur].oldPrice ? Number(next[dur].oldPrice) : null;
+        
+        if (!isNaN(priceVal)) {
+          next[dur].price = currency === 'MAD' 
+            ? Math.round(priceVal * EUR_TO_MAD).toString()
+            : (priceVal / EUR_TO_MAD).toFixed(2);
+        }
+        if (oldPriceVal !== null && !isNaN(oldPriceVal)) {
+          next[dur].oldPrice = currency === 'MAD'
+            ? Math.round(oldPriceVal * EUR_TO_MAD).toString()
+            : (oldPriceVal / EUR_TO_MAD).toFixed(2);
+        }
+      });
+      setSelectedDurations(next);
+    }
+
+    // For Editing Product Durations
+    if (editingProduct && Object.keys(editSelectedDurations).length > 0) {
+      const next = { ...editSelectedDurations };
+      Object.keys(next).forEach(dur => {
+        const priceVal = Number(next[dur].price);
+        const oldPriceVal = next[dur].oldPrice ? Number(next[dur].oldPrice) : null;
+        
+        if (!isNaN(priceVal)) {
+          next[dur].price = currency === 'MAD' 
+            ? Math.round(priceVal * EUR_TO_MAD).toString()
+            : (priceVal / EUR_TO_MAD).toFixed(2);
+        }
+        if (oldPriceVal !== null && !isNaN(oldPriceVal)) {
+          next[dur].oldPrice = currency === 'MAD'
+            ? Math.round(oldPriceVal * EUR_TO_MAD).toString()
+            : (oldPriceVal / EUR_TO_MAD).toFixed(2);
+        }
+      });
+      setEditSelectedDurations(next);
+    }
+  }, [currency]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -339,21 +390,44 @@ export default function AdminDashboard() {
     return res;
   };
 
+  // Price conversion helpers
+  const fromStoragePrice = (eurPrice: number | string): string => {
+    const val = Number(eurPrice);
+    if (isNaN(val)) return '0';
+    if (currency === 'MAD') return Math.round(val * EUR_TO_MAD).toString();
+    return val.toString();
+  };
+
+  const toStoragePrice = (displayPrice: string): number => {
+    const val = Number(displayPrice);
+    if (isNaN(val)) return 0;
+    if (currency === 'MAD') return val / EUR_TO_MAD;
+    return val;
+  };
+
   const addProduct = async () => {
     if (!newProduct.name) {
       alert('يرجى إدخال اسم المنتج');
       return;
     }
 
-    const durationStr = formatDurationString(selectedDurations);
+    const durationStr = Object.entries(selectedDurations)
+      .filter(([_, v]) => v.price !== '')
+      .map(([label, v]) => {
+        const p = toStoragePrice(v.price);
+        const op = v.oldPrice ? toStoragePrice(v.oldPrice) : null;
+        return op ? `${label}|${p}|${op}` : `${label}|${p}`;
+      })
+      .join(', ');
+
     const firstVal = Object.values(selectedDurations)[0];
-    const mainPrice = firstVal?.price || "0";
+    const mainPrice = firstVal ? toStoragePrice(firstVal.price) : 0;
 
     const id = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
     const productToAdd = { 
       ...newProduct, 
       id, 
-      price: Number(mainPrice),
+      price: mainPrice,
       duration: durationStr
     } as Product;
     
@@ -410,18 +484,35 @@ export default function AdminDashboard() {
 
   const startEdit = (product: Product) => {
     setEditingProduct({ ...product });
-    setEditSelectedDurations(parseDurationString(product.duration || ''));
+    // Convert EUR prices to current currency for display in edit form
+    const parsed = parseDurationString(product.duration || '');
+    const converted: Record<string, { price: string; oldPrice: string }> = {};
+    Object.entries(parsed).forEach(([label, v]) => {
+      converted[label] = {
+        price: fromStoragePrice(v.price),
+        oldPrice: v.oldPrice ? fromStoragePrice(v.oldPrice) : ''
+      };
+    });
+    setEditSelectedDurations(converted);
   };
 
   const saveEdit = async () => {
     if (!editingProduct) return;
     
-    const durationStr = formatDurationString(editSelectedDurations || {});
+    const durationStr = Object.entries(editSelectedDurations || {})
+      .filter(([_, v]) => v.price !== '')
+      .map(([label, v]) => {
+        const p = toStoragePrice(v.price);
+        const op = v.oldPrice ? toStoragePrice(v.oldPrice) : null;
+        return op ? `${label}|${p}|${op}` : `${label}|${p}`;
+      })
+      .join(', ');
+
     const firstVal = Object.values(editSelectedDurations || {})[0];
-    const mainPrice = firstVal?.price || editingProduct.price.toString();
+    const mainPrice = firstVal ? toStoragePrice(firstVal.price) : editingProduct.price;
 
     const updated = products.map((p) => 
-      p.id === editingProduct.id ? { ...editingProduct, price: Number(mainPrice), duration: durationStr } : p
+      p.id === editingProduct.id ? { ...editingProduct, price: mainPrice, duration: durationStr } : p
     );
     const success = await handleSave(updated);
     if (success) {
@@ -645,7 +736,7 @@ export default function AdminDashboard() {
             </Link>
             <div className="h-8 w-[1px] bg-slate-200 mx-1 hidden md:block" />
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-slate-900">Stream <span className="text-blue-600">TV</span> Admin</h1>
+              <h1 className="text-2xl font-black tracking-tight text-slate-900">Stream <span className="text-blue-600">TV</span> Admin</h1>
             </div>
           </div>
           
@@ -695,32 +786,32 @@ export default function AdminDashboard() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-4">
             <div className="space-y-1">
-              <h2 className="text-3xl font-extrabold tracking-tight">Streaming Manager</h2>
-              <p className="text-slate-500">Configure your streaming packages and multi-duration pricing.</p>
+              <h2 className="text-4xl font-black tracking-tight">Streaming Manager</h2>
+              <p className="text-lg text-slate-500 font-medium">Configure your streaming packages and multi-duration pricing.</p>
             </div>
             
             {/* Tabs */}
             <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-2xl w-fit border border-slate-200">
               <button 
                 onClick={() => setActiveTab('products')}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                className={`flex items-center gap-2 px-8 py-3.5 rounded-xl text-base font-black transition-all ${
                   activeTab === 'products' 
-                  ? 'bg-white text-blue-600 shadow-sm' 
+                  ? 'bg-white text-blue-600 shadow-md' 
                   : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                <Package size={18} />
+                <Package size={22} />
                 Products
               </button>
               <button 
                 onClick={() => setActiveTab('news')}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                className={`flex items-center gap-2 px-8 py-3.5 rounded-xl text-base font-black transition-all ${
                   activeTab === 'news' 
-                  ? 'bg-white text-blue-600 shadow-sm' 
+                  ? 'bg-white text-blue-600 shadow-md' 
                   : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                <Megaphone size={18} />
+                <Megaphone size={22} />
                 News Ticker
               </button>
             </div>
@@ -877,32 +968,32 @@ export default function AdminDashboard() {
         ) : (
           <div className="space-y-10">
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 bg-blue-600 text-white rounded-lg shadow-sm">
-                <Plus size={16} />
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-3 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20">
+                <Plus size={20} />
               </div>
-              <h3 className="text-base font-bold">Create New Package</h3>
+              <h3 className="text-xl font-black">Create New Package</h3>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Package Name</label>
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Package Name</label>
                   <input
                     type="text"
                     placeholder="e.g. Premium 4K Streaming"
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition-all text-sm"
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all text-base font-bold"
                     value={newProduct.name}
                     onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Category</label>
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Category</label>
                   <input
                     type="text"
                     placeholder="e.g. PREMIUM STREAMING..."
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition-all text-sm"
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all text-base font-bold"
                     value={newProduct.category?.replace('HIDDEN:', '') || ''}
                     onChange={(e) => {
                       const isCurrentlyHidden = newProduct.category?.startsWith('HIDDEN:');
@@ -914,20 +1005,20 @@ export default function AdminDashboard() {
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Image URL</label>
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Image URL</label>
                   <input
                     type="text"
                     placeholder="https://..."
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition-all text-sm"
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all text-base font-bold"
                     value={newProduct.image}
                     onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
                   />
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Durations & Prices</label>
+              <div className="space-y-4">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest block ml-1">Durations & Prices</label>
                 
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 flex items-center justify-between">
@@ -999,16 +1090,16 @@ export default function AdminDashboard() {
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
                   {Object.keys(selectedDurations).length > 0 ? (
                     PREDEFINED_DURATIONS.filter(dur => selectedDurations[dur]).map(dur => (
-                      <div key={dur} className="flex items-center gap-3 p-2 bg-white rounded-xl border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-1 duration-200">
-                        <span className="text-[11px] font-black text-slate-900 w-8">{dur}</span>
+                      <div key={dur} className="flex items-center gap-4 p-3 bg-white rounded-2xl border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-1 duration-200">
+                        <span className="text-sm font-black text-slate-900 w-10">{dur}</span>
                         
-                        <div className="flex items-center gap-2 flex-1">
+                        <div className="flex items-center gap-3 flex-1">
                           <div className="relative flex-1">
-                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">{symbol}</span>
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-black">{symbol}</span>
                             <input 
                               type="number"
                               placeholder="Price"
-                              className="w-full pl-5 pr-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-blue-500 focus:bg-white transition-all"
+                              className="w-full pl-7 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:border-blue-500 focus:bg-white transition-all"
                               value={selectedDurations[dur].price}
                               onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], price: e.target.value } })}
                             />
@@ -1016,8 +1107,8 @@ export default function AdminDashboard() {
                           <div className="relative flex-1">
                             <input 
                               type="number"
-                              placeholder={`Old Price ${symbol}`}
-                              className="w-full p-1.5 bg-red-50/30 border border-red-50 rounded-lg text-[10px] outline-none text-red-400 line-through placeholder:text-red-200"
+                              placeholder={`Old ${symbol}`}
+                              className="w-full p-2.5 bg-red-50/30 border border-red-50 rounded-xl text-sm font-bold outline-none text-red-400 line-through placeholder:text-red-300"
                               value={selectedDurations[dur].oldPrice}
                               onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], oldPrice: e.target.value } })}
                             />
@@ -1026,7 +1117,7 @@ export default function AdminDashboard() {
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-4 border border-dashed border-slate-200 rounded-xl text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    <div className="text-center py-6 border border-dashed border-slate-200 rounded-2xl text-xs font-black text-slate-400 uppercase tracking-widest">
                       Select durations above
                     </div>
                   )}
@@ -1034,12 +1125,12 @@ export default function AdminDashboard() {
               </div>
 
               <div className="space-y-4 flex flex-col">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Description</label>
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Description</label>
                   <textarea
                     placeholder="Package details..."
-                    rows={3}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition-all resize-none text-sm"
+                    rows={4}
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all resize-none text-base font-medium"
                     value={newProduct.description}
                     onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
                   />
@@ -1047,9 +1138,9 @@ export default function AdminDashboard() {
 
                 <button
                   onClick={addProduct}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-sm active:scale-[0.98] flex items-center justify-center gap-2 text-sm mt-auto"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4.5 rounded-2xl transition-all shadow-xl shadow-blue-500/20 active:scale-[0.98] flex items-center justify-center gap-3 text-lg mt-auto"
                 >
-                  <CheckCircle2 size={16} />
+                  <CheckCircle2 size={22} />
                   Add New Package
                 </button>
               </div>
@@ -1253,14 +1344,14 @@ export default function AdminDashboard() {
                                 <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
                                   {Object.keys(editSelectedDurations || {}).length > 0 ? (
                                     PREDEFINED_DURATIONS.filter(dur => (editSelectedDurations || {})[dur]).map(dur => (
-                                      <div key={dur} className="flex items-center gap-2 p-1.5 bg-white rounded-lg border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-1 duration-200">
-                                        <span className="text-[10px] font-black text-slate-900 w-6">{dur}</span>
-                                        <div className="flex items-center gap-1.5 flex-1">
+                                      <div key={dur} className="flex items-center gap-3 p-2 bg-white rounded-xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-1 duration-200">
+                                        <span className="text-xs font-black text-slate-900 w-8">{dur}</span>
+                                        <div className="flex items-center gap-2 flex-1">
                                           <div className="relative flex-1">
-                                            <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">{symbol}</span>
+                                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-black">{symbol}</span>
                                             <input 
                                               type="number"
-                                              className="w-full pl-4 pr-1 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold outline-none focus:border-blue-500 focus:bg-white transition-all"
+                                              className="w-full pl-6 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black outline-none focus:border-blue-500 focus:bg-white transition-all"
                                               value={(editSelectedDurations || {})[dur]?.price || ''}
                                               onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], price: e.target.value } })}
                                             />
@@ -1269,7 +1360,7 @@ export default function AdminDashboard() {
                                             <input 
                                               type="number"
                                               placeholder={`Old ${symbol}`}
-                                              className="w-full p-1.5 bg-red-50/30 border border-red-50 rounded-lg text-xs outline-none text-red-400 line-through placeholder:text-red-200"
+                                              className="w-full p-2 bg-red-50/30 border border-red-50 rounded-lg text-xs font-bold outline-none text-red-400 line-through placeholder:text-red-200"
                                               value={(editSelectedDurations || {})[dur]?.oldPrice || ''}
                                               onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], oldPrice: e.target.value } })}
                                             />
@@ -1278,7 +1369,7 @@ export default function AdminDashboard() {
                                       </div>
                                     ))
                                   ) : (
-                                    <div className="text-center py-2 border border-dashed border-slate-200 rounded-lg text-[9px] font-bold text-slate-400 uppercase">
+                                    <div className="text-center py-4 border border-dashed border-slate-200 rounded-xl text-xs font-black text-slate-400 uppercase">
                                       No durations selected
                                     </div>
                                   )}
@@ -1299,16 +1390,16 @@ export default function AdminDashboard() {
                           ) : (
                             <div className="space-y-2">
                               <div className="flex items-center gap-2">
-                                <span className="font-bold text-slate-900 flex items-center gap-2">
+                                <span className="text-xl font-black text-slate-900 flex items-center gap-3">
                                   {product.name}
                                   {product.category?.startsWith('HIDDEN:') && (
-                                    <span className="px-1.5 py-0.5 bg-slate-200 text-slate-500 rounded text-[10px] font-bold uppercase tracking-tight flex items-center gap-1">
-                                      <EyeOff size={10} /> Hidden
+                                    <span className="px-3 py-1 bg-slate-200 text-slate-600 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-1.5">
+                                      <EyeOff size={14} /> Hidden
                                     </span>
                                   )}
-                                </span>
-                                <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold uppercase tracking-tight">
-                                  {product.category?.replace('HIDDEN:', '') || 'PREMIUM STREAMING'}
+                                  <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-black uppercase tracking-widest">
+                                    {product.category?.replace('HIDDEN:', '') || 'PREMIUM STREAMING'}
+                                  </span>
                                 </span>
                                 {product.sale_end_date && (() => {
                                   const target = parseSaleDate(product.sale_end_date);
@@ -1319,7 +1410,7 @@ export default function AdminDashboard() {
                                   </div>
                                 )}
                               </div>
-                              <p className="text-sm text-slate-500 line-clamp-2">{product.description}</p>
+                              <p className="text-base text-slate-500 font-medium leading-relaxed line-clamp-2">{product.description}</p>
                               {product.duration && (
                                 <div className="flex flex-wrap gap-1.5">
                                   {product.duration.split(',').map((opt, i) => {

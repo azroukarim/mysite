@@ -97,7 +97,7 @@ export default function ProductList() {
         </div>
       </div>
 
-      <div className="grid gap-2 grid-cols-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 max-w-full mx-auto px-2 sm:px-4">
+      <div className="grid gap-1 grid-cols-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 max-w-full mx-auto px-1 sm:px-4">
         {filteredProducts.length > 0 ? (
           filteredProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
