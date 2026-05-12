@@ -1433,7 +1433,6 @@ export default function AdminDashboard() {
               isOpen={isAddProductModalOpen} 
               onClose={() => setIsAddProductModalOpen(false)} 
             />
-            </div>
 
 
           <div className="flex items-center justify-between gap-4 flex-wrap">
