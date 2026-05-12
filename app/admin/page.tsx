@@ -648,7 +648,7 @@ export default function AdminDashboard() {
     const mainPrice = firstVal ? toStoragePrice(firstVal.normalPrice || firstVal.price) : (editingProduct?.price || 0);
 
     const updated = products.map((p) => 
-      p.id === editingProduct.id ? { ...editingProduct, price: mainPrice, duration: durationStr } : p
+      p.id === editingProduct.id ? { ...editingProduct, price: mainPrice, duration: durationStr, sale_end_date: editingProduct.sale_end_date } : p
     );
     const success = await handleSave(updated);
     if (success) {
