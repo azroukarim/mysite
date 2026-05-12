@@ -217,7 +217,7 @@ export default function AdminDashboard() {
     originalData?: Product | null, 
     updatedData: Product 
   }) => {
-    const [viewMode, setViewMode] = useState<'after' | 'before'>('after');
+    const [viewMode, setViewMode] = useState<'after' | 'before'>('before');
     
     if (!isOpen) return null;
     
