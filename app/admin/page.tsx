@@ -41,7 +41,7 @@ const CATEGORIES = [
 const EUR_TO_MAD = 11; // Ensure consistency with context
 
 export default function AdminDashboard() {
-  const { currency, symbol, formatPrice, convertPrice } = useCurrency();
+  const { currency, symbol, formatPrice, convertPrice, setCurrency } = useCurrency();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
