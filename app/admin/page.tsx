@@ -1402,21 +1402,23 @@ export default function AdminDashboard() {
               <div className="relative z-10">
                 <h3 className="text-xl font-bold mb-2">Live Preview</h3>
                 <p className="text-blue-100 text-sm mb-6">This is how your news ticker looks on the home page:</p>
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
-                   <div className="w-full py-2 overflow-hidden whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="px-3 bg-white text-blue-600 text-[10px] font-bold uppercase tracking-widest rounded-lg mr-4">
-                        NEWS
-                      </div>
-                      <div 
-                        className={`${newsDirection === 'right' ? 'animate-marquee-preview-rtl' : 'animate-marquee-preview'} inline-block text-white text-xs font-bold`}
-                        style={{ animationDuration: `${newsSpeed / 2}s` }}
-                      >
-                        {news.length > 0 ? news.join('  •  ') : 'Welcome to Stream TV Store! New packages added daily...'}
+                 <div className="space-y-2">
+                   {(news.length > 0 ? news : ['Welcome to Stream TV Store! New packages added daily...']).map((item, index) => (
+                    <div key={index} className="w-full py-2 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 overflow-hidden whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="px-3 bg-white text-blue-600 text-[10px] font-bold uppercase tracking-widest rounded-lg mr-4 ml-1">
+                          NEWS
+                        </div>
+                        <div 
+                          className={`${newsDirection === 'right' ? 'animate-marquee-preview-rtl' : 'animate-marquee-preview'} inline-block text-white text-xs font-bold`}
+                          style={{ animationDuration: `${newsSpeed / 2}s` }}
+                        >
+                          {item}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
+                   ))}
+                 </div>
               </div>
               <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
             </div>
