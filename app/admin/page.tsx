@@ -242,7 +242,16 @@ export default function AdminDashboard() {
             </div>
 
             {/* Before/After Toggle Buttons - Only show if data is different */}
-            {originalData && updatedData && JSON.stringify(originalData) !== JSON.stringify(updatedData) && (
+            {originalData && updatedData && (
+              // Use a more robust check for differences, ignoring id if necessary or comparing relevant fields
+              (originalData.name !== updatedData.name || 
+               originalData.description !== updatedData.description || 
+               originalData.price !== updatedData.price || 
+               originalData.duration !== updatedData.duration || 
+               originalData.category !== updatedData.category ||
+               originalData.image !== updatedData.image ||
+               originalData.sale_end_date !== updatedData.sale_end_date)
+            ) && (
               <div className="flex p-1 bg-slate-100 rounded-2xl gap-1">
                 <button 
                   onClick={() => setViewMode('before')}
@@ -485,12 +494,24 @@ export default function AdminDashboard() {
   };
 
   // Helper to parse duration string to object
+  // Helper to normalize duration labels (e.g. "12 months" -> "12M")
+  const normalizeDurationLabel = (label: string): string => {
+    const l = label.toLowerCase().trim();
+    if (l.includes('12 month') || l === '12m' || l === '12 months') return '12M';
+    if (l.includes('6 month') || l === '6m' || l === '6 months') return '6M';
+    if (l.includes('3 month') || l === '3m' || l === '3 months') return '3M';
+    if (l.includes('1 month') || l === '1m' || l === '1 months') return '1M';
+    if (l.includes('lifetime') || l === 'lif') return 'Lifetime';
+    return label;
+  };
+
   const parseDurationString = (durStr: string): Record<string, { price: string; normalPrice?: string; oldPrice: string }> => {
     const res: Record<string, { price: string; normalPrice?: string; oldPrice: string }> = {};
     if (!durStr) return res;
     durStr.split(',').forEach(opt => {
       const parts = opt.split('|');
-      const label = parts[0]?.trim();
+      const rawLabel = parts[0]?.trim();
+      const label = normalizeDurationLabel(rawLabel);
       const price = parts[1]?.trim() || '';
       const normalPrice = parts[2]?.trim() || '';
       const oldPrice = parts[3]?.trim() || '';
@@ -1343,8 +1364,9 @@ export default function AdminDashboard() {
                                 type="number"
                                 placeholder="0.00"
                                 className="w-full pl-7 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:border-blue-500 focus:bg-white transition-all"
-                                value={selectedDurations[dur].price}
-                                onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], price: e.target.value } })}
+                                  onFocus={(e) => e.target.select()}
+                                  value={selectedDurations[dur].price}
+                                  onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], price: e.target.value } })}
                               />
                             </div>
                           </div>
@@ -1356,8 +1378,9 @@ export default function AdminDashboard() {
                                 type="number"
                                 placeholder="0.00"
                                 className="w-full pl-7 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:border-blue-500 focus:bg-white transition-all"
-                                value={selectedDurations[dur].normalPrice || ''}
-                                onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], normalPrice: e.target.value } })}
+                                  onFocus={(e) => e.target.select()}
+                                  value={selectedDurations[dur].normalPrice || ''}
+                                  onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], normalPrice: e.target.value } })}
                               />
                             </div>
                           </div>
@@ -1369,8 +1392,9 @@ export default function AdminDashboard() {
                                 type="number"
                                 placeholder="0.00"
                                 className="w-full pl-7 pr-3 py-2.5 bg-red-50/20 border border-red-100 rounded-xl text-sm font-bold outline-none text-red-400 line-through placeholder:text-red-300"
-                                value={selectedDurations[dur].oldPrice}
-                                onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], oldPrice: e.target.value } })}
+                                  onFocus={(e) => e.target.select()}
+                                  value={selectedDurations[dur].oldPrice}
+                                  onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], oldPrice: e.target.value } })}
                               />
                             </div>
                           </div>
@@ -1646,6 +1670,7 @@ export default function AdminDashboard() {
                                                 type="number"
                                                 placeholder="0.0"
                                                 className="w-full pl-6 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black outline-none focus:border-blue-500 focus:bg-white transition-all"
+                                                onFocus={(e) => e.target.select()}
                                                 value={(editSelectedDurations || {})[dur]?.price || ''}
                                                 onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], price: e.target.value } })}
                                               />
@@ -1659,6 +1684,7 @@ export default function AdminDashboard() {
                                                 type="number"
                                                 placeholder="0.0"
                                                 className="w-full pl-6 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black outline-none focus:border-blue-500 focus:bg-white transition-all"
+                                                onFocus={(e) => e.target.select()}
                                                 value={(editSelectedDurations || {})[dur]?.normalPrice || ''}
                                                 onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], normalPrice: e.target.value } })}
                                               />
@@ -1671,6 +1697,7 @@ export default function AdminDashboard() {
                                                 type="number"
                                                 placeholder="0.0"
                                                 className="w-full p-2 bg-red-50/20 border border-red-50 rounded-lg text-xs font-bold outline-none text-red-400 line-through placeholder:text-red-200"
+                                                onFocus={(e) => e.target.select()}
                                                 value={(editSelectedDurations || {})[dur]?.oldPrice || ''}
                                                 onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], oldPrice: e.target.value } })}
                                               />
@@ -1716,16 +1743,23 @@ export default function AdminDashboard() {
                                 originalData={products.find(p => p.id === editingProduct.id)}
                                 updatedData={{
                                   ...editingProduct,
-                                  price: Number(toStoragePrice(Object.values(editSelectedDurations || {})[0]?.normalPrice || Object.values(editSelectedDurations || {})[0]?.price || editingProduct.price.toString())),
-                                  duration: Object.entries(editSelectedDurations || {})
-                                    .filter(([_, v]) => v.price !== '')
-                                    .map(([label, v]) => {
+                                  price: (() => {
+                                    const durs = PREDEFINED_DURATIONS.filter(d => (editSelectedDurations || {})[d]);
+                                    const firstDur = durs[0];
+                                    if (!firstDur) return editingProduct.price;
+                                    const val = editSelectedDurations[firstDur];
+                                    return Number(toStoragePrice(val.normalPrice || val.price));
+                                  })(),
+                                  duration: PREDEFINED_DURATIONS
+                                    .filter(d => (editSelectedDurations || {})[d])
+                                    .map(d => {
+                                      const v = editSelectedDurations[d];
                                       const p = toStoragePrice(v.price);
                                       const np = toStoragePrice(v.normalPrice || v.price);
                                       const op = toStoragePrice(v.oldPrice || '0');
-                                      return `${label}|${p}|${np}|${op}`;
+                                      return `${d}|${p}|${np}|${op}`;
                                     })
-                                    .join(', ')
+                                    .join(',')
                                 } as Product}
                               />
                             </div>
@@ -1756,7 +1790,9 @@ export default function AdminDashboard() {
                               {product.duration && (
                                 <div className="flex flex-wrap gap-1.5">
                                   {product.duration.split(',').map((opt, i) => {
-                                    const [label, promo, normal, strike] = opt.split('|').map(s => s.trim());
+                                    const [rawLabel, promo, normal, strike] = opt.split('|').map(s => s.trim());
+                                    const label = normalizeDurationLabel(rawLabel);
+                                    if (!label) return null;
                                     return (
                                       <div key={i} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg shadow-sm text-[11px]">
                                         <span className="font-bold text-slate-800">{label}</span>
