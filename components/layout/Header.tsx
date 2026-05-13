@@ -67,7 +67,7 @@ export default function Header() {
             </Link>
 
             <nav
-              className="hidden md:flex items-center space-x-1"
+              className="flex items-center space-x-1"
               role="navigation"
               aria-label="Main navigation"
             >
@@ -75,9 +75,9 @@ export default function Header() {
                 <Link
                   key={href}
                   href={href}
-                  className={`relative py-2 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`relative py-1 px-2 sm:py-2 sm:px-4 rounded-lg text-[10px] sm:text-sm font-medium transition-all duration-200 ${
                     isActivePath(href)
-                      ? "bg-orange-100 shadow-md"
+                      ? "bg-orange-100 shadow-sm"
                       : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                   }`}
                   aria-current={isActivePath(href) ? "page" : undefined}
@@ -90,12 +90,12 @@ export default function Header() {
 
 
 
-          <div className="flex items-center space-x-2 sm:space-x-4">
+          <div className="flex items-center space-x-1 sm:space-x-4">
 
 
             <button
               onClick={toggleMobileMenu}
-              className="md:hidden p-2 rounded-full hover:bg-gray-100 transition-colors"
+              className="hidden p-2 rounded-full hover:bg-gray-100 transition-colors"
               aria-label="Toggle navigation menu"
               aria-expanded={isMobileOpen}
             >
@@ -108,13 +108,13 @@ export default function Header() {
 
             <Link
               href="/cart"
-              className="relative p-2 rounded-full hover:bg-gray-100 transition-all duration-200 group"
+              className="relative p-1.5 sm:p-2 rounded-full hover:bg-gray-100 transition-all duration-200 group"
               aria-label={`Shopping cart with ${cartCount} items`}
             >
-              <ShoppingCart className="h-6 w-6 text-gray-700 group-hover:text-gray-900 transition-colors" />
+              <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 text-gray-700 group-hover:text-gray-900 transition-colors" />
               {cartCount > 0 && (
                 <span
-                  className="absolute -top-1 -right-1 bg-primary text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1"
+                  className="absolute top-0 right-0 bg-primary text-white text-[8px] sm:text-xs font-bold rounded-full min-w-[14px] h-3.5 sm:min-w-[20px] sm:h-5 flex items-center justify-center px-1"
                   aria-label={`${cartCount} items in cart`}
                 >
                   {cartCount > 99 ? "99+" : cartCount}
@@ -122,11 +122,11 @@ export default function Header() {
               )}
             </Link>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1 sm:space-x-2">
               {/* Currency Toggle */}
               <button
                 onClick={() => setCurrency(currency === 'EUR' ? 'MAD' : 'EUR')}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 hover:bg-gray-50 transition-colors text-xs font-bold"
+                className="flex items-center gap-1 px-2 py-1 rounded-full border border-gray-200 hover:bg-gray-50 transition-colors text-[9px] sm:text-xs font-bold"
                 title={currency === 'EUR' ? 'تبديل إلى الدرهم المغربي' : 'Switch to EUR'}
               >
                 <span className={currency === 'EUR' ? 'text-blue-600' : 'text-gray-400'}>EUR</span>
@@ -137,10 +137,10 @@ export default function Header() {
               {/* Language Toggle */}
               <button
                 onClick={() => setLanguage(language === 'en' ? 'fr' : 'en')}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 hover:bg-gray-50 transition-all font-bold text-xs uppercase"
+                className="flex items-center gap-1 px-2 py-1 rounded-full border border-gray-200 hover:bg-gray-50 transition-all font-bold text-[9px] sm:text-xs uppercase"
                 title={language === 'en' ? 'Switch to French' : 'Passer en Anglais'}
               >
-                <Globe className="h-3.5 w-3.5 text-blue-500" />
+                <Globe className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-500" />
                 <span>{language === 'en' ? 'FR' : 'EN'}</span>
               </button>
             </div>

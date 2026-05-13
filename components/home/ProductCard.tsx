@@ -130,7 +130,7 @@ export default function ProductCard({
   };
 
   return (
-    <div className="relative group pt-1 sm:pt-5">
+    <div className="relative group pt-1 sm:pt-5 h-full">
       {/* Flash Sale Countdown - Floating Badge Design */}
       {product.sale_end_date && !saleEnded && (
         <div className="absolute top-0 left-0 right-0 z-20 flex justify-center -translate-y-0.5 sm:-translate-y-2 group-hover:-translate-y-3 transition-transform duration-500">
@@ -143,7 +143,7 @@ export default function ProductCard({
       )}
 
       <Card className={cn(
-        "bg-white border-slate-200 rounded-lg sm:rounded-xl hover:shadow-2xl hover:border-primary/40 transition-all duration-500 hover:-translate-y-1 shadow-xl shadow-slate-200/50 overflow-hidden",
+        "bg-white border-slate-200 rounded-lg sm:rounded-xl hover:shadow-2xl hover:border-primary/40 transition-all duration-500 hover:-translate-y-1 shadow-xl shadow-slate-200/50 overflow-hidden h-full flex flex-col",
         isReadOnly && "sm:rounded-2xl"
       )}>
         <div className="relative overflow-hidden">
@@ -192,7 +192,7 @@ export default function ProductCard({
 
         </div>
 
-        <CardContent className={cn("p-1 sm:p-4 space-y-0.5 sm:space-y-3", isReadOnly && "sm:p-3 sm:space-y-2")}>
+        <CardContent className={cn("p-1 sm:p-4 space-y-0.5 sm:space-y-3 flex-1 flex flex-col justify-between", isReadOnly && "sm:p-3 sm:space-y-2")}>
           <div className={cn(isReadOnly && "pointer-events-none")}>
             <div className="flex items-center justify-between mb-0.5">
               {product.category && (
