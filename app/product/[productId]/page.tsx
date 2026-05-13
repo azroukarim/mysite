@@ -212,7 +212,7 @@ export default function Product() {
         </div>
 
         {/* Bottom Section: Details */}
-        <div className="space-y-4 w-full">
+        <div className="space-y-4 w-full max-w-sm">
           <h1 className="text-xl lg:text-2xl font-bold text-foreground mb-1 tracking-tight">
             {product.name}
           </h1>
@@ -268,7 +268,7 @@ export default function Product() {
               </label>
               
               {durationOptions ? (
-                <div className="flex flex-col gap-2 items-start">
+                <div className="flex flex-col gap-2 items-start w-full">
                   {durationOptions.map((opt: any, idx: number) => {
                     const isLifetime = opt.label.toLowerCase().includes('lifetime');
                     const isSelected = selectedDuration?.label === opt.label;
@@ -278,7 +278,7 @@ export default function Product() {
                         key={idx}
                         onClick={() => setSelectedDuration(opt)}
                         className={cn(
-                          "relative group px-4 py-2 rounded-xl border-2 transition-all duration-300 flex items-center justify-between overflow-hidden w-fit min-w-[220px]",
+                          "relative group px-4 py-2 rounded-xl border-2 transition-all duration-300 flex items-center justify-between overflow-hidden w-full",
                           isSelected
                             ? "border-primary bg-primary/5 shadow-lg shadow-primary/5 translate-y-[-1px]"
                             : "border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50"
@@ -362,11 +362,11 @@ export default function Product() {
               )}
             </div>
 
-            <div className="flex flex-col gap-2 pt-1 items-start">
+            <div className="flex flex-col gap-2 pt-1 items-start w-full">
               <Button
                 size="lg"
                 className={cn(
-                  "w-fit px-6 h-9 text-[11px] font-black transition-all duration-300 rounded-xl shadow-sm",
+                  "w-full h-9 text-[11px] font-black transition-all duration-300 rounded-xl shadow-sm",
                   justAdded
                     ? "bg-green-600 text-white hover:bg-green-700 shadow-green-500/5"
                     : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/5"
@@ -396,7 +396,7 @@ export default function Product() {
                 size="lg"
                 variant="outline"
                 onClick={handleBuyNow}
-                className="w-fit px-6 h-9 text-[11px] font-black rounded-xl border-2"
+                className="w-full h-9 text-[11px] font-black rounded-xl border-2"
               >
                 {t('buy_now')}
               </Button>
@@ -404,7 +404,7 @@ export default function Product() {
 
             <Button
               size="lg"
-              className="w-fit px-6 h-9 bg-[#25D366] text-white hover:bg-[#128C7E] flex items-center justify-center gap-2 font-black text-[11px] rounded-xl shadow-md shadow-green-500/5 mt-0.5"
+              className="w-full h-9 bg-[#25D366] text-white hover:bg-[#128C7E] flex items-center justify-center gap-2 font-black text-[11px] rounded-xl shadow-md shadow-green-500/5 mt-0.5"
               onClick={() => {
                 const WHATSAPP_NUMBER = "212670965351";
                 const typeLabel = language === 'en' ? 'Type' : "Type d'abonnement";
