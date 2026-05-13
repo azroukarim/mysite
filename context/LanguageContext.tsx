@@ -23,7 +23,7 @@ const translations: any = {
   
   // Product Page
   add_to_cart: { en: 'Add to Cart', fr: 'Ajouter au panier' },
-  buy_now: { en: 'Buy Now', fr: 'Acheter maintenant' },
+  buy_now: { en: 'Buy Now', fr: 'Commander' },
   order_whatsapp: { en: 'Order via WhatsApp', fr: 'Commander via WhatsApp' },
   select_duration: { en: 'Select Duration', fr: 'Choisir la durée' },
   subscription_duration: { en: 'Subscription Duration', fr: 'Durée d\'abonnement' },
