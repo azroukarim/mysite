@@ -33,23 +33,29 @@ export default function NewsTicker() {
 
   return (
     <div className="flex flex-col gap-2 mb-4">
-      {news.map((item, index) => (
-        <div key={index} className="w-full bg-blue-600/5 border-y border-blue-100 py-5 overflow-hidden whitespace-nowrap rounded-2xl shadow-sm animate-in fade-in slide-in-from-left duration-500" style={{ animationDelay: `${index * 100}ms` }}>
-          <div className="flex items-center">
-            <div className="px-6 py-2 bg-blue-600 text-white text-[16px] font-black uppercase tracking-widest rounded-r-2xl mr-6 z-10 shadow-lg shadow-blue-500/20">
-              NEWS
-            </div>
-            <div 
-              className={`${direction === 'right' ? 'animate-marquee-rtl' : 'animate-marquee'} inline-block text-blue-950 text-2xl font-black`}
-              style={{ animationDuration: `${speed}s` }}
-            >
-              <span className="px-4">{item}</span>
-              <span className="px-4">{item}</span>
-              <span className="px-4">{item}</span>
+      {news.map((item, index) => {
+        const isArabic = /[\u0600-\u06FF]/.test(item);
+        const scrollDir = isArabic ? 'right' : direction;
+        
+        return (
+          <div key={index} className="w-full bg-blue-600/5 border-y border-blue-100 py-5 overflow-hidden whitespace-nowrap rounded-2xl shadow-sm animate-in fade-in slide-in-from-left duration-500" style={{ animationDelay: `${index * 100}ms` }}>
+            <div className="flex items-center">
+              <div className="px-6 py-2 bg-blue-600 text-white text-[16px] font-black uppercase tracking-widest rounded-r-2xl mr-6 z-10 shadow-lg shadow-blue-500/20">
+                NEWS
+              </div>
+              <div 
+                className={`${scrollDir === 'right' ? 'animate-marquee-rtl' : 'animate-marquee'} inline-block text-blue-950 text-2xl font-black`}
+                style={{ animationDuration: `${speed}s` }}
+                dir={isArabic ? 'rtl' : 'ltr'}
+              >
+                <span className="px-4">{item}</span>
+                <span className="px-4">{item}</span>
+                <span className="px-4">{item}</span>
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
