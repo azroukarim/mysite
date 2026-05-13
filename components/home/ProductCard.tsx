@@ -252,42 +252,42 @@ export default function ProductCard({
             )}
           </div>
 
-          <div className="flex gap-1 sm:gap-2">
+          <div className="flex gap-1 sm:gap-1.5 pt-0.5">
             <Button
               variant="outline"
               className={cn(
-                "flex-1 h-6 sm:h-11 px-0 sm:px-4 transition-all duration-300 font-black text-[7px] sm:text-xs border-slate-200 hover:bg-slate-50 hover:border-primary/30 text-slate-600",
-                isReadOnly && "sm:h-8 sm:text-[10px]"
+                "flex-1 h-5 sm:h-8 px-0 transition-all duration-300 font-black text-[6px] sm:text-[10px] border-slate-200 hover:bg-slate-50 hover:border-primary/30 text-slate-600 rounded-lg",
+                isReadOnly && "sm:h-7 sm:text-[9px]"
               )}
               onClick={handleQuickViewClick}
               disabled={isReadOnly}
             >
-              <Eye className="h-2 w-2 sm:h-4 sm:w-4 mr-0.5 sm:mr-1" />
+              <Eye className="h-1.5 w-1.5 sm:h-3 sm:w-3 mr-0.5" />
               <span>{t('buy_now')}</span>
             </Button>
 
             <Button
               className={cn(
-                "flex-1 h-6 sm:h-11 px-0 sm:px-4 transition-all duration-300 font-black text-[7px] sm:text-xs",
+                "flex-1 h-5 sm:h-8 px-0 transition-all duration-300 font-black text-[6px] sm:text-[10px] rounded-lg",
                 justAdded
                   ? "bg-green-600 text-white hover:bg-green-600"
                   : isSaleActive 
                     ? "bg-red-600 text-white hover:bg-red-700"
                     : "bg-primary text-primary-foreground hover:bg-primary/90",
-                isReadOnly && "sm:h-8 sm:text-[10px]"
+                isReadOnly && "sm:h-7 sm:text-[9px]"
               )}
               onClick={handleAction}
               disabled={isAdding || isReadOnly}
             >
               {isAdding ? (
-                <div className="w-2 h-2 sm:w-4 sm:h-4 border border-current border-t-transparent rounded-full animate-spin" />
+                <div className="w-1.5 h-1.5 sm:w-3 sm:h-3 border border-current border-t-transparent rounded-full animate-spin" />
               ) : justAdded ? (
-                <Check className="h-2 w-2 sm:h-4 sm:w-4" />
+                <Check className="h-1.5 w-1.5 sm:h-3 sm:w-3" />
               ) : (
                 <div className="flex items-center justify-center gap-0.5 w-full">
-                  <ShoppingCart className="h-2 w-2 sm:h-4 sm:w-4" />
+                  <ShoppingCart className="h-1.5 w-1.5 sm:h-3 sm:w-3" />
                   <span>
-                    {t('add_to_cart').split(' ')[0]}
+                    {language === 'fr' ? 'Ajouter' : 'Add'}
                   </span>
                 </div>
               )}
