@@ -62,7 +62,7 @@ export default function Header() {
               aria-label="Stream TV Home"
             >
               <div className="animate-flag-wave">
-                STREAM<span className="text-blue-600 italic">TV</span>
+                STREAM<span className="text-blue-600">TV</span>
               </div>
             </Link>
 

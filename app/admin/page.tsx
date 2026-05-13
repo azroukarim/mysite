@@ -1048,17 +1048,29 @@ export default function AdminDashboard() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full">
-          <div className="text-center mb-10">
-            <div className="inline-flex p-4 bg-blue-600 text-white rounded-xl shadow-xl shadow-blue-500/20 mb-6">
-              <Lock size={32} />
-            </div>
-            <h1 className="text-3xl font-black text-slate-900 mb-2">Admin Portal</h1>
-            <p className="text-slate-500">Secure access to Stream TV management</p>
+      <div 
+        className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
+        style={{
+          backgroundImage: `url('https://i.pinimg.com/1200x/45/d9/2e/45d92ee33e14e2d879cb498321fa6d9d.jpg')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        {/* Overlay for better readability */}
+        <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]" />
+
+        <div className="max-w-md w-full relative z-10 text-center">
+          <div className="animate-flag-wave mb-8">
+            <h1 className="text-6xl font-black text-slate-950 drop-shadow-[0_2px_20px_rgba(255,255,255,0.5)] uppercase tracking-tight">
+              STREAM<span className="text-blue-600 ml-2">TV</span>
+            </h1>
+          </div>
+          <div className="mb-10">
+            <p className="text-blue-100 font-bold drop-shadow-md uppercase tracking-[0.2em] text-xs">Admin Panel</p>
           </div>
 
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100">
+          <div className="bg-white/90 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl border border-white/20 animate-in fade-in zoom-in duration-500">
             {!isResetMode ? (
               <form onSubmit={handleLogin} className="space-y-6">
                 <div className="space-y-2">
@@ -1171,7 +1183,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="text-center mt-10">
-            <Link href="/" className="text-sm font-bold text-slate-400 hover:text-blue-600 transition-colors">
+            <Link href="/" className="text-sm font-bold text-white/70 hover:text-white transition-colors bg-white/10 backdrop-blur-md px-6 py-2 rounded-full border border-white/10">
               ← Return to Storefront
             </Link>
           </div>
@@ -1190,7 +1202,9 @@ export default function AdminDashboard() {
             </Link>
             <div className="h-8 w-[1px] bg-slate-200 mx-1 hidden md:block" />
             <div>
-              <h1 className="text-2xl font-black tracking-tight text-slate-900">Stream <span className="text-blue-600">TV</span> Admin</h1>
+            <div className="animate-flag-wave">
+              <h1 className="text-2xl font-black tracking-tight text-slate-950 uppercase">STREAM <span className="text-blue-600">TV</span> Admin</h1>
+            </div>
             </div>
           </div>
           

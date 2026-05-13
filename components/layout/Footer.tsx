@@ -89,7 +89,7 @@ export default function Footer() {
                 aria-label="Stream TV Home"
               >
                 <div className="animate-flag-wave">
-                  STREAM<span className="text-blue-600 italic">TV</span>
+                  STREAM<span className="text-blue-600">TV</span>
                 </div>
               </Link>
               <p className="text-muted-foreground mb-6 max-w-sm">
