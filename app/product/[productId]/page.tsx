@@ -188,14 +188,14 @@ export default function Product() {
       <div className="flex flex-col gap-8 mb-16 items-start">
         {/* Top Section: Image Frame */}
         <div className="w-full flex justify-start">
-          <div className="relative group max-w-sm mx-auto lg:mx-0">
-            <div className="relative aspect-square sm:h-[280px] w-full rounded-[1.5rem] overflow-hidden bg-white border border-slate-100 shadow-lg flex items-center justify-center p-12 sm:p-20 transition-all duration-700 hover:shadow-primary/10">
+          <div className="relative group w-full max-w-sm mx-auto lg:mx-0">
+            <div className="relative aspect-square h-[320px] sm:h-[280px] w-full rounded-[1.5rem] overflow-hidden bg-white border border-slate-100 shadow-lg flex items-center justify-center p-4 sm:p-20 transition-all duration-700 hover:shadow-primary/10">
               <Image
                 src={product.image}
                 alt={product.name}
                 fill
                 priority
-                className="object-contain p-12 sm:p-20 transition-transform duration-700 group-hover:scale-105"
+                className="object-contain p-4 sm:p-20 transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900/5 to-transparent pointer-events-none" />
             </div>
