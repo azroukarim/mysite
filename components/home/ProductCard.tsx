@@ -189,18 +189,7 @@ export default function ProductCard({
 
           </Link>
           
-          {!isReadOnly && (
-            <div className="absolute inset-0 bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 pointer-events-none group-hover:pointer-events-auto">
-              <Button
-                size="sm"
-                className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 text-xs pointer-events-auto"
-                onClick={handleQuickViewClick}
-              >
-                <Eye className="h-3 w-3 mr-1" />
-                {t('quick_view')}
-              </Button>
-            </div>
-          )}
+
         </div>
 
         <CardContent className={cn("p-1 sm:p-4 space-y-0.5 sm:space-y-3", isReadOnly && "sm:p-3 sm:space-y-2")}>
@@ -263,32 +252,47 @@ export default function ProductCard({
             )}
           </div>
 
-          <Button
-            className={cn(
-              "w-full h-6 sm:h-12 p-0 sm:p-4 transition-all duration-300 font-black text-[7px] sm:text-base",
-              justAdded
-                ? "bg-green-600 text-white hover:bg-green-600"
-                : isSaleActive 
-                  ? "bg-red-600 text-white hover:bg-red-700"
-                  : "bg-primary text-primary-foreground hover:bg-primary/90",
-              isReadOnly && "sm:h-9 sm:text-xs"
-            )}
-            onClick={handleAction}
-            disabled={isAdding || isReadOnly}
-          >
-            {isAdding ? (
-              <div className="w-2 h-2 sm:w-5 sm:h-5 border border-current border-t-transparent rounded-full animate-spin" />
-            ) : justAdded ? (
-              <Check className="h-2 w-2 sm:h-5 sm:w-5" />
-            ) : (
-              <div className="flex items-center justify-center gap-0.5 w-full">
-                <ShoppingCart className="h-2 w-2 sm:h-5 sm:w-5" />
-                <span>
-                  {product.link ? 'Buy' : 'Add'}
-                </span>
-              </div>
-            )}
-          </Button>
+          <div className="flex gap-1 sm:gap-2">
+            <Button
+              variant="outline"
+              className={cn(
+                "flex-1 h-6 sm:h-11 px-0 sm:px-4 transition-all duration-300 font-black text-[7px] sm:text-xs border-slate-200 hover:bg-slate-50 hover:border-primary/30 text-slate-600",
+                isReadOnly && "sm:h-8 sm:text-[10px]"
+              )}
+              onClick={handleQuickViewClick}
+              disabled={isReadOnly}
+            >
+              <Eye className="h-2 w-2 sm:h-4 sm:w-4 mr-0.5 sm:mr-1" />
+              <span>{t('buy_now')}</span>
+            </Button>
+
+            <Button
+              className={cn(
+                "flex-1 h-6 sm:h-11 px-0 sm:px-4 transition-all duration-300 font-black text-[7px] sm:text-xs",
+                justAdded
+                  ? "bg-green-600 text-white hover:bg-green-600"
+                  : isSaleActive 
+                    ? "bg-red-600 text-white hover:bg-red-700"
+                    : "bg-primary text-primary-foreground hover:bg-primary/90",
+                isReadOnly && "sm:h-8 sm:text-[10px]"
+              )}
+              onClick={handleAction}
+              disabled={isAdding || isReadOnly}
+            >
+              {isAdding ? (
+                <div className="w-2 h-2 sm:w-4 sm:h-4 border border-current border-t-transparent rounded-full animate-spin" />
+              ) : justAdded ? (
+                <Check className="h-2 w-2 sm:h-4 sm:w-4" />
+              ) : (
+                <div className="flex items-center justify-center gap-0.5 w-full">
+                  <ShoppingCart className="h-2 w-2 sm:h-4 sm:w-4" />
+                  <span>
+                    {t('add_to_cart').split(' ')[0]}
+                  </span>
+                </div>
+              )}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
