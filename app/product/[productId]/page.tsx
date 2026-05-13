@@ -207,8 +207,8 @@ export default function Product() {
                   // Debug: Log the description to console
                   console.log("Current Product Description:", product.description);
                   
-                  // Extract code from description if it exists (Case-insensitive)
-                  const codeMatch = product.description?.match(/CODE:\s*(\d+)/i);
+                  // Extract code from description if it exists (Handles: code:123, code 123, downloader code:123, etc.)
+                  const codeMatch = product.description?.match(/(?:downloader\s+)?code[:\s]*(\d+)/i);
                   const code = codeMatch ? codeMatch[1] : "295325"; 
                   
                   navigator.clipboard.writeText(code);
@@ -230,7 +230,7 @@ export default function Product() {
                   <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">Downloader Code</span>
                   <span className="text-sm font-black text-slate-900">
                     {(() => {
-                      const codeMatch = product.description?.match(/CODE:\s*(\d+)/i);
+                      const codeMatch = product.description?.match(/(?:downloader\s+)?code[:\s]*(\d+)/i);
                       return codeMatch ? codeMatch[1] : "295325";
                     })()}
                   </span>
