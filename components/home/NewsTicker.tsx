@@ -46,11 +46,10 @@ export default function NewsTicker() {
               <div 
                 className={`${scrollDir === 'right' ? 'animate-marquee-rtl' : 'animate-marquee'} inline-block text-blue-950 text-2xl font-black`}
                 style={{ animationDuration: `${speed}s` }}
-                dir={isArabic ? 'rtl' : 'ltr'}
               >
-                <span className="px-4">{item}{isArabic ? '\u200F' : ''}</span>
-                <span className="px-4">{item}{isArabic ? '\u200F' : ''}</span>
-                <span className="px-4">{item}{isArabic ? '\u200F' : ''}</span>
+                <span className="px-4"><bdi dir={isArabic ? 'rtl' : 'ltr'}>{item}{isArabic ? '\u200F' : ''}</bdi></span>
+                <span className="px-4"><bdi dir={isArabic ? 'rtl' : 'ltr'}>{item}{isArabic ? '\u200F' : ''}</bdi></span>
+                <span className="px-4"><bdi dir={isArabic ? 'rtl' : 'ltr'}>{item}{isArabic ? '\u200F' : ''}</bdi></span>
               </div>
             </div>
           </div>
