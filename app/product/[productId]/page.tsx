@@ -185,9 +185,9 @@ export default function Product() {
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <ProductBreadcrumb />
 
-      <div className="grid lg:grid-cols-2 gap-8 mb-16 items-start">
-        {/* Left Column: Image Gallery Style */}
-        <div className="space-y-6">
+      <div className="flex flex-col gap-8 mb-16 max-w-2xl mx-auto">
+        {/* Top Section: Image Frame */}
+        <div className="w-full flex justify-center">
           <div className="relative group max-w-sm mx-auto lg:mx-0">
             <div className="relative aspect-square sm:h-[280px] w-full rounded-[1.5rem] overflow-hidden bg-white border border-slate-100 shadow-lg flex items-center justify-center p-12 sm:p-20 transition-all duration-700 hover:shadow-primary/10">
               <Image
@@ -211,8 +211,8 @@ export default function Product() {
           </div>
         </div>
 
-        {/* Right Column: Details */}
-        <div className="space-y-3">
+        {/* Bottom Section: Details */}
+        <div className="space-y-4 px-2 sm:px-6">
           <h1 className="text-xl lg:text-2xl font-bold text-foreground mb-1 tracking-tight">
             {product.name}
           </h1>
