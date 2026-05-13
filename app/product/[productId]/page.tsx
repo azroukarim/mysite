@@ -185,7 +185,7 @@ export default function Product() {
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <ProductBreadcrumb />
 
-      <div className="grid lg:grid-cols-2 gap-12 mb-16">
+      <div className="grid lg:grid-cols-2 gap-8 mb-16 items-start">
         {/* Left Column: Image Gallery Style */}
         <div className="space-y-6">
           <div className="relative group max-w-md mx-auto lg:mx-0">
@@ -212,8 +212,8 @@ export default function Product() {
         </div>
 
         {/* Right Column: Details */}
-        <div className="space-y-6">
-          <h1 className="text-3xl lg:text-4xl font-bold text-foreground mb-4 tracking-tight">
+        <div className="space-y-4">
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2 tracking-tight">
             {product.name}
           </h1>
           
@@ -362,14 +362,14 @@ export default function Product() {
               )}
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Button
                 size="lg"
                 className={cn(
-                  "flex-1 h-14 text-lg font-bold transition-all duration-300 rounded-xl shadow-lg",
+                  "flex-1 h-11 text-sm font-bold transition-all duration-300 rounded-xl shadow-md",
                   justAdded
-                    ? "bg-green-600 text-white hover:bg-green-700 shadow-green-500/20"
-                    : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/20"
+                    ? "bg-green-600 text-white hover:bg-green-700 shadow-green-500/10"
+                    : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/10"
                 )}
                 onClick={handleAddToCart}
                 disabled={isAdding}
@@ -396,7 +396,7 @@ export default function Product() {
                 size="lg"
                 variant="outline"
                 onClick={handleBuyNow}
-                className="flex-1 h-14 text-lg font-bold rounded-xl border-2"
+                className="flex-1 h-11 text-sm font-bold rounded-xl border-2"
               >
                 {t('buy_now')}
               </Button>
@@ -404,7 +404,7 @@ export default function Product() {
 
             <Button
               size="lg"
-              className="w-full h-14 bg-[#25D366] text-white hover:bg-[#128C7E] flex items-center justify-center gap-2 font-black text-lg rounded-xl shadow-xl shadow-green-500/20 mt-2"
+              className="w-full h-11 bg-[#25D366] text-white hover:bg-[#128C7E] flex items-center justify-center gap-2 font-black text-sm rounded-xl shadow-lg shadow-green-500/10 mt-1"
               onClick={() => {
                 const WHATSAPP_NUMBER = "212670965351";
                 const typeLabel = language === 'en' ? 'Type' : "Type d'abonnement";
