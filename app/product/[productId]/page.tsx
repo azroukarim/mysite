@@ -204,8 +204,11 @@ export default function Product() {
             <div className="absolute bottom-4 left-0 right-0 flex justify-center px-4">
               <button
                 onClick={() => {
-                  // Extract code from description if it exists (Format: CODE:123456 or CODE: 123456)
-                  const codeMatch = product.description?.match(/CODE:\s*(\d+)/);
+                  // Debug: Log the description to console
+                  console.log("Current Product Description:", product.description);
+                  
+                  // Extract code from description if it exists (Case-insensitive)
+                  const codeMatch = product.description?.match(/CODE:\s*(\d+)/i);
                   const code = codeMatch ? codeMatch[1] : "295325"; 
                   
                   navigator.clipboard.writeText(code);
@@ -227,7 +230,7 @@ export default function Product() {
                   <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">Downloader Code</span>
                   <span className="text-sm font-black text-slate-900">
                     {(() => {
-                      const codeMatch = product.description?.match(/CODE:\s*(\d+)/);
+                      const codeMatch = product.description?.match(/CODE:\s*(\d+)/i);
                       return codeMatch ? codeMatch[1] : "295325";
                     })()}
                   </span>
