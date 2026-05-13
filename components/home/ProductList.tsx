@@ -20,10 +20,8 @@ export default function ProductList() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
-  const [selectedDuration, setSelectedDuration] = useState<any>(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -48,35 +46,7 @@ export default function ProductList() {
     fetchProducts();
   }, []);
 
-  // Set default duration when quickViewProduct changes
-  useEffect(() => {
-    if (quickViewProduct) {
-      if (quickViewProduct.duration && quickViewProduct.duration.includes('|')) {
-        const options = quickViewProduct.duration.split(',').map((opt: string) => {
-          const parts = opt.split('|').map(s => s.trim());
-          const label = parts[0];
-          if (parts.length >= 4) {
-            return { label, promo: parseFloat(parts[1]), normal: parseFloat(parts[2]), strike: parseFloat(parts[3]) };
-          } else {
-            const promo = parseFloat(parts[1]);
-            const strike = parseFloat(parts[2]);
-            return { label, promo, normal: strike || promo, strike };
-          }
-        });
-        setSelectedDuration(options[0]);
-      } else {
-        setSelectedDuration({ 
-          label: quickViewProduct.duration || 'Standard', 
-          promo: quickViewProduct.price, 
-          normal: quickViewProduct.price, 
-          strike: null 
-        });
-      }
-    } else {
-      setSelectedDuration(null);
-      setJustAdded(false);
-    }
-  }, [quickViewProduct]);
+
 
   const isProductOnSale = (p: any) => {
     if (!p.sale_end_date) return false;
@@ -172,7 +142,6 @@ export default function ProductList() {
             <ProductCard 
               key={product.id} 
               product={product} 
-              onQuickView={(p) => setQuickViewProduct(p)}
             />
           ))
         ) : (
@@ -195,206 +164,6 @@ export default function ProductList() {
         </div>
       )}
     </div>
-
-    {/* Quick View Modal */}
-    {quickViewProduct && (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-300">
-        <div className="bg-white rounded-[2rem] sm:rounded-[3rem] shadow-2xl relative max-w-4xl w-full max-h-[95vh] overflow-y-auto animate-in zoom-in-95 duration-300 border border-white/20 custom-scrollbar">
-          <button 
-            onClick={() => setQuickViewProduct(null)}
-            className="absolute top-4 sm:top-8 right-4 sm:right-8 w-10 sm:h-12 sm:w-12 h-10 bg-white/80 backdrop-blur-md text-slate-900 rounded-2xl shadow-xl flex items-center justify-center hover:bg-white transition-all border border-slate-100 z-50 hover:rotate-90 duration-300"
-          >
-            <X size={20} />
-          </button>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-0 sm:gap-8 p-4 sm:p-10">
-            {/* Left: Product Image */}
-            <div className="space-y-6">
-              <div className="relative aspect-square w-full rounded-[2rem] overflow-hidden bg-slate-50 flex items-center justify-center p-8 border border-slate-100 shadow-inner">
-                <Image
-                  src={quickViewProduct.image}
-                  alt={quickViewProduct.name}
-                  fill
-                  className="object-contain p-8"
-                />
-                
-                {/* Sale Badge */}
-                {isProductOnSale(quickViewProduct) && (
-                  <div className="absolute top-6 left-6 px-4 py-2 bg-red-600 text-white text-[10px] font-black rounded-full shadow-lg shadow-red-500/20 uppercase tracking-widest animate-bounce">
-                    {t('sale')}
-                  </div>
-                )}
-
-                {/* Downloader Code Copy Button */}
-                <div className="absolute bottom-4 left-0 right-0 flex justify-center px-4">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const codeMatch = quickViewProduct.description?.match(/(?:downloader\s+)?code[:\s]*(\d+)/i);
-                      const code = codeMatch ? codeMatch[1] : "295325"; 
-                      navigator.clipboard.writeText(code);
-                      const btn = document.getElementById(`copy-code-qv-${quickViewProduct.id}`);
-                      if (btn) {
-                        const originalContent = btn.innerHTML;
-                        btn.innerHTML = language === 'en' ? 'Copied!' : 'Copié !';
-                        btn.classList.add('bg-green-600', 'text-white');
-                        setTimeout(() => {
-                          btn.innerHTML = originalContent;
-                          btn.classList.remove('bg-green-600', 'text-white');
-                        }, 2000);
-                      }
-                    }}
-                    id={`copy-code-qv-${quickViewProduct.id}`}
-                    className="group/btn px-3 py-1.5 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-white/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
-                  >
-                    <div className="flex flex-col items-start leading-none text-left">
-                      <span className="text-[6px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Downloader Code</span>
-                      <span className="text-xs font-black text-slate-900">
-                        {(() => {
-                          const codeMatch = quickViewProduct.description?.match(/(?:downloader\s+)?code[:\s]*(\d+)/i);
-                          return codeMatch ? codeMatch[1] : "295325";
-                        })()}
-                      </span>
-                    </div>
-                    <div className="w-6 h-6 rounded-lg bg-blue-600/10 text-blue-600 flex items-center justify-center group-hover/btn:bg-blue-600 group-hover/btn:text-white transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                    </div>
-                  </button>
-                </div>
-              </div>
-              
-              <div className="hidden md:flex flex-wrap gap-2 justify-center">
-                {['4K QUALITY', '24/7 SUPPORT', 'INSTANT'].map(tag => (
-                  <span key={tag} className="px-3 py-1 bg-blue-50 text-blue-600 text-[8px] font-black rounded-full border border-blue-100">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Right: Product Details */}
-            <div className="flex flex-col h-full py-4 sm:py-0">
-              <div className="flex-grow space-y-6">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">
-                      {quickViewProduct.category?.replace('HIDDEN:', '')}
-                    </span>
-                    <div className="flex items-center gap-0.5">
-                      {[...Array(5)].map((_, i) => <Star key={i} size={10} className="fill-blue-600 text-blue-600" />)}
-                    </div>
-                  </div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
-                    {quickViewProduct.name}
-                  </h2>
-                </div>
-
-                {quickViewProduct.sale_end_date && isProductOnSale(quickViewProduct) && (
-                  <div className="scale-90 origin-left">
-                    <CountdownTimer endDate={quickViewProduct.sale_end_date} />
-                  </div>
-                )}
-
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    {t('subscription_duration')}
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(quickViewProduct.duration?.includes('|') ? quickViewProduct.duration.split(',') : [quickViewProduct.duration || 'Standard']).map((optStr: string, idx: number) => {
-                      const parts = optStr.split('|').map(s => s.trim());
-                      const label = parts[0] || 'Standard';
-                      const isSelected = selectedDuration?.label === label;
-                      
-                      return (
-                        <button
-                          key={idx}
-                          onClick={() => {
-                            if (parts.length >= 4) {
-                              setSelectedDuration({ label, promo: parseFloat(parts[1]), normal: parseFloat(parts[2]), strike: parseFloat(parts[3]) });
-                            } else if (parts.length === 2) {
-                              setSelectedDuration({ label, promo: parseFloat(parts[1]), normal: parseFloat(parts[1]), strike: null });
-                            } else {
-                              setSelectedDuration({ label, promo: quickViewProduct.price, normal: quickViewProduct.price, strike: null });
-                            }
-                          }}
-                          className={cn(
-                            "px-4 py-3 rounded-xl border-2 text-left transition-all",
-                            isSelected ? "border-blue-600 bg-blue-50/50" : "border-slate-100 hover:border-blue-200"
-                          )}
-                        >
-                          <div className={cn("text-xs font-black", isSelected ? "text-blue-600" : "text-slate-900")}>{label}</div>
-                          <div className="text-[10px] font-bold text-slate-400 uppercase">Abonnement</div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                   <div className="flex items-baseline gap-3">
-                     <span className={cn(
-                       "text-3xl font-black tracking-tighter",
-                       isProductOnSale(quickViewProduct) ? "text-red-600" : "text-slate-900"
-                     )}>
-                       {formatPrice(isProductOnSale(quickViewProduct) ? (selectedDuration?.promo || quickViewProduct.price) : (selectedDuration?.normal || quickViewProduct.price))}
-                     </span>
-                     {(selectedDuration?.strike || quickViewProduct.oldPrice) && (
-                       <span className="text-lg text-slate-300 line-through font-bold">
-                         {formatPrice(selectedDuration?.strike || quickViewProduct.oldPrice)}
-                       </span>
-                     )}
-                   </div>
-                </div>
-
-                <div className="prose prose-slate prose-sm line-clamp-3">
-                   <p className="text-slate-500 font-medium">{quickViewProduct.description}</p>
-                </div>
-              </div>
-
-              <div className="mt-8 space-y-3">
-                <Button
-                  onClick={async () => {
-                    setIsAdding(true);
-                    await new Promise(r => setTimeout(r, 600));
-                    addToCart({
-                      id: quickViewProduct.id,
-                      name: `${quickViewProduct.name} (${selectedDuration?.label || 'Standard'})`,
-                      price: isProductOnSale(quickViewProduct) ? (selectedDuration?.promo || quickViewProduct.price) : (selectedDuration?.normal || quickViewProduct.price),
-                      image: quickViewProduct.image,
-                      quantity: 1
-                    });
-                    setIsAdding(false);
-                    setJustAdded(true);
-                    setTimeout(() => setJustAdded(false), 2000);
-                  }}
-                  className={cn(
-                    "w-full h-14 sm:h-16 rounded-2xl sm:rounded-[1.5rem] text-lg font-black transition-all shadow-xl",
-                    justAdded ? "bg-green-600" : "bg-blue-600 hover:bg-blue-700 shadow-blue-500/20"
-                  )}
-                >
-                  {isAdding ? (
-                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : justAdded ? (
-                    <div className="flex items-center gap-2"><Check /> Added!</div>
-                  ) : (
-                    <div className="flex items-center gap-3">
-                      <ShoppingCart size={22} />
-                      {t('add_to_cart')}
-                    </div>
-                  )}
-                </Button>
-                <Link 
-                  href={`/product/${quickViewProduct.id}`}
-                  className="block w-full py-4 text-center text-sm font-black text-slate-400 hover:text-blue-600 transition-colors uppercase tracking-widest"
-                >
-                  View Full Details →
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )}
   </div>
 );
 }

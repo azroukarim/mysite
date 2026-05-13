@@ -17,6 +17,7 @@ import { useState } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Separator } from "../ui/separator";
+import { paymentMethods } from "@/lib/payment-methods";
 
 export default function Footer() {
   const [email, setEmail] = useState("");
@@ -153,24 +154,33 @@ export default function Footer() {
           </div>
         </div>
 
-        <Separator className="my-8" />
+        <div className="py-10 flex flex-col items-center justify-center gap-8 border-t border-slate-100/50">
+          <div className="text-center">
+            <h3 className="text-lg md:text-xl font-black text-slate-900 mb-2 uppercase tracking-tight">
+              {t('payment_methods_title')}
+            </h3>
+            <div className="w-12 h-1 bg-primary mx-auto rounded-full opacity-50" />
+          </div>
+          
+          <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 transition-all duration-500">
+            {paymentMethods.map((method) => (
+              <div key={method.name} className="relative h-12 w-20 md:h-16 md:w-28 bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden flex items-center justify-center p-3 group hover:border-primary/50 hover:shadow-2xl hover:scale-110 transition-all duration-500">
+                <img 
+                  src={method.image} 
+                  alt={method.name} 
+                  className="max-h-full max-w-full object-contain transition-all duration-300"
+                />
+              </div>
+            ))}
+          </div>
 
-        <div className="py-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="text-center space-y-2">
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <Link href="/admin" className="hover:text-muted-foreground cursor-default decoration-transparent">
                 <span>{t('all_rights')}</span>
               </Link>
             </div>
-            <p className="text-sm text-muted-foreground">Developed by <span className="font-bold text-slate-900">karim Abu rida</span> • enjoy</p>
-          </div>
-
-
-
-          <div className="flex flex-wrap items-center justify-center md:justify-end gap-2 opacity-60 hover:opacity-100 transition-all duration-500 max-w-lg">
-            {['BINANCE', 'CASHPLUS', 'WAFACASH', 'REMITLY', 'MONEYGRAM', 'CIH BANK', 'BARID CASH', 'DAMAN CASH', 'WESTERN UNION', 'RIA MONEYTRANS', 'SENDWAVE'].map((method) => (
-              <div key={method} className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-[9px] font-bold tracking-wider">{method}</div>
-            ))}
+            <p className="text-xs md:text-sm text-muted-foreground opacity-80">Developed by <span className="font-bold text-slate-900">karim Abu rida</span> • enjoy</p>
           </div>
         </div>
       </div>

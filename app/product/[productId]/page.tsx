@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import CountdownTimer from "@/components/product/CountdownTimer";
 import { parseSaleDate } from "@/lib/dateUtils";
+import { paymentMethods } from "@/lib/payment-methods";
 
 export default function Product() {
   const { addToCart } = useCart();
@@ -186,9 +187,9 @@ export default function Product() {
       <ProductBreadcrumb />
 
       <div className="flex flex-col gap-8 mb-16 items-start">
-        {/* Top Section: Image Frame */}
-        <div className="w-full flex justify-start">
-          <div className="relative group w-full max-w-sm mx-auto lg:mx-0">
+        {/* Top Section: Image Frame with Vertical Payment Logos */}
+        <div className="w-full flex flex-row items-center gap-4 lg:gap-8 justify-start">
+          <div className="relative group w-full max-w-sm lg:mx-0">
             <div className="relative aspect-square h-[320px] sm:h-[280px] w-full rounded-[1.5rem] overflow-hidden bg-white border border-slate-100 shadow-lg flex items-center justify-center p-4 sm:p-20 transition-all duration-700 hover:shadow-primary/10">
               <Image
                 src={product.image}
@@ -238,6 +239,23 @@ export default function Product() {
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
                 </div>
               </button>
+            </div>
+          </div>
+
+          <div className="hidden sm:flex flex-col gap-4">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-l-2 border-primary pl-3 py-1">
+              {t('payment_methods_title')}
+            </p>
+            <div className="grid grid-cols-3 gap-4 lg:gap-6">
+              {paymentMethods.map((method) => (
+                <div key={method.name} className="relative h-12 w-20 lg:h-16 lg:w-28 bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden flex items-center justify-center p-3 group hover:border-primary/50 hover:shadow-2xl hover:scale-110 transition-all duration-500">
+                  <img 
+                    src={method.image} 
+                    alt={method.name} 
+                    className="max-h-full max-w-full object-contain transition-all duration-300"
+                  />
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -484,15 +502,18 @@ export default function Product() {
             </Button>
           </div>
 
-          {/* Safe Payment Methods */}
-          <div className="pt-6 mt-6 border-t border-slate-100">
-            <p className="text-[10px] font-bold text-slate-400 mb-3 uppercase tracking-wider text-center">
-              {language === 'en' ? 'Guaranteed Safe Checkout' : 'Paiement Sécurisé Garanti'}
+          <div className="pt-6 mt-6 border-t border-slate-100 sm:hidden">
+            <p className="text-[11px] font-black text-slate-900 mb-4 uppercase tracking-widest text-center">
+              {t('payment_methods_title')}
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-2 opacity-80">
-              {['BINANCE', 'CASHPLUS', 'WAFACASH', 'REMITLY', 'MONEYGRAM', 'CIH BANK', 'BARID CASH', 'DAMAN CASH', 'WESTERN UNION', 'RIA MONEYTRANS', 'SENDWAVE'].map((method) => (
-                <div key={method} className="px-2 py-1 bg-slate-50 border border-slate-100 text-slate-500 rounded text-[9px] font-bold tracking-wider">
-                  {method}
+            <div className="flex flex-wrap items-center justify-center gap-4 opacity-100">
+              {paymentMethods.map((method) => (
+                <div key={method.name} className="relative h-10 w-16 bg-white rounded-xl border border-slate-200 shadow-md overflow-hidden flex items-center justify-center p-2 group hover:border-primary/50 hover:shadow-lg hover:scale-105 transition-all duration-300">
+                  <img 
+                    src={method.image} 
+                    alt={method.name} 
+                    className="max-h-full max-w-full object-contain"
+                  />
                 </div>
               ))}
             </div>

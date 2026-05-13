@@ -128,6 +128,7 @@ const translations: any = {
   faq_a3: { en: 'Activation is usually instant, but it can take up to 15 minutes during peak hours.', fr: 'L\'activation est généralement instantanée, mais cela peut prendre jusqu\'à 15 minutes pendant les heures de pointe.' },
   faq_q4: { en: 'Do you offer a free trial?', fr: 'Proposez-vous un essai gratuit ?' },
   faq_a4: { en: 'Yes, contact us on WhatsApp to get a 24-hour free trial to test our service quality.', fr: 'Oui, contactez-nous sur WhatsApp pour obtenir un essai gratuit de 24 heures afin de tester la qualité de notre service.' },
+  payment_methods_title: { en: 'Our Available Payment Methods', fr: 'Nos moyens de paiement disponibles' },
 };
 
 interface LanguageContextType {

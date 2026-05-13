@@ -8,6 +8,7 @@ import { useCart } from "@/context/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { CreditCard, Heart, Shield, Truck } from "lucide-react";
 import Link from "next/link";
+import { paymentMethods } from "@/lib/payment-methods";
 
 export default function OrderSummary() {
   const { cart } = useCart();
@@ -73,6 +74,20 @@ export default function OrderSummary() {
           </svg>
           إتمام الطلب عبر واتساب
         </Button>
+
+        <div className="pt-2">
+          <div className="flex flex-wrap items-center justify-center gap-2 opacity-80">
+            {paymentMethods.map((method) => (
+              <div key={method.name} className="relative h-6 w-10 bg-white rounded border border-slate-100 shadow-sm overflow-hidden flex items-center justify-center p-1">
+                <img 
+                  src={method.image} 
+                  alt={method.name} 
+                  className="max-h-full max-w-full object-contain"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
 
         <div className="space-y-3 pt-4 border-t border-border">
           <div className="flex items-center gap-3 text-sm text-muted-foreground">

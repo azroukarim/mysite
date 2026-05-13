@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import CountdownTimer from "@/components/product/CountdownTimer";
 import { parseSaleDate } from "@/lib/dateUtils";
 import { useLanguage } from "@/context/LanguageContext";
+import { useRouter } from "next/navigation";
 
 interface Product {
   id: number;
@@ -47,6 +48,7 @@ export default function ProductCard({
   const { addToCart } = useCart();
   const { formatPrice } = useCurrency();
   const { t } = useLanguage();
+  const router = useRouter();
 
   // Parse prices from the first duration option
   const getPrices = () => {
@@ -124,9 +126,7 @@ export default function ProductCard({
   const handleQuickViewClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (onQuickView) {
-      onQuickView(product);
-    }
+    router.push(`/product/${product.id}`);
   };
 
   return (
