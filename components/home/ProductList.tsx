@@ -224,6 +224,43 @@ export default function ProductList() {
                     {t('sale')}
                   </div>
                 )}
+
+                {/* Downloader Code Copy Button */}
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center px-4">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const codeMatch = quickViewProduct.description?.match(/(?:downloader\s+)?code[:\s]*(\d+)/i);
+                      const code = codeMatch ? codeMatch[1] : "295325"; 
+                      navigator.clipboard.writeText(code);
+                      const btn = document.getElementById(`copy-code-qv-${quickViewProduct.id}`);
+                      if (btn) {
+                        const originalContent = btn.innerHTML;
+                        btn.innerHTML = language === 'en' ? 'Copied!' : 'Copié !';
+                        btn.classList.add('bg-green-600', 'text-white');
+                        setTimeout(() => {
+                          btn.innerHTML = originalContent;
+                          btn.classList.remove('bg-green-600', 'text-white');
+                        }, 2000);
+                      }
+                    }}
+                    id={`copy-code-qv-${quickViewProduct.id}`}
+                    className="group/btn px-3 py-1.5 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-white/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+                  >
+                    <div className="flex flex-col items-start leading-none text-left">
+                      <span className="text-[6px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Downloader Code</span>
+                      <span className="text-xs font-black text-slate-900">
+                        {(() => {
+                          const codeMatch = quickViewProduct.description?.match(/(?:downloader\s+)?code[:\s]*(\d+)/i);
+                          return codeMatch ? codeMatch[1] : "295325";
+                        })()}
+                      </span>
+                    </div>
+                    <div className="w-6 h-6 rounded-lg bg-blue-600/10 text-blue-600 flex items-center justify-center group-hover/btn:bg-blue-600 group-hover/btn:text-white transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                    </div>
+                  </button>
+                </div>
               </div>
               
               <div className="hidden md:flex flex-wrap gap-2 justify-center">
