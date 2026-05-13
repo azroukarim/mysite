@@ -188,22 +188,22 @@ export default function Product() {
       <div className="grid lg:grid-cols-2 gap-8 mb-16 items-start">
         {/* Left Column: Image Gallery Style */}
         <div className="space-y-6">
-          <div className="relative group max-w-md mx-auto lg:mx-0">
-            <div className="relative aspect-square sm:h-[340px] w-full rounded-[2rem] overflow-hidden bg-white border border-slate-100 shadow-xl flex items-center justify-center p-16 sm:p-24 transition-all duration-700 hover:shadow-primary/10">
+          <div className="relative group max-w-sm mx-auto lg:mx-0">
+            <div className="relative aspect-square sm:h-[280px] w-full rounded-[1.5rem] overflow-hidden bg-white border border-slate-100 shadow-lg flex items-center justify-center p-12 sm:p-20 transition-all duration-700 hover:shadow-primary/10">
               <Image
                 src={product.image}
                 alt={product.name}
                 fill
                 priority
-                className="object-contain p-16 sm:p-24 transition-transform duration-700 group-hover:scale-105"
+                className="object-contain p-12 sm:p-20 transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900/5 to-transparent pointer-events-none" />
             </div>
             
             {/* Trust Badges on Image */}
-            <div className="absolute bottom-6 left-6 right-6 flex gap-2 overflow-x-auto no-scrollbar">
+            <div className="absolute bottom-4 left-4 right-4 flex gap-1.5 overflow-x-auto no-scrollbar">
               {['4K QUALITY', 'INSTANT ACTIVATION', '24/7 SUPPORT'].map((tag) => (
-                <div key={tag} className="px-3 py-1.5 bg-white/90 backdrop-blur-md rounded-full text-[9px] font-black tracking-widest text-slate-900 shadow-xl whitespace-nowrap border border-white/20">
+                <div key={tag} className="px-2 py-1 bg-white/90 backdrop-blur-md rounded-full text-[7px] font-black tracking-widest text-slate-900 shadow-md whitespace-nowrap border border-white/10">
                   {tag}
                 </div>
               ))}
@@ -212,18 +212,18 @@ export default function Product() {
         </div>
 
         {/* Right Column: Details */}
-        <div className="space-y-4">
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2 tracking-tight">
+        <div className="space-y-3">
+          <h1 className="text-xl lg:text-2xl font-bold text-foreground mb-1 tracking-tight">
             {product.name}
           </h1>
           
-          <div className="flex items-center gap-2 mb-4">
-            <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5 mb-2">
+            <div className="flex items-center gap-0.5">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} className="h-4 w-4 fill-primary text-primary" />
+                <Star key={i} className="h-3 w-3 fill-primary text-primary" />
               ))}
             </div>
-            <span className="text-sm text-muted-foreground font-medium">
+            <span className="text-[10px] text-muted-foreground font-bold">
               (4.8) • 127 reviews
             </span>
           </div>
@@ -238,19 +238,19 @@ export default function Product() {
             </div>
           )}
 
-          <div className="flex items-baseline gap-4 flex-wrap">
+          <div className="flex items-baseline gap-3 flex-wrap">
             <span className={cn(
-              "text-5xl font-black transition-all tracking-tighter",
-              isSaleActive ? "text-red-600 drop-shadow-[0_0_20px_rgba(220,38,38,0.2)]" : "text-slate-900"
+              "text-3xl font-black transition-all tracking-tighter",
+              isSaleActive ? "text-red-600 drop-shadow-[0_0_15px_rgba(220,38,38,0.15)]" : "text-slate-900"
             )}>
               {formatPrice(finalPrice)}
             </span>
             {finalOldPrice && (
-              <div className="flex items-center gap-3">
-                <span className="text-2xl font-bold text-slate-300 line-through decoration-slate-300/50">
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-bold text-slate-300 line-through decoration-slate-300/50">
                   {formatPrice(finalOldPrice)}
                 </span>
-                <span className="px-3 py-1 bg-gradient-to-r from-red-600 to-amber-500 text-white text-xs font-black rounded-full shadow-lg shadow-red-500/20">
+                <span className="px-2 py-0.5 bg-gradient-to-r from-red-600 to-amber-500 text-white text-[9px] font-black rounded-full shadow-md">
                   -{Math.round(((finalOldPrice - finalPrice) / finalOldPrice) * 100)}%
                 </span>
               </div>
@@ -261,9 +261,9 @@ export default function Product() {
 
           <Separator />
 
-          <div className="space-y-4">
-            <div className="space-y-3">
-              <label className="text-sm font-bold text-foreground mb-1 block uppercase tracking-wider opacity-70">
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-foreground mb-0.5 block uppercase tracking-wider opacity-60">
                 {durationOptions ? t('select_duration') : (product.duration ? t('subscription_duration') : t('quantity'))}
               </label>
               
@@ -278,31 +278,31 @@ export default function Product() {
                         key={idx}
                         onClick={() => setSelectedDuration(opt)}
                         className={cn(
-                          "relative group px-5 py-5 rounded-[1.5rem] border-2 transition-all duration-300 flex items-center justify-between overflow-hidden",
+                          "relative group px-4 py-3 rounded-[1.2rem] border-2 transition-all duration-300 flex items-center justify-between overflow-hidden",
                           isSelected
-                            ? "border-primary bg-primary/5 shadow-xl shadow-primary/10 translate-y-[-2px]"
+                            ? "border-primary bg-primary/5 shadow-lg shadow-primary/5 translate-y-[-1px]"
                             : "border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50"
                         )}
                       >
-                        <div className="flex items-center gap-4 z-10">
+                        <div className="flex items-center gap-3 z-10">
                           <div className={cn(
-                            "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500",
-                            isSelected ? "bg-primary text-white rotate-6" : "bg-slate-50 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary"
+                            "w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-500",
+                            isSelected ? "bg-primary text-white rotate-3" : "bg-slate-50 text-slate-400 group-hover:bg-primary/5 group-hover:text-primary"
                           )}>
                             {isLifetime ? (
-                              <Zap className="w-6 h-6 fill-current" />
+                              <Zap className="w-4 h-4 fill-current" />
                             ) : (
-                              <MonitorPlay className="w-6 h-6" />
+                              <MonitorPlay className="w-4 h-4" />
                             )}
                           </div>
                           <div className="text-left">
                             <div className={cn(
-                              "font-black text-base tracking-tight leading-none mb-1",
+                              "font-black text-sm tracking-tight leading-none mb-0.5",
                               isSelected ? "text-slate-900" : "text-slate-600"
                             )}>
                               {opt.label}
                             </div>
-                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                            <div className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">
                               {t('full_access')}
                             </div>
                           </div>
@@ -310,13 +310,13 @@ export default function Product() {
                         
                         <div className="text-right z-10">
                           <div className={cn(
-                            "text-xl font-black tracking-tighter",
+                            "text-lg font-black tracking-tighter",
                             isSelected ? "text-primary" : "text-slate-900"
                           )}>
                             {formatPrice(isSaleActive ? opt.promo : opt.normal)}
                           </div>
                           {opt.strike && (
-                            <div className="text-xs text-slate-300 line-through font-bold">{formatPrice(opt.strike)}</div>
+                            <div className="text-[9px] text-slate-300 line-through font-bold">{formatPrice(opt.strike)}</div>
                           )}
                         </div>
 
@@ -362,14 +362,14 @@ export default function Product() {
               )}
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <div className="flex flex-col sm:flex-row gap-2 pt-1">
               <Button
                 size="lg"
                 className={cn(
-                  "flex-1 h-11 text-sm font-bold transition-all duration-300 rounded-xl shadow-md",
+                  "flex-1 h-9 text-[11px] font-black transition-all duration-300 rounded-xl shadow-sm",
                   justAdded
-                    ? "bg-green-600 text-white hover:bg-green-700 shadow-green-500/10"
-                    : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/10"
+                    ? "bg-green-600 text-white hover:bg-green-700 shadow-green-500/5"
+                    : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/5"
                 )}
                 onClick={handleAddToCart}
                 disabled={isAdding}
@@ -396,7 +396,7 @@ export default function Product() {
                 size="lg"
                 variant="outline"
                 onClick={handleBuyNow}
-                className="flex-1 h-11 text-sm font-bold rounded-xl border-2"
+                className="flex-1 h-9 text-[11px] font-black rounded-xl border-2"
               >
                 {t('buy_now')}
               </Button>
@@ -404,7 +404,7 @@ export default function Product() {
 
             <Button
               size="lg"
-              className="w-full h-9 bg-[#25D366] text-white hover:bg-[#128C7E] flex items-center justify-center gap-2 font-black text-xs rounded-xl shadow-lg shadow-green-500/10 mt-1"
+              className="w-full h-9 bg-[#25D366] text-white hover:bg-[#128C7E] flex items-center justify-center gap-2 font-black text-[11px] rounded-xl shadow-md shadow-green-500/5 mt-0.5"
               onClick={() => {
                 const WHATSAPP_NUMBER = "212670965351";
                 const typeLabel = language === 'en' ? 'Type' : "Type d'abonnement";
