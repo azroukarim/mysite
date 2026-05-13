@@ -47,7 +47,7 @@ export default function ProductCard({
 
   const { addToCart } = useCart();
   const { formatPrice } = useCurrency();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const router = useRouter();
 
   // Parse prices from the first duration option
