@@ -404,7 +404,7 @@ export default function Product() {
 
             <Button
               size="lg"
-              className="w-full h-9 bg-[#25D366] text-white hover:bg-[#128C7E] flex items-center justify-center gap-2 font-black text-[11px] rounded-xl shadow-md shadow-green-500/5 mt-0.5"
+              className="w-fit px-6 h-9 bg-[#25D366] text-white hover:bg-[#128C7E] flex items-center justify-center gap-2 font-black text-[11px] rounded-xl shadow-md shadow-green-500/5 mt-0.5"
               onClick={() => {
                 const WHATSAPP_NUMBER = "212670965351";
                 const typeLabel = language === 'en' ? 'Type' : "Type d'abonnement";
