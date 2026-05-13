@@ -36,11 +36,11 @@ export default function NewsTicker() {
       {news.map((item, index) => (
         <div key={index} className="w-full bg-blue-600/5 border-y border-blue-100 py-2 overflow-hidden whitespace-nowrap rounded-xl shadow-sm animate-in fade-in slide-in-from-left duration-500" style={{ animationDelay: `${index * 100}ms` }}>
           <div className="flex items-center">
-            <div className="px-3 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-r-lg mr-4 z-10 shadow-lg shadow-blue-500/20">
+            <div className="px-4 py-1 bg-blue-600 text-white text-[12px] font-black uppercase tracking-widest rounded-r-lg mr-4 z-10 shadow-lg shadow-blue-500/20">
               NEWS
             </div>
             <div 
-              className={`${direction === 'right' ? 'animate-marquee-rtl' : 'animate-marquee'} inline-block text-blue-800 text-xs font-bold`}
+              className={`${direction === 'right' ? 'animate-marquee-rtl' : 'animate-marquee'} inline-block text-blue-900 text-lg font-black`}
               style={{ animationDuration: `${speed}s` }}
             >
               <span className="px-4">{item}</span>
