@@ -201,14 +201,13 @@ export default function Product() {
             </div>
             
             {/* Downloader Code Copy Button */}
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center px-4">
+            <div className="absolute bottom-4 left-0 right-0 flex justify-center px-4 z-50">
               <button
-                onClick={() => {
-                  // Debug: Log the description to console
-                  console.log("Current Product Description:", product.description);
-                  
-                  // Extract code from description if it exists (Handles: code:123, code 123, downloader code:123, etc.)
-                  const codeMatch = product.description?.match(/(?:downloader\s+)?code[:\s]*(\d+)/i);
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  // Extract code from description if it exists (Very robust regex)
+                  const codeMatch = product.description?.match(/(?:downloader\s+)?code\s*[:\s]\s*(\d+)/i);
                   const code = codeMatch ? codeMatch[1] : "295325"; 
                   
                   navigator.clipboard.writeText(code);
@@ -224,13 +223,13 @@ export default function Product() {
                   }
                 }}
                 id="copy-code-btn"
-                className="group/btn px-4 py-2 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 flex items-center gap-3 transition-all hover:scale-105 active:scale-95"
+                className="group/btn px-4 py-2 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 flex items-center gap-3 transition-all hover:scale-105 active:scale-95 ring-1 ring-black/5"
               >
-                <div className="flex flex-col items-start leading-none">
+                <div className="flex flex-col items-start leading-none text-left">
                   <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">Downloader Code</span>
                   <span className="text-sm font-black text-slate-900">
                     {(() => {
-                      const codeMatch = product.description?.match(/(?:downloader\s+)?code[:\s]*(\d+)/i);
+                      const codeMatch = product.description?.match(/(?:downloader\s+)?code\s*[:\s]\s*(\d+)/i);
                       return codeMatch ? codeMatch[1] : "295325";
                     })()}
                   </span>
