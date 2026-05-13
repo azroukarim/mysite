@@ -531,7 +531,7 @@ export default function AdminDashboard() {
                             <input 
                               type="number"
                               placeholder="0.00"
-                              className="w-full pl-7 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner"
+                              className="w-full pl-14 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner"
                                 onFocus={(e) => e.target.select()}
                                 value={selectedDurations[dur].price}
                                 onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], price: e.target.value } })}
@@ -545,7 +545,7 @@ export default function AdminDashboard() {
                             <input 
                               type="number"
                               placeholder="0.00"
-                              className="w-full pl-7 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner"
+                              className="w-full pl-14 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner"
                                 onFocus={(e) => e.target.select()}
                                 value={selectedDurations[dur].normalPrice || ''}
                                 onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], normalPrice: e.target.value } })}
@@ -559,7 +559,7 @@ export default function AdminDashboard() {
                             <input 
                               type="number"
                               placeholder="0.00"
-                              className="w-full pl-7 pr-3 py-2.5 bg-red-50/30 border border-red-100 rounded-xl text-sm font-bold outline-none text-red-400 line-through placeholder:text-red-300"
+                              className="w-full pl-14 pr-3 py-2.5 bg-red-50/30 border border-red-100 rounded-xl text-sm font-bold outline-none text-red-400 line-through placeholder:text-red-300"
                                 onFocus={(e) => e.target.select()}
                                 value={selectedDurations[dur].oldPrice}
                                 onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], oldPrice: e.target.value } })}
@@ -1733,7 +1733,7 @@ export default function AdminDashboard() {
                                                <input 
                                                  type="number"
                                                  placeholder="0.0"
-                                                 className="w-full pl-11 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black outline-none focus:border-blue-500 focus:bg-white transition-all"
+                                                 className="w-full pl-14 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black outline-none focus:border-blue-500 focus:bg-white transition-all"
                                                  onFocus={(e) => e.target.select()}
                                                  value={(editSelectedDurations || {})[dur]?.price || ''}
                                                  onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], price: e.target.value } })}
@@ -1747,7 +1747,7 @@ export default function AdminDashboard() {
                                               <input 
                                                 type="number"
                                                 placeholder="0.0"
-                                                className="w-full pl-11 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black outline-none focus:border-blue-500 focus:bg-white transition-all"
+                                                className="w-full pl-14 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black outline-none focus:border-blue-500 focus:bg-white transition-all"
                                                 onFocus={(e) => e.target.select()}
                                                 value={(editSelectedDurations || {})[dur]?.normalPrice || ''}
                                                 onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], normalPrice: e.target.value } })}
@@ -1761,7 +1761,7 @@ export default function AdminDashboard() {
                                                <input 
                                                  type="number"
                                                  placeholder="0.0"
-                                                 className="w-full pl-11 pr-2 py-2 bg-red-50/20 border border-red-50 rounded-lg text-xs font-bold outline-none text-red-400 line-through placeholder:text-red-200"
+                                                 className="w-full pl-14 pr-2 py-2 bg-red-50/20 border border-red-50 rounded-lg text-xs font-bold outline-none text-red-400 line-through placeholder:text-red-200"
                                                  onFocus={(e) => e.target.select()}
                                                  value={(editSelectedDurations || {})[dur]?.oldPrice || ''}
                                                  onChange={(e) => setEditSelectedDurations({ ...(editSelectedDurations || {}), [dur]: { ...(editSelectedDurations || {})[dur], oldPrice: e.target.value } })}
