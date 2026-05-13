@@ -73,7 +73,7 @@ export default function ProductList() {
   return (
     <div className="space-y-8">
       {/* News Bar */}
-      <div className="max-w-md mx-auto px-4 sm:px-0">
+      <div className="max-w-4xl mx-auto px-4 sm:px-0">
         <NewsTicker />
       </div>
 
