@@ -551,7 +551,6 @@ export default function Product() {
               {[
                 t('guarantee_1'),
                 t('guarantee_2'),
-                t('guarantee_3'),
                 t('guarantee_4'),
                 t('guarantee_5')
               ].map((item, i) => (
