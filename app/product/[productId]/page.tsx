@@ -189,13 +189,13 @@ export default function Product() {
         {/* Left Column: Image Gallery Style */}
         <div className="space-y-6">
           <div className="relative group">
-            <div className="relative aspect-square sm:h-[450px] w-full rounded-[2.5rem] overflow-hidden bg-white border border-slate-100 shadow-2xl flex items-center justify-center p-12 sm:p-20 transition-all duration-700 hover:shadow-primary/10">
+            <div className="relative aspect-square sm:h-[380px] w-full rounded-[2.5rem] overflow-hidden bg-white border border-slate-100 shadow-2xl flex items-center justify-center p-24 sm:p-40 transition-all duration-700 hover:shadow-primary/10">
               <Image
                 src={product.image}
                 alt={product.name}
                 fill
                 priority
-                className="object-contain p-12 sm:p-20 transition-transform duration-700 group-hover:scale-105"
+                className="object-contain p-24 sm:p-40 transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900/5 to-transparent pointer-events-none" />
             </div>
