@@ -48,9 +48,9 @@ export default function NewsTicker() {
                 style={{ animationDuration: `${speed}s` }}
                 dir={isArabic ? 'rtl' : 'ltr'}
               >
-                <span className="px-4">{item}</span>
-                <span className="px-4">{item}</span>
-                <span className="px-4">{item}</span>
+                <span className="px-4">{item}{isArabic ? '\u200F' : ''}</span>
+                <span className="px-4">{item}{isArabic ? '\u200F' : ''}</span>
+                <span className="px-4">{item}{isArabic ? '\u200F' : ''}</span>
               </div>
             </div>
           </div>
