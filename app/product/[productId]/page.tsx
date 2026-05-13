@@ -204,15 +204,18 @@ export default function Product() {
             <div className="absolute bottom-4 left-0 right-0 flex justify-center px-4">
               <button
                 onClick={() => {
-                  const code = "295325"; // Default downloader code, can be customized
+                  // Extract code from description if it exists (Format: CODE:123456)
+                  const codeMatch = product.description?.match(/CODE:(\d+)/);
+                  const code = codeMatch ? codeMatch[1] : "295325"; 
+                  
                   navigator.clipboard.writeText(code);
                   const btn = document.getElementById('copy-code-btn');
                   if (btn) {
-                    const originalText = btn.innerHTML;
+                    const originalContent = btn.innerHTML;
                     btn.innerHTML = language === 'en' ? 'Copied!' : 'Copié !';
                     btn.classList.add('bg-green-600', 'text-white');
                     setTimeout(() => {
-                      btn.innerHTML = originalText;
+                      btn.innerHTML = originalContent;
                       btn.classList.remove('bg-green-600', 'text-white');
                     }, 2000);
                   }
@@ -222,7 +225,12 @@ export default function Product() {
               >
                 <div className="flex flex-col items-start leading-none">
                   <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">Downloader Code</span>
-                  <span className="text-sm font-black text-slate-900">295325</span>
+                  <span className="text-sm font-black text-slate-900">
+                    {(() => {
+                      const codeMatch = product.description?.match(/CODE:(\d+)/);
+                      return codeMatch ? codeMatch[1] : "295325";
+                    })()}
+                  </span>
                 </div>
                 <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover/btn:bg-primary group-hover/btn:text-white transition-colors">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
