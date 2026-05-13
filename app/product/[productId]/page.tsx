@@ -268,7 +268,7 @@ export default function Product() {
               </label>
               
               {durationOptions ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-2 items-start">
                   {durationOptions.map((opt: any, idx: number) => {
                     const isLifetime = opt.label.toLowerCase().includes('lifetime');
                     const isSelected = selectedDuration?.label === opt.label;
@@ -278,7 +278,7 @@ export default function Product() {
                         key={idx}
                         onClick={() => setSelectedDuration(opt)}
                         className={cn(
-                          "relative group px-4 py-3 rounded-[1.2rem] border-2 transition-all duration-300 flex items-center justify-between overflow-hidden",
+                          "relative group px-4 py-2 rounded-xl border-2 transition-all duration-300 flex items-center justify-between overflow-hidden w-fit min-w-[220px]",
                           isSelected
                             ? "border-primary bg-primary/5 shadow-lg shadow-primary/5 translate-y-[-1px]"
                             : "border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50"
@@ -362,11 +362,11 @@ export default function Product() {
               )}
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2 pt-1">
+            <div className="flex flex-col gap-2 pt-1 items-start">
               <Button
                 size="lg"
                 className={cn(
-                  "flex-1 h-9 text-[11px] font-black transition-all duration-300 rounded-xl shadow-sm",
+                  "w-fit px-6 h-9 text-[11px] font-black transition-all duration-300 rounded-xl shadow-sm",
                   justAdded
                     ? "bg-green-600 text-white hover:bg-green-700 shadow-green-500/5"
                     : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/5"
@@ -396,7 +396,7 @@ export default function Product() {
                 size="lg"
                 variant="outline"
                 onClick={handleBuyNow}
-                className="flex-1 h-9 text-[11px] font-black rounded-xl border-2"
+                className="w-fit px-6 h-9 text-[11px] font-black rounded-xl border-2"
               >
                 {t('buy_now')}
               </Button>
