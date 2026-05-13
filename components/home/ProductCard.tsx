@@ -24,7 +24,15 @@ interface Product {
   sale_end_date?: string | null;
 }
 
-export default function ProductCard({ product, isReadOnly = false }: { product: Product, isReadOnly?: boolean }) {
+export default function ProductCard({ 
+  product, 
+  isReadOnly = false,
+  onQuickView 
+}: { 
+  product: Product, 
+  isReadOnly?: boolean,
+  onQuickView?: (product: Product) => void
+}) {
   const [isLiked, setIsLiked] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
@@ -113,6 +121,14 @@ export default function ProductCard({ product, isReadOnly = false }: { product: 
     setIsLiked(!isLiked);
   };
 
+  const handleQuickViewClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onQuickView) {
+      onQuickView(product);
+    }
+  };
+
   return (
     <div className="relative group pt-1 sm:pt-5">
       {/* Flash Sale Countdown - Floating Badge Design */}
@@ -148,7 +164,7 @@ export default function ProductCard({ product, isReadOnly = false }: { product: 
             />
           </Button>
 
-          <div className={cn("block relative", isReadOnly && "pointer-events-none")}>
+          <Link href={`/product/${product.id}`} className={cn("block relative", isReadOnly && "pointer-events-none")}>
             <div className={cn(
               "aspect-square overflow-hidden bg-slate-50/40 flex items-center justify-center p-1 sm:p-6 group-hover:bg-slate-50/80 transition-colors duration-500",
               isReadOnly && "sm:p-4"
@@ -176,13 +192,14 @@ export default function ProductCard({ product, isReadOnly = false }: { product: 
                 <Button
                   size="sm"
                   className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 text-xs"
+                  onClick={handleQuickViewClick}
                 >
                   <Eye className="h-3 w-3 mr-1" />
                   {t('quick_view')}
                 </Button>
               </div>
             )}
-          </div>
+          </Link>
         </div>
 
         <CardContent className={cn("p-1 sm:p-4 space-y-0.5 sm:space-y-3", isReadOnly && "sm:p-3 sm:space-y-2")}>
