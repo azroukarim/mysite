@@ -39,6 +39,18 @@ export default function ContentProtection() {
     }
 
     const preventDefault = (e: Event) => {
+      const target = e.target as HTMLElement;
+      // Allow interaction with buttons, inputs, and links
+      if (
+        target.closest('button') || 
+        target.closest('a') || 
+        target.closest('input') || 
+        target.closest('select') ||
+        target.tagName === 'BUTTON' ||
+        target.tagName === 'A'
+      ) {
+        return true;
+      }
       e.preventDefault();
       e.stopPropagation();
       return false;
