@@ -187,19 +187,20 @@ export default function ProductCard({
               )}
             </div>
 
-            {!isReadOnly && (
-              <div className="absolute inset-0 bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
-                <Button
-                  size="sm"
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 text-xs"
-                  onClick={handleQuickViewClick}
-                >
-                  <Eye className="h-3 w-3 mr-1" />
-                  {t('quick_view')}
-                </Button>
-              </div>
-            )}
           </Link>
+          
+          {!isReadOnly && (
+            <div className="absolute inset-0 bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 pointer-events-none group-hover:pointer-events-auto">
+              <Button
+                size="sm"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 text-xs pointer-events-auto"
+                onClick={handleQuickViewClick}
+              >
+                <Eye className="h-3 w-3 mr-1" />
+                {t('quick_view')}
+              </Button>
+            </div>
+          )}
         </div>
 
         <CardContent className={cn("p-1 sm:p-4 space-y-0.5 sm:space-y-3", isReadOnly && "sm:p-3 sm:space-y-2")}>
