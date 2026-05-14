@@ -1581,13 +1581,13 @@ export default function AdminDashboard() {
                 <Package size={22} />
                 Products
               </button>
-              <Link 
-                href="/admin/ticker"
-                className="flex items-center gap-2 px-8 py-3.5 rounded-xl text-base font-black transition-all text-slate-500 hover:text-slate-700"
+              <button 
+                onClick={() => window.location.href = '/admin/ticker'}
+                className="flex items-center gap-2 px-8 py-3.5 rounded-xl text-base font-black transition-all text-slate-500 hover:text-slate-700 hover:bg-white/50"
               >
                 <Megaphone size={22} />
                 News Ticker
-              </Link>
+              </button>
             </div>
 
             {activeTab === 'products' && (
