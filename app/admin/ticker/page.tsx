@@ -195,12 +195,6 @@ export default function TickerManager() {
     setAdQueue(adQueue.filter(ad => ad.id !== id));
   };
 
-  const restartQueue = () => {
-    if (confirm("This will restart the timing for the entire ad queue from NOW. Continue?")) {
-      setQueueStartTime(new Date().toISOString());
-      handleSaveAll();
-    }
-  };
 
   if (!isLoggedIn) {
     return (
