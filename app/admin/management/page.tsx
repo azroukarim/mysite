@@ -16,6 +16,7 @@ import {
   PlusCircle,
   GripVertical,
   Activity,
+  Settings,
   Sparkles,
   Layers,
   ArrowRight
