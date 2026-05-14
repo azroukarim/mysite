@@ -1564,7 +1564,9 @@ export default function AdminDashboard() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-4">
             <div className="space-y-1">
-              <h2 className="text-4xl font-black tracking-tight">Streaming Manager</h2>
+              <h2 className="text-4xl font-black tracking-tight flex items-center gap-4">
+                Streaming Manager <span className="text-blue-600 text-sm bg-blue-50 px-3 py-1 rounded-full border border-blue-100">v2.1</span>
+              </h2>
               <p className="text-lg text-slate-500 font-medium">Configure your streaming packages and multi-duration pricing.</p>
             </div>
             
@@ -1582,7 +1584,7 @@ export default function AdminDashboard() {
                 Products
               </button>
               <button 
-                onClick={() => window.location.href = '/admin/ticker'}
+                onClick={() => window.location.href = '/admin/management'}
                 className="flex items-center gap-2 px-8 py-3.5 rounded-xl text-base font-black transition-all text-slate-500 hover:text-slate-700 hover:bg-white/50"
               >
                 <Megaphone size={22} />
