@@ -2114,7 +2114,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                      <p className="text-xs text-slate-500 line-clamp-2">
-                      <CopyableDescription text={product.description} />
+                      <CopyableDescription text={product.description} setStatus={setStatus} />
                     </p>
                   </div>
                   <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between gap-2">
