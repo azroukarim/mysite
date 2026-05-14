@@ -20,6 +20,7 @@ const translations: any = {
     en: 'Discover a wide selection of premium Streaming packages and entertainment apps with 4K quality, 24/7 support, and instant activation. Shop now!', 
     fr: 'Découvrez une large sélection de forfaits Streaming premium et d\'applications de divertissement avec une qualité 4K, un support 24/7 et une activation instantanée. Achetez maintenant !' 
   },
+
   
   // Product Page
   add_to_cart: { en: 'Add to Cart', fr: 'Ajouter au panier' },

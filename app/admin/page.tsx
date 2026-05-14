@@ -15,6 +15,9 @@ import { parseSaleDate, formatToGMTPlus1Date } from '@/lib/dateUtils';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { useCurrency } from '@/context/CurrencyContext';
+import ParticlesBackground from '@/components/layout/ParticlesBackground';
+
+
 
 interface Product {
   id: number;
@@ -1051,36 +1054,46 @@ export default function AdminDashboard() {
       <div 
         className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
         style={{
-          backgroundImage: `url('https://i.pinimg.com/1200x/45/d9/2e/45d92ee33e14e2d879cb498321fa6d9d.jpg')`,
+          backgroundImage: `url('https://raw.githubusercontent.com/azroukarim/strzone/main/png/background/background-admin.png')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
         }}
       >
+
         {/* Overlay for better readability */}
-        <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px] z-0" />
+        
+        {/* Particles on top of the overlay */}
+        <ParticlesBackground />
 
         <div className="max-w-md w-full relative z-10 text-center">
+
           <div className="animate-flag-wave mb-8">
-            <h1 className="text-6xl font-black text-slate-950 drop-shadow-[0_2px_20px_rgba(255,255,255,0.5)] uppercase tracking-tight">
-              STREAM<span className="text-blue-600 ml-2">TV</span>
+            <h1 className="text-6xl font-black text-white drop-shadow-[0_2px_30px_rgba(0,0,0,0.5)] uppercase tracking-tight">
+              STREAM<span className="text-white ml-2">TV</span>
             </h1>
+
           </div>
           <div className="mb-10">
             <p className="text-blue-100 font-bold drop-shadow-md uppercase tracking-[0.2em] text-xs">Admin Panel</p>
           </div>
 
-          <div className="bg-white/90 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl border border-white/20 animate-in fade-in zoom-in duration-500">
+
+
+          <div className="bg-transparent p-8 rounded-[3rem] shadow-none border border-white/5 animate-in fade-in zoom-in duration-1000">
+
+
             {!isResetMode ? (
-              <form onSubmit={handleLogin} className="space-y-6">
+              <form onSubmit={handleLogin} className="space-y-6 text-left">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
+                  <label className="text-[10px] font-bold text-white uppercase tracking-[0.2em] ml-2">Email Address</label>
                   <div className="relative">
                     <input
                       type="email"
                       required
                       placeholder="admin@example.com"
-                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
+                      className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl outline-none focus:border-blue-500 transition-all font-medium text-slate-900 placeholder:text-slate-400 shadow-sm"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                     />
@@ -1088,21 +1101,21 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center ml-1">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Password</label>
+                  <div className="flex justify-between items-center ml-2">
+                    <label className="text-[10px] font-bold text-white uppercase tracking-[0.2em]">Password</label>
                     <button 
                       type="button"
                       onClick={() => setIsResetMode(true)}
-                      className="text-xs font-bold text-blue-600 hover:text-blue-700"
+                      className="text-[10px] font-bold text-blue-400 hover:text-blue-300 tracking-wider drop-shadow-sm"
                     >
-                      Forgot?
+                      FORGOT?
                     </button>
                   </div>
                   <input
                     type="password"
                     required
                     placeholder="••••••••"
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
+                    className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl outline-none focus:border-blue-500 transition-all font-medium text-slate-900 placeholder:text-slate-400 shadow-sm"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
@@ -1110,11 +1123,13 @@ export default function AdminDashboard() {
 
                 <button
                   type="submit"
-                  className="w-full py-5 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-[0.98]"
+                  className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-2xl active:scale-[0.98] mt-4 border border-white/10"
                 >
                   Enter Dashboard
                 </button>
+
               </form>
+
             ) : (
               <form 
                 onSubmit={isRecoveryFlow ? handleUpdatePassword : handleResetPassword} 

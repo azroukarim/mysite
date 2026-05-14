@@ -143,6 +143,8 @@ export default function Header() {
                 <Globe className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-500" />
                 <span>{language === 'en' ? 'FR' : 'EN'}</span>
               </button>
+
+
             </div>
           </div>
         </div>
