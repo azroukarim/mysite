@@ -15,7 +15,7 @@ import { parseSaleDate, formatToGMTPlus1Date } from '@/lib/dateUtils';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { useCurrency } from '@/context/CurrencyContext';
-import ParticlesBackground from '@/components/layout/ParticlesBackground';
+
 
 
 
@@ -1064,8 +1064,8 @@ export default function AdminDashboard() {
         {/* Overlay for better readability */}
         <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px] z-0" />
         
-        {/* Particles on top of the overlay */}
-        <ParticlesBackground />
+
+
 
         <div className="max-w-md w-full relative z-10 text-center">
 
