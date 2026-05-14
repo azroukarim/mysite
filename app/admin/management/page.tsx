@@ -13,15 +13,12 @@ import {
   Eye,
   EyeOff,
   Save,
-  ArrowLeft,
-  Settings,
-  Sparkles,
-  Layers,
-  ArrowRight,
   PlusCircle,
   GripVertical,
   Activity,
-  History
+  Sparkles,
+  Layers,
+  ArrowRight
 } from 'lucide-react';
 
 export default function TickerManager() {
