@@ -22,6 +22,7 @@ interface Product {
   category?: string;
   link?: string;
   duration?: string;
+  sale_start_date?: string | null;
   sale_end_date?: string | null;
 }
 
@@ -78,8 +79,10 @@ export default function ProductCard({
   
   const hasSaleEndDate = !!product.sale_end_date;
   const isSaleActive = hasSaleEndDate && !saleEnded && (() => {
-    const target = parseSaleDate(product.sale_end_date);
-    return target ? target > Date.now() : false;
+    const end = parseSaleDate(product.sale_end_date);
+    const start = product.sale_start_date ? parseSaleDate(product.sale_start_date) : 0;
+    const now = Date.now();
+    return end ? (now >= (start || 0) && now < end) : false;
   })();
 
   // 3-Tier Pricing Logic:
@@ -132,10 +135,10 @@ export default function ProductCard({
   return (
     <div className="relative group pt-1 sm:pt-5 h-full">
       {/* Flash Sale Countdown - Floating Badge Design */}
-      {product.sale_end_date && !saleEnded && (
+      {isSaleActive && (
         <div className="absolute top-0 left-0 right-0 z-20 flex justify-center -translate-y-0.5 sm:-translate-y-2 group-hover:-translate-y-3 transition-transform duration-500">
           <CountdownTimer 
-            endDate={product.sale_end_date} 
+            endDate={product.sale_end_date!} 
             onEnd={() => setSaleEnded(true)}
             className="shadow-2xl scale-95 sm:scale-105"
           />
@@ -194,21 +197,32 @@ export default function ProductCard({
 
         <CardContent className={cn("p-1 sm:p-4 space-y-0.5 sm:space-y-3 flex-1 flex flex-col justify-between", isReadOnly && "sm:p-3 sm:space-y-2")}>
           <div className={cn(isReadOnly && "pointer-events-none")}>
-            <div className="flex items-center justify-between mb-0.5">
-              {product.category && (
-                <span className="text-[6px] sm:text-[11px] font-black text-primary uppercase tracking-tighter block truncate">
-                  {product.category.replace('HIDDEN:', '')}
-                </span>
-              )}
-              {isReadOnly && product.category?.startsWith('HIDDEN:') && (
-                <span className="text-[6px] sm:text-[10px] font-black bg-slate-900 text-white px-1.5 py-0.5 rounded uppercase tracking-tighter">
-                  Hidden
-                </span>
-              )}
+            <div className="flex flex-col gap-0.5 mb-1.5">
+              <div className="flex items-center justify-between">
+                {product.category && (
+                  <span className="text-[6px] sm:text-[11px] font-black text-primary uppercase tracking-tighter block truncate">
+                    {product.category.replace('HIDDEN:', '')}
+                  </span>
+                )}
+                {isReadOnly && product.category?.startsWith('HIDDEN:') && (
+                  <span className="text-[6px] sm:text-[10px] font-black bg-slate-900 text-white px-1.5 py-0.5 rounded uppercase tracking-tighter">
+                    Hidden
+                  </span>
+                )}
+                {isSaleActive && (
+                  <span className="text-[6px] sm:text-[11px] font-black bg-red-100 text-red-600 px-0.5 py-0 rounded uppercase">
+                    {t('sale')}
+                  </span>
+                )}
+              </div>
+              
               {isSaleActive && (
-                <span className="text-[6px] sm:text-[11px] font-black bg-red-100 text-red-600 px-0.5 py-0 rounded uppercase">
-                  {t('sale')}
-                </span>
+                <div className="text-[6px] sm:text-[9px] font-bold text-slate-500 space-y-0">
+                  <div className="flex items-center gap-1">
+                    <span className="text-amber-600 uppercase text-[5px] sm:text-[8px]">Ends:</span>
+                    <span>{new Date(product.sale_end_date!).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                  </div>
+                </div>
               )}
             </div>
             <h2 className={cn(

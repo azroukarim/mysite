@@ -130,8 +130,10 @@ export default function Product() {
 
   const hasSaleEndDate = !!product?.sale_end_date;
   const isSaleActive = hasSaleEndDate && !saleEnded && (() => {
-    const target = parseSaleDate(product.sale_end_date);
-    return target ? target > Date.now() : false;
+    const end = parseSaleDate(product.sale_end_date);
+    const start = product.sale_start_date ? parseSaleDate(product.sale_start_date) : 0;
+    const now = Date.now();
+    return end ? (now >= (start || 0) && now < end) : false;
   })();
 
   const currentPrices = selectedDuration || { promo: product?.price || 0, normal: product?.price || 0, strike: null };
@@ -277,12 +279,23 @@ export default function Product() {
             </span>
           </div>
 
-          {product.sale_end_date && !saleEnded && (
-            <div className="w-full py-4">
+          {isSaleActive && (
+            <div className="w-full space-y-3 py-2">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-xs font-black text-amber-600 uppercase bg-amber-50 w-fit px-3 py-1 rounded-lg border border-amber-100">
+                  <Zap size={14} className="fill-current" /> Promo Active
+                </div>
+                <div className="text-[11px] font-bold text-slate-500 flex items-center gap-4 ml-1">
+                  <div className="flex items-center gap-1">
+                    <span className="text-slate-400">Ends at:</span>
+                    <span className="text-red-500">{new Date(product.sale_end_date).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                  </div>
+                </div>
+              </div>
               <CountdownTimer 
                 endDate={product.sale_end_date} 
                 onEnd={() => setSaleEnded(true)}
-                className="shadow-2xl"
+                className="shadow-2xl !mx-0"
               />
             </div>
           )}

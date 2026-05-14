@@ -6,7 +6,8 @@ import {
   Plus, Edit, Trash2, Save, X, Lock, LogOut, 
   ChevronLeft, Package, Image as ImageIcon, 
   Euro, Tag, Search, CheckCircle2, Shield, ShieldAlert,
-  Eye, EyeOff, Copy, ChevronUp, ChevronDown, LayoutGrid, List, Megaphone
+  Eye, EyeOff, Copy, ChevronUp, ChevronDown, LayoutGrid, List, Megaphone,
+  MoreVertical
 } from 'lucide-react';
 import Link from 'next/link';
 import ProductCard from '@/components/home/ProductCard';
@@ -27,6 +28,7 @@ interface Product {
   image: string;
   category?: string;
   duration?: string;
+  sale_start_date?: string | null;
   sale_end_date?: string | null;
 }
 
@@ -281,42 +283,56 @@ const AddProductModal = ({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Tag size={14} className="text-amber-600" />
-                    <span className="text-[10px] font-bold text-amber-700 uppercase tracking-tight">Sale</span>
+                    <span className="text-[10px] font-bold text-amber-700 uppercase tracking-tight">Flash Sale (Start & End)</span>
                   </div>
                   <input 
                     type="checkbox"
                     checked={!!newProduct.sale_end_date}
                     onChange={(e) => {
-                      setNewProduct({
-                        ...newProduct, 
-                        sale_end_date: e.target.checked ? formatToGMTPlus1Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : null
-                      });
+                      if (e.target.checked) {
+                        // Default to now and 7 days later in GMT+1
+                        const now = new Date();
+                        const gmtPlus1Now = new Date(now.getTime() + (1 * 60 * 60 * 1000));
+                        const start = gmtPlus1Now.toISOString().slice(0, 16);
+                        
+                        const weekLater = new Date(now.getTime() + (7 * 24 * 60 * 60 * 1000) + (1 * 60 * 60 * 1000));
+                        const end = weekLater.toISOString().slice(0, 16);
+                        
+                        setNewProduct({
+                          ...newProduct, 
+                          sale_start_date: start + ":00+01:00",
+                          sale_end_date: end + ":00+01:00"
+                        });
+                      } else {
+                        setNewProduct({
+                          ...newProduct, 
+                          sale_start_date: null,
+                          sale_end_date: null
+                        });
+                      }
                     }}
                     className="w-3.5 h-3.5 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
                   />
                 </div>
                 {newProduct.sale_end_date && (
-                  <div className="flex gap-2">
-                    <input 
-                      type="date"
-                      className="flex-[2] p-1.5 text-[10px] bg-white border border-amber-200 rounded-lg outline-none text-amber-900 shadow-inner"
-                      value={formatToGMTPlus1Date(newProduct.sale_end_date)}
-                      onChange={(e) => setNewProduct({ ...newProduct, sale_end_date: e.target.value })}
-                    />
-                    <div className="flex-1 relative">
+                  <div className="space-y-2">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[8px] font-bold text-amber-600 uppercase ml-1">Starts At (GMT+1)</label>
                       <input 
-                        type="number"
-                        placeholder="Hours"
-                        className="w-full p-1.5 pl-5 text-[10px] bg-white border border-amber-200 rounded-lg outline-none text-amber-900 shadow-inner"
-                        onChange={(e) => {
-                          const hrs = parseInt(e.target.value);
-                          if (hrs > 0) {
-                            const expiry = Date.now() + hrs * 60 * 60 * 1000;
-                            setNewProduct({ ...newProduct, sale_end_date: expiry.toString() });
-                          }
-                        }}
+                        type="datetime-local"
+                        className="w-full p-1.5 text-[10px] bg-white border border-amber-200 rounded-lg outline-none text-amber-900 shadow-inner"
+                        value={newProduct.sale_start_date ? newProduct.sale_start_date.slice(0, 16) : ''}
+                        onChange={(e) => setNewProduct({ ...newProduct, sale_start_date: e.target.value + ":00+01:00" })}
                       />
-                      <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[8px] font-bold text-amber-600">H:</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[8px] font-bold text-amber-600 uppercase ml-1">Ends At (GMT+1)</label>
+                      <input 
+                        type="datetime-local"
+                        className="w-full p-1.5 text-[10px] bg-white border border-amber-200 rounded-lg outline-none text-amber-900 shadow-inner"
+                        value={newProduct.sale_end_date ? newProduct.sale_end_date.slice(0, 16) : ''}
+                        onChange={(e) => setNewProduct({ ...newProduct, sale_end_date: e.target.value + ":00+01:00" })}
+                      />
                     </div>
                   </div>
                 )}
@@ -484,6 +500,69 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, itemName, itemCount }:
 };
 
 
+const ProductActionDropdown = ({ 
+  product, 
+  onEdit, 
+  onDelete, 
+  onDuplicate, 
+  onToggleVisibility,
+  onQuickPreview
+}: { 
+  product: Product, 
+  onEdit: () => void, 
+  onDelete: () => void, 
+  onDuplicate: () => void, 
+  onToggleVisibility: () => void,
+  onQuickPreview: () => void
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button 
+        onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
+        className="p-2 hover:bg-slate-100 rounded-xl transition-all text-slate-400 hover:text-slate-900 active:scale-95"
+      >
+        <MoreVertical size={20} />
+      </button>
+      
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-[70]" onClick={() => setIsOpen(false)} />
+          <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] border border-slate-100 z-[80] overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200">
+            <div className="p-2 space-y-1">
+              <button onClick={() => { onQuickPreview(); setIsOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 text-xs font-black text-slate-700 hover:bg-amber-50 hover:text-amber-600 rounded-xl transition-all uppercase tracking-tight">
+                <div className="p-1.5 bg-amber-100/50 rounded-lg"><Eye size={16} /></div>
+                Aperçu Rapide
+              </button>
+              <button onClick={() => { onEdit(); setIsOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 text-xs font-black text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all uppercase tracking-tight">
+                <div className="p-1.5 bg-blue-100/50 rounded-lg"><Edit size={16} /></div>
+                Modifier
+              </button>
+              <button onClick={() => { onDuplicate(); setIsOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 text-xs font-black text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-xl transition-all uppercase tracking-tight">
+                <div className="p-1.5 bg-emerald-100/50 rounded-lg"><Copy size={16} /></div>
+                Dupliquer
+              </button>
+              <button onClick={() => { onToggleVisibility(); setIsOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 text-xs font-black text-slate-700 hover:bg-slate-100 rounded-xl transition-all uppercase tracking-tight">
+                <div className="p-1.5 bg-slate-200/50 rounded-lg">
+                  {product.category?.startsWith('HIDDEN:') ? <Eye size={16} /> : <EyeOff size={16} />}
+                </div>
+                {product.category?.startsWith('HIDDEN:') ? 'Afficher' : 'Masquer'}
+              </button>
+              <div className="h-[1px] bg-slate-50 my-1 mx-2" />
+              <button onClick={() => { onDelete(); setIsOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 text-xs font-black text-red-600 hover:bg-red-50 rounded-xl transition-all uppercase tracking-tight">
+                <div className="p-1.5 bg-red-100/50 rounded-lg"><Trash2 size={16} /></div>
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+
 export default function AdminDashboard() {
   const { currency, symbol, formatPrice, convertPrice, setCurrency } = useCurrency();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -502,6 +581,7 @@ export default function AdminDashboard() {
     image: '', 
     category: 'PREMIUM STREAMING',
     duration: '',
+    sale_start_date: null,
     sale_end_date: null
   });
   
@@ -934,7 +1014,16 @@ export default function AdminDashboard() {
     
     const success = await handleSave([...products, productToAdd]);
     if (success) {
-      setNewProduct({ name: '', price: 0, description: '', image: '', category: 'PREMIUM STREAMING', duration: '', sale_end_date: null });
+      setNewProduct({ 
+        name: '', 
+        price: 0, 
+        description: '', 
+        image: '', 
+        category: 'PREMIUM STREAMING', 
+        duration: '', 
+        sale_start_date: null,
+        sale_end_date: null 
+      });
       setSelectedDurations({});
       setIsAddProductModalOpen(false);
     }
@@ -1635,7 +1724,7 @@ export default function AdminDashboard() {
           </div>
 
           {viewMode === 'list' ? (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-visible">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-slate-900 text-white rounded-xl">
@@ -1745,53 +1834,55 @@ export default function AdminDashboard() {
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-2 text-amber-600">
                                     <Tag size={16} />
-                                    <span className="text-[11px] font-black uppercase tracking-widest">Flash Sale</span>
+                                    <span className="text-[11px] font-black uppercase tracking-widest">Edit Flash Sale Schedule</span>
                                   </div>
                                   <input 
                                     type="checkbox"
                                     checked={!!editingProduct.sale_end_date}
                                     onChange={(e) => {
-                                      setEditingProduct({
-                                        ...editingProduct, 
-                                        sale_end_date: e.target.checked ? formatToGMTPlus1Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : null
-                                      });
+                                      if (e.target.checked) {
+                                        const now = new Date();
+                                        const gmtPlus1Now = new Date(now.getTime() + (1 * 60 * 60 * 1000));
+                                        const start = gmtPlus1Now.toISOString().slice(0, 16);
+                                        
+                                        const weekLater = new Date(now.getTime() + (7 * 24 * 60 * 60 * 1000) + (1 * 60 * 60 * 1000));
+                                        const end = weekLater.toISOString().slice(0, 16);
+                                        
+                                        setEditingProduct({
+                                          ...editingProduct, 
+                                          sale_start_date: start + ":00+01:00",
+                                          sale_end_date: end + ":00+01:00"
+                                        });
+                                      } else {
+                                        setEditingProduct({
+                                          ...editingProduct, 
+                                          sale_start_date: null,
+                                          sale_end_date: null
+                                        });
+                                      }
                                     }}
                                     className="w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
                                   />
                                 </div>
                                 {editingProduct.sale_end_date && (
-                                  <div className="flex gap-2">
-                                    <div className="flex-[2] space-y-1">
-                                      <label className="text-[8px] font-black text-amber-700 uppercase ml-1">Expiry Date</label>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                      <label className="text-[8px] font-black text-amber-700 uppercase ml-1">Starts At (GMT+1)</label>
                                       <input 
-                                        type="date"
+                                        type="datetime-local"
                                         className="w-full p-2 text-sm bg-white border border-amber-200 rounded-xl outline-none text-amber-900"
-                                        value={formatToGMTPlus1Date(editingProduct.sale_end_date)}
-                                        onChange={(e) => setEditingProduct({ ...editingProduct, sale_end_date: e.target.value })}
+                                        value={editingProduct.sale_start_date ? editingProduct.sale_start_date.slice(0, 16) : ''}
+                                        onChange={(e) => setEditingProduct({ ...editingProduct, sale_start_date: e.target.value + ":00+01:00" })}
                                       />
                                     </div>
-                                    <div className="flex-1 space-y-1">
-                                      <label className="text-[8px] font-black text-amber-700 uppercase ml-1">Quick Hours</label>
-                                      <div className="relative">
-                                        <input 
-                                          type="number"
-                                          placeholder="24"
-                                          className="w-full p-2 pl-6 text-sm bg-white border border-amber-200 rounded-xl outline-none text-amber-900"
-                                          onChange={(e) => {
-                                            const val = e.target.value;
-                                            if (!val) {
-                                              setEditingProduct({ ...editingProduct, sale_end_date: null });
-                                              return;
-                                            }
-                                            const hrs = parseInt(val);
-                                            if (hrs > 0) {
-                                              const expiry = Date.now() + hrs * 60 * 60 * 1000;
-                                              setEditingProduct({ ...editingProduct, sale_end_date: expiry.toString() });
-                                            }
-                                          }}
-                                        />
-                                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-amber-600">H:</span>
-                                      </div>
+                                    <div className="space-y-1">
+                                      <label className="text-[8px] font-black text-amber-700 uppercase ml-1">Ends At (GMT+1)</label>
+                                      <input 
+                                        type="datetime-local"
+                                        className="w-full p-2 text-sm bg-white border border-amber-200 rounded-xl outline-none text-amber-900"
+                                        value={editingProduct.sale_end_date ? editingProduct.sale_end_date.slice(0, 16) : ''}
+                                        onChange={(e) => setEditingProduct({ ...editingProduct, sale_end_date: e.target.value + ":00+01:00" })}
+                                      />
                                     </div>
                                   </div>
                                 )}
@@ -1972,10 +2063,25 @@ export default function AdminDashboard() {
                                   </span>
                                 </div>
                                 
-                                {/* Countdown Timer below the name */}
+                                {/* Promo Date Display */}
                                 {product.sale_end_date && (
-                                  <div className="w-fit scale-[0.8] origin-left">
-                                    <CountdownTimer endDate={product.sale_end_date} />
+                                  <div className="flex flex-col gap-1 py-1">
+                                    <div className="flex items-center gap-2 text-[10px] font-bold text-amber-600 uppercase bg-amber-50 w-fit px-2 py-0.5 rounded-md border border-amber-100">
+                                      <Tag size={10} /> Promo Active
+                                    </div>
+                                    <div className="text-[10px] font-medium text-slate-500 flex flex-col gap-0.5 ml-1">
+                                      <div className="flex items-center gap-1">
+                                        <span className="font-bold text-slate-400">DU:</span>
+                                        <span>{product.sale_start_date ? new Date(product.sale_start_date).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) : 'Maintenant'}</span>
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <span className="font-bold text-slate-400">AU:</span>
+                                        <span className="text-red-500 font-bold">{new Date(product.sale_end_date).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                                      </div>
+                                    </div>
+                                    <div className="w-fit scale-[0.75] origin-left mt-1">
+                                      <CountdownTimer endDate={product.sale_end_date} />
+                                    </div>
                                   </div>
                                 )}
                                  <p className="text-base text-slate-500 font-medium leading-relaxed line-clamp-2">
@@ -2036,50 +2142,14 @@ export default function AdminDashboard() {
                                 </button>
                               </div>
 
-                              {/* Aperçu Quick Button */}
-                              <button 
-                                onClick={() => setQuickPreviewProduct(product)}
-                                className="p-2.5 bg-amber-50 text-amber-600 hover:bg-amber-100 rounded-xl border border-amber-200 transition-all"
-                                title="Aperçu rapide"
-                              >
-                                <Eye size={20} />
-                              </button>
-
-                              {/* Visibility Toggle */}
-                              <button 
-                                onClick={() => toggleVisibility(product.id)} 
-                                className="p-2.5 bg-slate-50 text-slate-600 hover:bg-slate-200 rounded-xl border border-slate-200 transition-all" 
-                                title={product.category?.startsWith('HIDDEN:') ? "Show Product" : "Hide Product"}
-                              >
-                                {product.category?.startsWith('HIDDEN:') ? <EyeOff size={20} /> : <Eye size={20} className="opacity-40" />}
-                              </button>
-
-                              {/* Duplicate Button */}
-                              <button 
-                                onClick={() => handleDuplicate(product)}
-                                className="p-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl border border-blue-200 transition-all"
-                                title="Duplicate Product"
-                              >
-                                <Copy size={20} />
-                              </button>
-
-                              {/* Edit Button */}
-                              <button 
-                                onClick={() => startEdit(product)} 
-                                className="p-2.5 bg-slate-50 text-slate-600 hover:bg-slate-200 rounded-xl border border-slate-200 transition-all" 
-                                title="Edit"
-                              >
-                                <Edit size={20} />
-                              </button>
-
-                              {/* Delete Button */}
-                              <button 
-                                onClick={() => deleteProduct(product.id)} 
-                                className="p-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl border border-red-200 transition-all" 
-                                title="Delete"
-                              >
-                                <Trash2 size={20} />
-                              </button>
+                              <ProductActionDropdown 
+                                product={product}
+                                onEdit={() => startEdit(product)}
+                                onDelete={() => deleteProduct(product.id)}
+                                onDuplicate={() => handleDuplicate(product)}
+                                onToggleVisibility={() => toggleVisibility(product.id)}
+                                onQuickPreview={() => setQuickPreviewProduct(product)}
+                              />
                             </div>
                           )}
                         </td>
@@ -2123,7 +2193,7 @@ export default function AdminDashboard() {
           ) : (
             <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
               {filteredProducts.map((product) => (
-                <div key={product.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden group hover:shadow-lg transition-all flex flex-col">
+                <div key={product.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-visible group hover:shadow-lg transition-all flex flex-col relative z-0 hover:z-10">
                   <div className="relative aspect-square overflow-hidden bg-slate-50 p-10 flex items-center justify-center">
                     <img 
                       src={product.image} 
@@ -2180,17 +2250,35 @@ export default function AdminDashboard() {
                     </p>
                   </div>
                   <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => startEdit(product)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Edit">
-                        <Edit size={16} />
-                      </button>
-                      <button onClick={() => handleDuplicate(product)} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Duplicate">
-                        <Copy size={16} />
-                      </button>
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+                        <button 
+                          onClick={() => moveProduct(products.findIndex(p => p.id === product.id), 'up')}
+                          disabled={products.findIndex(p => p.id === product.id) === 0}
+                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-10 transition-all"
+                          title="Move Up"
+                        >
+                          <ChevronUp size={16} />
+                        </button>
+                        <button 
+                          onClick={() => moveProduct(products.findIndex(p => p.id === product.id), 'down')}
+                          disabled={products.findIndex(p => p.id === product.id) === products.length - 1}
+                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-10 transition-all"
+                          title="Move Down"
+                        >
+                          <ChevronDown size={16} />
+                        </button>
+                      </div>
                     </div>
-                    <button onClick={() => deleteProduct(product.id)} className="p-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl border border-red-200 transition-all" title="Delete">
-                      <Trash2 size={20} />
-                    </button>
+                    
+                    <ProductActionDropdown 
+                      product={product}
+                      onEdit={() => startEdit(product)}
+                      onDelete={() => deleteProduct(product.id)}
+                      onDuplicate={() => handleDuplicate(product)}
+                      onToggleVisibility={() => toggleVisibility(product.id)}
+                      onQuickPreview={() => setQuickPreviewProduct(product)}
+                    />
                   </div>
                 </div>
               ))}

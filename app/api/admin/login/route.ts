@@ -19,17 +19,6 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error('Auth error:', error.message);
-      
-      // Legacy Fallback: check if the input matches username or email in admin_config
-      const { data: configs } = await supabase.from('admin_config').select('*').limit(1);
-      
-      if (configs && configs.length > 0) {
-        const config = configs[0];
-        // Check if input matches username OR email from the old config
-        if ((email === config.username || email === config.email) && password === config.password) {
-          return NextResponse.json({ success: true, message: 'Legacy Login successful', legacy: true });
-        }
-      }
       return NextResponse.json({ success: false, error: 'بيانات الدخول غير صحيحة' }, { status: 401 });
     }
 
