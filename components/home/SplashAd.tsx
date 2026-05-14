@@ -35,10 +35,10 @@ export default function SplashAd() {
             setIsClosing(false);
             setTimeout(() => setIsVisible(true), 800);
             
-            // Auto-close after 1.5 seconds
+            // Auto-close after 2 seconds
             setTimeout(() => {
               handleClose();
-            }, 1500);
+            }, 2000);
           }
       })
       .catch(err => console.error("Splash fetch error:", err));
