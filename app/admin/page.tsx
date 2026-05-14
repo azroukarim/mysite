@@ -43,6 +43,400 @@ const CATEGORIES = [
 
 const EUR_TO_MAD = 11; // Ensure consistency with context
 
+const CopyableDescription = ({ text, setStatus }: { text: string, setStatus: (s: string) => void }) => {
+  if (!text) return null;
+  const parts = text.split(/(\d{4,})/g); // Match 4 or more digits
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (/^\d{4,}$/.test(part)) {
+          return (
+            <span 
+              key={i} 
+              onClick={(e) => {
+                e.stopPropagation();
+                navigator.clipboard.writeText(part);
+                setStatus(`Copied: ${part}`);
+                setTimeout(() => setStatus(''), 2000);
+              }}
+              className="cursor-pointer font-black text-blue-600 hover:text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded-md border border-blue-100 transition-colors inline-flex items-center gap-1"
+              title="Click to copy code"
+            >
+              {part}
+            </span>
+          );
+        }
+        return part;
+      })}
+    </>
+  );
+};
+
+const PreviewModal = ({ isOpen, onClose, originalData, updatedData }: { 
+  isOpen: boolean, 
+  onClose: () => void, 
+  originalData?: Product | null, 
+  updatedData: Product 
+}) => {
+  const [viewMode, setViewMode] = useState<'after' | 'before'>('before');
+  
+  if (!isOpen) return null;
+  
+  // If no original data (like adding new), always show updated
+  const activeData = (viewMode === 'before' && originalData) ? originalData : updatedData;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="bg-white rounded-[1.5rem] p-3 shadow-2xl relative max-w-[220px] w-full animate-in zoom-in-95 duration-300 border border-slate-100 flex flex-col gap-3">
+        <button 
+          onClick={onClose}
+          className="absolute -top-3 -right-3 w-10 h-10 bg-white text-slate-900 rounded-full shadow-2xl flex items-center justify-center hover:bg-slate-50 transition-all border border-slate-100 z-10 hover:rotate-90 duration-300"
+        >
+          <X size={20} />
+        </button>
+        
+        <div className="space-y-4 text-center">
+          {/* Compact Header */}
+          <div className="flex items-center justify-center gap-2 border-b border-slate-50 pb-2">
+            <Eye size={16} className="text-blue-600" />
+            <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-tight">Aperçu</h4>
+          </div>
+
+          {/* Before/After Toggle Buttons - Only show if data is different */}
+          {originalData && updatedData && (
+            // Use a more robust check for differences, ignoring id if necessary or comparing relevant fields
+            (originalData.name !== updatedData.name || 
+             originalData.description !== updatedData.description || 
+             originalData.price !== updatedData.price || 
+             originalData.duration !== updatedData.duration || 
+             originalData.category !== updatedData.category ||
+             originalData.image !== updatedData.image ||
+             originalData.sale_end_date !== updatedData.sale_end_date)
+          ) && (
+            <div className="flex p-1 bg-slate-100 rounded-2xl gap-1">
+              <button 
+                onClick={() => setViewMode('before')}
+                className={cn(
+                  "flex-1 py-2.5 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5",
+                  viewMode === 'before' ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                )}
+              >
+                <ShieldAlert size={12} className={viewMode === 'before' ? "text-red-500" : "text-slate-300"} />
+                ORIGINAL
+              </button>
+              <button 
+                onClick={() => setViewMode('after')}
+                className={cn(
+                  "flex-1 py-2.5 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5",
+                  viewMode === 'after' ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20" : "text-slate-400 hover:text-slate-600"
+                )}
+              >
+                <CheckCircle2 size={12} className={viewMode === 'after' ? "text-green-400" : "text-slate-300"} />
+                MODIFIÉ
+              </button>
+            </div>
+          )}
+
+          {/* The Product Card Preview - Scaled for smaller modal */}
+          <div className="relative group perspective-1000 transform scale-[0.7] origin-top mb-[-70px]">
+             <ProductCard product={activeData} isReadOnly={true} />
+          </div>
+
+          <button 
+            onClick={onClose}
+            className="w-full py-2 bg-slate-900 text-white rounded-xl font-black text-[10px] hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20 active:scale-[0.98] flex items-center justify-center gap-2"
+          >
+            <Save size={14} className="text-blue-400" />
+            Retour
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+interface AddProductModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  newProduct: Partial<Product>;
+  setNewProduct: React.Dispatch<React.SetStateAction<Partial<Product>>>;
+  addProduct: () => Promise<void>;
+  setShowAddPreview: React.Dispatch<React.SetStateAction<boolean>>;
+  selectedDurations: Record<string, { price: string; normalPrice?: string; oldPrice: string }>;
+  setSelectedDurations: React.Dispatch<React.SetStateAction<Record<string, { price: string; normalPrice?: string; oldPrice: string }>>>;
+  symbol: string;
+}
+
+const AddProductModal = ({ 
+  isOpen, 
+  onClose, 
+  newProduct, 
+  setNewProduct, 
+  addProduct, 
+  setShowAddPreview, 
+  selectedDurations, 
+  setSelectedDurations, 
+  symbol 
+}: AddProductModalProps) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+      <div className="bg-slate-50 rounded-[2rem] p-8 shadow-2xl relative max-w-5xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300 border border-white scroll-smooth custom-scrollbar">
+        <button 
+          onClick={onClose}
+          className="absolute top-6 right-6 w-12 h-12 bg-white text-slate-900 rounded-2xl shadow-xl flex items-center justify-center hover:bg-slate-50 transition-all border border-slate-100 z-10 hover:rotate-90 duration-300"
+        >
+          <X size={24} />
+        </button>
+        
+        <div className="flex items-center gap-3 mb-8">
+          <div className="p-3 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20">
+            <Plus size={24} />
+          </div>
+          <div>
+            <h3 className="text-2xl font-black text-slate-900">Create New Package</h3>
+            <p className="text-sm text-slate-500 font-medium">Add a new streaming package to your catalog.</p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+          {/* Left Column: Details */}
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Package Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Premium 4K Streaming"
+                  className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:border-blue-500 outline-none transition-all text-base font-bold shadow-sm"
+                  value={newProduct.name}
+                  onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Category</label>
+                <input
+                  type="text"
+                  placeholder="e.g. PREMIUM STREAMING..."
+                  className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:border-blue-500 outline-none transition-all text-base font-bold shadow-sm"
+                  value={newProduct.category?.replace('HIDDEN:', '') || ''}
+                  onChange={(e) => {
+                    const isCurrentlyHidden = newProduct.category?.startsWith('HIDDEN:');
+                    setNewProduct({ 
+                      ...newProduct, 
+                      category: isCurrentlyHidden ? `HIDDEN:${e.target.value}` : e.target.value 
+                    });
+                  }}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Image URL</label>
+                <input
+                  type="text"
+                  placeholder="https://..."
+                  className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:border-blue-500 outline-none transition-all text-base font-bold shadow-sm"
+                  value={newProduct.image}
+                  onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Description</label>
+                <textarea
+                  placeholder="Package details..."
+                  rows={4}
+                  className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:border-blue-500 outline-none transition-all resize-none text-base font-medium shadow-sm"
+                  value={newProduct.description}
+                  onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={addProduct}
+                className="flex-[2] bg-blue-600 hover:bg-blue-700 text-white font-black py-4.5 rounded-xl transition-all shadow-xl shadow-blue-500/20 active:scale-[0.98] flex items-center justify-center gap-3 text-lg"
+              >
+                <CheckCircle2 size={22} />
+                Add Package
+              </button>
+              <button
+                onClick={() => setShowAddPreview(true)}
+                className="flex-1 bg-white hover:bg-slate-50 text-blue-600 border-2 border-blue-100 font-black py-4.5 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-3 text-lg shadow-sm"
+              >
+                <Eye size={22} />
+                Aperçu
+              </button>
+            </div>
+          </div>
+
+          {/* Right Column: Pricing */}
+          <div className="space-y-6">
+            <label className="text-xs font-black text-slate-500 uppercase tracking-widest block ml-1">Durations & Prices</label>
+            
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 space-y-2 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Tag size={14} className="text-amber-600" />
+                    <span className="text-[10px] font-bold text-amber-700 uppercase tracking-tight">Sale</span>
+                  </div>
+                  <input 
+                    type="checkbox"
+                    checked={!!newProduct.sale_end_date}
+                    onChange={(e) => {
+                      setNewProduct({
+                        ...newProduct, 
+                        sale_end_date: e.target.checked ? formatToGMTPlus1Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : null
+                      });
+                    }}
+                    className="w-3.5 h-3.5 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                  />
+                </div>
+                {newProduct.sale_end_date && (
+                  <div className="flex gap-2">
+                    <input 
+                      type="date"
+                      className="flex-[2] p-1.5 text-[10px] bg-white border border-amber-200 rounded-lg outline-none text-amber-900 shadow-inner"
+                      value={formatToGMTPlus1Date(newProduct.sale_end_date)}
+                      onChange={(e) => setNewProduct({ ...newProduct, sale_end_date: e.target.value })}
+                    />
+                    <div className="flex-1 relative">
+                      <input 
+                        type="number"
+                        placeholder="Hours"
+                        className="w-full p-1.5 pl-5 text-[10px] bg-white border border-amber-200 rounded-lg outline-none text-amber-900 shadow-inner"
+                        onChange={(e) => {
+                          const hrs = parseInt(e.target.value);
+                          if (hrs > 0) {
+                            const expiry = Date.now() + hrs * 60 * 60 * 1000;
+                            setNewProduct({ ...newProduct, sale_end_date: expiry.toString() });
+                          }
+                        }}
+                      />
+                      <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[8px] font-bold text-amber-600">H:</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-3 bg-white rounded-xl border border-slate-200 flex items-center justify-between shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Eye size={14} className="text-slate-600" />
+                  <span className="text-[10px] font-bold text-slate-700 uppercase tracking-tight">Visible</span>
+                </div>
+                <input 
+                  type="checkbox"
+                  checked={!newProduct.category?.startsWith('HIDDEN:')}
+                  onChange={(e) => {
+                    const isCurrentlyHidden = newProduct.category?.startsWith('HIDDEN:');
+                    if (e.target.checked && isCurrentlyHidden) {
+                      setNewProduct({ ...newProduct, category: newProduct.category?.replace('HIDDEN:', '') });
+                    } else if (!e.target.checked && !isCurrentlyHidden) {
+                      setNewProduct({ ...newProduct, category: `HIDDEN:${newProduct.category || ''}` });
+                    }
+                  }}
+                  className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Duration Selectors */}
+            <div className="flex flex-wrap gap-1.5 mb-2 p-1.5 bg-white rounded-xl border border-slate-100 shadow-sm">
+              {PREDEFINED_DURATIONS.map(dur => (
+                <button
+                  key={dur}
+                  type="button"
+                  onClick={() => {
+                    if (selectedDurations[dur]) {
+                      const next = { ...selectedDurations };
+                      delete next[dur];
+                      setSelectedDurations(next);
+                    } else {
+                      setSelectedDurations({ ...selectedDurations, [dur]: { price: '0', oldPrice: '' } });
+                    }
+                  }}
+                  className={`flex-1 py-1.5 px-1 rounded-lg text-[11px] font-black transition-all border ${
+                    selectedDurations[dur]
+                      ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                      : "bg-slate-50 text-slate-500 border-slate-100 hover:border-blue-300"
+                  }`}
+                >
+                  {dur}
+                </button>
+              ))}
+            </div>
+
+            {/* Price Inputs */}
+            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+              {Object.keys(selectedDurations).length > 0 ? (
+                PREDEFINED_DURATIONS.filter(dur => selectedDurations[dur]).map(dur => (
+                  <div key={dur} className="flex items-center gap-4 p-4 bg-white rounded-[1.5rem] border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+                    <span className="text-sm font-black text-slate-900 w-10">{dur}</span>
+                    
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="flex-1 space-y-1">
+                        <label className="text-[10px] font-black text-blue-600 uppercase tracking-tighter ml-1">Promo Price</label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-black">{symbol}</span>
+                          <input 
+                            type="number"
+                            placeholder="0.00"
+                            className="w-full pl-14 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner"
+                              onFocus={(e) => e.target.select()}
+                              value={selectedDurations[dur].price}
+                              onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], price: e.target.value } })}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <label className="text-[10px] font-black text-slate-900 uppercase tracking-tighter ml-1">Normal Price</label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-black">{symbol}</span>
+                          <input 
+                            type="number"
+                            placeholder="0.00"
+                            className="w-full pl-14 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner"
+                              onFocus={(e) => e.target.select()}
+                              value={selectedDurations[dur].normalPrice || ''}
+                              onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], normalPrice: e.target.value } })}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <label className="text-[10px] font-black text-red-500 uppercase tracking-tighter ml-1">Strike Price</label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-black">{symbol}</span>
+                          <input 
+                            type="number"
+                            placeholder="0.00"
+                            className="w-full pl-14 pr-3 py-2.5 bg-red-50/30 border border-red-100 rounded-xl text-sm font-bold outline-none text-red-400 line-through placeholder:text-red-300"
+                              onFocus={(e) => e.target.select()}
+                              value={selectedDurations[dur].oldPrice}
+                              onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], oldPrice: e.target.value } })}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-10 border-2 border-dashed border-slate-100 rounded-[2rem] text-xs font-black text-slate-300 uppercase tracking-widest bg-slate-50/50">
+                  Select durations above to set prices
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CATEGORIES = [
+
 export default function AdminDashboard() {
   const { currency, symbol, formatPrice, convertPrice, setCurrency } = useCurrency();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -71,34 +465,7 @@ export default function AdminDashboard() {
 
   const [status, setStatus] = useState('');
 
-  const CopyableDescription = ({ text }: { text: string }) => {
-    if (!text) return null;
-    const parts = text.split(/(\d{4,})/g); // Match 4 or more digits
-    return (
-      <>
-        {parts.map((part, i) => {
-          if (/^\d{4,}$/.test(part)) {
-            return (
-              <span 
-                key={i} 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigator.clipboard.writeText(part);
-                  setStatus(`Copied: ${part}`);
-                  setTimeout(() => setStatus(''), 2000);
-                }}
-                className="cursor-pointer font-black text-blue-600 hover:text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded-md border border-blue-100 transition-colors inline-flex items-center gap-1"
-                title="Click to copy code"
-              >
-                {part}
-              </span>
-            );
-          }
-          return part;
-        })}
-      </>
-    );
-  };
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -244,346 +611,9 @@ export default function AdminDashboard() {
   }, [currency]);
 
   // Helper to render Preview Modal with Before/After Toggle
-  const PreviewModal = ({ isOpen, onClose, originalData, updatedData }: { 
-    isOpen: boolean, 
-    onClose: () => void, 
-    originalData?: Product | null, 
-    updatedData: Product 
-  }) => {
-    const [viewMode, setViewMode] = useState<'after' | 'before'>('before');
-    
-    if (!isOpen) return null;
-    
-    // If no original data (like adding new), always show updated
-    const activeData = (viewMode === 'before' && originalData) ? originalData : updatedData;
 
-    return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-sm animate-in fade-in duration-300">
-        <div className="bg-white rounded-[1.5rem] p-3 shadow-2xl relative max-w-[220px] w-full animate-in zoom-in-95 duration-300 border border-slate-100 flex flex-col gap-3">
-          <button 
-            onClick={onClose}
-            className="absolute -top-3 -right-3 w-10 h-10 bg-white text-slate-900 rounded-full shadow-2xl flex items-center justify-center hover:bg-slate-50 transition-all border border-slate-100 z-10 hover:rotate-90 duration-300"
-          >
-            <X size={20} />
-          </button>
-          
-          <div className="space-y-4 text-center">
-            {/* Compact Header */}
-            <div className="flex items-center justify-center gap-2 border-b border-slate-50 pb-2">
-              <Eye size={16} className="text-blue-600" />
-              <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-tight">Aperçu</h4>
-            </div>
 
-            {/* Before/After Toggle Buttons - Only show if data is different */}
-            {originalData && updatedData && (
-              // Use a more robust check for differences, ignoring id if necessary or comparing relevant fields
-              (originalData.name !== updatedData.name || 
-               originalData.description !== updatedData.description || 
-               originalData.price !== updatedData.price || 
-               originalData.duration !== updatedData.duration || 
-               originalData.category !== updatedData.category ||
-               originalData.image !== updatedData.image ||
-               originalData.sale_end_date !== updatedData.sale_end_date)
-            ) && (
-              <div className="flex p-1 bg-slate-100 rounded-2xl gap-1">
-                <button 
-                  onClick={() => setViewMode('before')}
-                  className={cn(
-                    "flex-1 py-2.5 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5",
-                    viewMode === 'before' ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"
-                  )}
-                >
-                  <ShieldAlert size={12} className={viewMode === 'before' ? "text-red-500" : "text-slate-300"} />
-                  ORIGINAL
-                </button>
-                <button 
-                  onClick={() => setViewMode('after')}
-                  className={cn(
-                    "flex-1 py-2.5 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5",
-                    viewMode === 'after' ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20" : "text-slate-400 hover:text-slate-600"
-                  )}
-                >
-                  <CheckCircle2 size={12} className={viewMode === 'after' ? "text-green-400" : "text-slate-300"} />
-                  MODIFIÉ
-                </button>
-              </div>
-            )}
 
-            {/* The Product Card Preview - Scaled for smaller modal */}
-            <div className="relative group perspective-1000 transform scale-[0.7] origin-top mb-[-70px]">
-               <ProductCard product={activeData} isReadOnly={true} />
-            </div>
-
-            <button 
-              onClick={onClose}
-              className="w-full py-2 bg-slate-900 text-white rounded-xl font-black text-[10px] hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20 active:scale-[0.98] flex items-center justify-center gap-2"
-            >
-              <Save size={14} className="text-blue-400" />
-              Retour
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const AddProductModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
-    if (!isOpen) return null;
-    return (
-      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
-        <div className="bg-slate-50 rounded-[2rem] p-8 shadow-2xl relative max-w-5xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300 border border-white scroll-smooth custom-scrollbar">
-          <button 
-            onClick={onClose}
-            className="absolute top-6 right-6 w-12 h-12 bg-white text-slate-900 rounded-2xl shadow-xl flex items-center justify-center hover:bg-slate-50 transition-all border border-slate-100 z-10 hover:rotate-90 duration-300"
-          >
-            <X size={24} />
-          </button>
-          
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-3 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20">
-              <Plus size={24} />
-            </div>
-            <div>
-              <h3 className="text-2xl font-black text-slate-900">Create New Package</h3>
-              <p className="text-sm text-slate-500 font-medium">Add a new streaming package to your catalog.</p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-            {/* Left Column: Details */}
-            <div className="space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Package Name</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Premium 4K Streaming"
-                    className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:border-blue-500 outline-none transition-all text-base font-bold shadow-sm"
-                    value={newProduct.name}
-                    onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Category</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. PREMIUM STREAMING..."
-                    className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:border-blue-500 outline-none transition-all text-base font-bold shadow-sm"
-                    value={newProduct.category?.replace('HIDDEN:', '') || ''}
-                    onChange={(e) => {
-                      const isCurrentlyHidden = newProduct.category?.startsWith('HIDDEN:');
-                      setNewProduct({ 
-                        ...newProduct, 
-                        category: isCurrentlyHidden ? `HIDDEN:${e.target.value}` : e.target.value 
-                      });
-                    }}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Image URL</label>
-                  <input
-                    type="text"
-                    placeholder="https://..."
-                    className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:border-blue-500 outline-none transition-all text-base font-bold shadow-sm"
-                    value={newProduct.image}
-                    onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Description</label>
-                  <textarea
-                    placeholder="Package details..."
-                    rows={4}
-                    className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:border-blue-500 outline-none transition-all resize-none text-base font-medium shadow-sm"
-                    value={newProduct.description}
-                    onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={addProduct}
-                  className="flex-[2] bg-blue-600 hover:bg-blue-700 text-white font-black py-4.5 rounded-xl transition-all shadow-xl shadow-blue-500/20 active:scale-[0.98] flex items-center justify-center gap-3 text-lg"
-                >
-                  <CheckCircle2 size={22} />
-                  Add Package
-                </button>
-                <button
-                  onClick={() => setShowAddPreview(true)}
-                  className="flex-1 bg-white hover:bg-slate-50 text-blue-600 border-2 border-blue-100 font-black py-4.5 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-3 text-lg shadow-sm"
-                >
-                  <Eye size={22} />
-                  Aperçu
-                </button>
-              </div>
-            </div>
-
-            {/* Right Column: Pricing */}
-            <div className="space-y-6">
-              <label className="text-xs font-black text-slate-500 uppercase tracking-widest block ml-1">Durations & Prices</label>
-              
-              <div className="grid grid-cols-2 gap-2 mb-2">
-                <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 space-y-2 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Tag size={14} className="text-amber-600" />
-                      <span className="text-[10px] font-bold text-amber-700 uppercase tracking-tight">Sale</span>
-                    </div>
-                    <input 
-                      type="checkbox"
-                      checked={!!newProduct.sale_end_date}
-                      onChange={(e) => {
-                        setNewProduct({
-                          ...newProduct, 
-                          sale_end_date: e.target.checked ? formatToGMTPlus1Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : null
-                        });
-                      }}
-                      className="w-3.5 h-3.5 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
-                    />
-                  </div>
-                  {newProduct.sale_end_date && (
-                    <div className="flex gap-2">
-                      <input 
-                        type="date"
-                        className="flex-[2] p-1.5 text-[10px] bg-white border border-amber-200 rounded-lg outline-none text-amber-900 shadow-inner"
-                        value={formatToGMTPlus1Date(newProduct.sale_end_date)}
-                        onChange={(e) => setNewProduct({ ...newProduct, sale_end_date: e.target.value })}
-                      />
-                      <div className="flex-1 relative">
-                        <input 
-                          type="number"
-                          placeholder="Hours"
-                          className="w-full p-1.5 pl-5 text-[10px] bg-white border border-amber-200 rounded-lg outline-none text-amber-900 shadow-inner"
-                          onChange={(e) => {
-                            const hrs = parseInt(e.target.value);
-                            if (hrs > 0) {
-                              const expiry = Date.now() + hrs * 60 * 60 * 1000;
-                              setNewProduct({ ...newProduct, sale_end_date: expiry.toString() });
-                            }
-                          }}
-                        />
-                        <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[8px] font-bold text-amber-600">H:</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="p-3 bg-white rounded-xl border border-slate-200 flex items-center justify-between shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <Eye size={14} className="text-slate-600" />
-                    <span className="text-[10px] font-bold text-slate-700 uppercase tracking-tight">Visible</span>
-                  </div>
-                  <input 
-                    type="checkbox"
-                    checked={!newProduct.category?.startsWith('HIDDEN:')}
-                    onChange={(e) => {
-                      const isCurrentlyHidden = newProduct.category?.startsWith('HIDDEN:');
-                      if (e.target.checked && isCurrentlyHidden) {
-                        setNewProduct({ ...newProduct, category: newProduct.category?.replace('HIDDEN:', '') });
-                      } else if (!e.target.checked && !isCurrentlyHidden) {
-                        setNewProduct({ ...newProduct, category: `HIDDEN:${newProduct.category || ''}` });
-                      }
-                    }}
-                    className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              {/* Duration Selectors */}
-              <div className="flex flex-wrap gap-1.5 mb-2 p-1.5 bg-white rounded-xl border border-slate-100 shadow-sm">
-                {PREDEFINED_DURATIONS.map(dur => (
-                  <button
-                    key={dur}
-                    type="button"
-                    onClick={() => {
-                      if (selectedDurations[dur]) {
-                        const next = { ...selectedDurations };
-                        delete next[dur];
-                        setSelectedDurations(next);
-                      } else {
-                        setSelectedDurations({ ...selectedDurations, [dur]: { price: '0', oldPrice: '' } });
-                      }
-                    }}
-                    className={`flex-1 py-1.5 px-1 rounded-lg text-[11px] font-black transition-all border ${
-                      selectedDurations[dur]
-                        ? "bg-blue-600 text-white border-blue-600 shadow-md"
-                        : "bg-slate-50 text-slate-500 border-slate-100 hover:border-blue-300"
-                    }`}
-                  >
-                    {dur}
-                  </button>
-                ))}
-              </div>
-
-              {/* Price Inputs */}
-              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                {Object.keys(selectedDurations).length > 0 ? (
-                  PREDEFINED_DURATIONS.filter(dur => selectedDurations[dur]).map(dur => (
-                    <div key={dur} className="flex items-center gap-4 p-4 bg-white rounded-[1.5rem] border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
-                      <span className="text-sm font-black text-slate-900 w-10">{dur}</span>
-                      
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className="flex-1 space-y-1">
-                          <label className="text-[10px] font-black text-blue-600 uppercase tracking-tighter ml-1">Promo Price</label>
-                          <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-black">{symbol}</span>
-                            <input 
-                              type="number"
-                              placeholder="0.00"
-                              className="w-full pl-14 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner"
-                                onFocus={(e) => e.target.select()}
-                                value={selectedDurations[dur].price}
-                                onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], price: e.target.value } })}
-                            />
-                          </div>
-                        </div>
-                        <div className="flex-1 space-y-1">
-                          <label className="text-[10px] font-black text-slate-900 uppercase tracking-tighter ml-1">Normal Price</label>
-                          <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-black">{symbol}</span>
-                            <input 
-                              type="number"
-                              placeholder="0.00"
-                              className="w-full pl-14 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner"
-                                onFocus={(e) => e.target.select()}
-                                value={selectedDurations[dur].normalPrice || ''}
-                                onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], normalPrice: e.target.value } })}
-                            />
-                          </div>
-                        </div>
-                        <div className="flex-1 space-y-1">
-                          <label className="text-[10px] font-black text-red-500 uppercase tracking-tighter ml-1">Strike Price</label>
-                          <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-black">{symbol}</span>
-                            <input 
-                              type="number"
-                              placeholder="0.00"
-                              className="w-full pl-14 pr-3 py-2.5 bg-red-50/30 border border-red-100 rounded-xl text-sm font-bold outline-none text-red-400 line-through placeholder:text-red-300"
-                                onFocus={(e) => e.target.select()}
-                                value={selectedDurations[dur].oldPrice}
-                                onChange={(e) => setSelectedDurations({ ...selectedDurations, [dur]: { ...selectedDurations[dur], oldPrice: e.target.value } })}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-10 border-2 border-dashed border-slate-100 rounded-[2rem] text-xs font-black text-slate-300 uppercase tracking-widest bg-slate-50/50">
-                    Select durations above to set prices
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1486,6 +1516,13 @@ export default function AdminDashboard() {
             <AddProductModal 
               isOpen={isAddProductModalOpen} 
               onClose={() => setIsAddProductModalOpen(false)} 
+              newProduct={newProduct}
+              setNewProduct={setNewProduct}
+              addProduct={addProduct}
+              setShowAddPreview={setShowAddPreview}
+              selectedDurations={selectedDurations}
+              setSelectedDurations={setSelectedDurations}
+              symbol={symbol}
             />
 
 
@@ -1881,7 +1918,7 @@ export default function AdminDashboard() {
                                   </div>
                                 )}
                                  <p className="text-base text-slate-500 font-medium leading-relaxed line-clamp-2">
-                                  <CopyableDescription text={product.description} />
+                                  <CopyableDescription text={product.description} setStatus={setStatus} />
                                 </p>
                               {product.duration && (
                                 <div className="flex flex-wrap gap-1.5">
