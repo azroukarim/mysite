@@ -5,11 +5,23 @@ export const dynamic = 'force-dynamic';
 
 // Helper to verify admin password (shared logic)
 async function verifyAdmin(password: string) {
+  if (!password) return false;
+  
+  // 1. Check against Environment Variable (Master Password)
+  const masterPass = process.env.ADMIN_PASSWORD || 'streamtv';
+  if (password === masterPass) return true;
+
+  // 2. Check against Database
   const { data: config } = await supabase
     .from('admin_config')
     .select('password')
     .limit(1);
-  return config && config[0]?.password === password;
+    
+  if (config && config.length > 0) {
+    if (config[0].password === password) return true;
+  }
+  
+  return false;
 }
 
 export async function GET() {
@@ -20,7 +32,15 @@ export async function GET() {
       .limit(1);
 
     if (error) throw error;
-    return NextResponse.json(data && data[0]?.splash_ads_json ? data[0].splash_ads_json : []);
+    
+    const json = data && data[0]?.splash_ads_json ? data[0].splash_ads_json : { ads: [], queueStartTime: null };
+    
+    // Migration: if it's just an array, wrap it
+    if (Array.isArray(json)) {
+      return NextResponse.json({ ads: json, queueStartTime: null });
+    }
+    
+    return NextResponse.json(json);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -28,35 +48,38 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { password, ads } = await request.json();
+    const { password, ads, queueStartTime } = await request.json();
 
     if (!(await verifyAdmin(password))) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Use upsert to handle cases where the row might not exist yet
-    // We assume the first row or create one with the password
+    const payload = {
+      ads: Array.isArray(ads) ? ads : [],
+      queueStartTime: queueStartTime || new Date().toISOString()
+    };
+
     const { error } = await supabase
       .from('admin_config')
       .upsert({ 
         password: password, 
-        splash_ads_json: ads 
+        splash_ads_json: payload 
       }, { onConflict: 'password' }); // This works if password is unique/PK
 
     if (error) {
-      // If password isn't unique, we try to update the first row
+      // If upsert fails (e.g. unique constraint issues), we try to update the first row
       const { data: rows } = await supabase.from('admin_config').select('id').limit(1);
       if (rows && rows[0]) {
         const { error: updateError } = await supabase
           .from('admin_config')
-          .update({ splash_ads_json: ads })
+          .update({ splash_ads_json: payload })
           .eq('id', rows[0].id);
         if (updateError) throw updateError;
       } else {
         // Last resort: just insert
         const { error: insertError } = await supabase
           .from('admin_config')
-          .insert({ password, splash_ads_json: ads });
+          .insert({ password, splash_ads_json: payload });
         if (insertError) throw insertError;
       }
     }

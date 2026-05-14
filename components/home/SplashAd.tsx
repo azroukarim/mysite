@@ -6,42 +6,49 @@ import { cn } from '@/lib/utils';
 
 export default function SplashAd() {
   const [isVisible, setIsVisible] = useState(false);
-  const [adData, setAdData] = useState<{ url: string; enabled: boolean } | null>(null);
+  const [adData, setAdData] = useState<{ id: number; url: string; enabled: boolean } | null>(null);
   const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
-    // 1. Fetch scheduled ads
-    fetch('/api/admin/splash-ads')
+    // Only check once on mount (refresh or first visit)
+    fetch('/api/admin/splash-ads', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
           const now = new Date();
-          // Find the first active ad for the current time
-          const activeAd = data.find(ad => {
-            const start = new Date(ad.start_date);
-            const end = new Date(ad.end_date);
-            return ad.is_active && now >= start && now <= end;
-          });
+          let activeAd = null;
+
+          // Find ad active in its own specific time window
+          if (data.ads && Array.isArray(data.ads)) {
+            activeAd = data.ads.find((ad: any) => {
+              const start = new Date(ad.start_time);
+              const end = new Date(ad.end_time);
+              return now >= start && now < end;
+            });
+          }
 
           if (activeAd) {
-            setAdData({ url: activeAd.image_url, enabled: true });
-            // Show after a tiny delay for effect
-            setTimeout(() => setIsVisible(true), 500);
+            setAdData({ 
+              id: activeAd.id, 
+              url: activeAd.image_url, 
+              enabled: true 
+            });
+            setIsClosing(false);
+            setTimeout(() => setIsVisible(true), 800);
             
-            // 2. Auto-close after 1.5 seconds of visibility
+            // Auto-close after 6 seconds
             setTimeout(() => {
               handleClose();
-            }, 2500);
+            }, 6000);
           }
-        }
-      });
+      })
+      .catch(err => console.error("Splash fetch error:", err));
   }, []);
 
   const handleClose = () => {
     setIsClosing(true);
     setTimeout(() => {
       setIsVisible(false);
-    }, 800); // Animation duration
+    }, 800);
   };
 
   if (!isVisible || !adData) return null;

@@ -7,7 +7,7 @@ import {
   ChevronLeft, Package, Image as ImageIcon, 
   Euro, Tag, Search, CheckCircle2, Shield, ShieldAlert,
   Eye, EyeOff, Copy, ChevronUp, ChevronDown, LayoutGrid, List, Megaphone,
-  MoreVertical, Zap, Calendar, Clock
+  MoreVertical, Zap, Calendar, Clock, ArrowRight, Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 import ProductCard from '@/components/home/ProductCard';
@@ -1581,17 +1581,13 @@ export default function AdminDashboard() {
                 <Package size={22} />
                 Products
               </button>
-              <button 
-                onClick={() => setActiveTab('news')}
-                className={`flex items-center gap-2 px-8 py-3.5 rounded-xl text-base font-black transition-all ${
-                  activeTab === 'news' 
-                  ? 'bg-white text-blue-600 shadow-md' 
-                  : 'text-slate-500 hover:text-slate-700'
-                }`}
+              <Link 
+                href="/admin/ticker"
+                className="flex items-center gap-2 px-8 py-3.5 rounded-xl text-base font-black transition-all text-slate-500 hover:text-slate-700"
               >
                 <Megaphone size={22} />
                 News Ticker
-              </button>
+              </Link>
             </div>
 
             {activeTab === 'products' && (
@@ -1623,136 +1619,7 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {activeTab === 'news' ? (
-          /* News Management View - Redirect to new page */
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 py-12">
-            <div className="max-w-4xl mx-auto">
-              <div className="bg-gradient-to-br from-blue-600 to-indigo-800 rounded-[3rem] p-12 text-white shadow-2xl shadow-blue-500/30 flex flex-col items-center text-center gap-8 border border-white/10 relative overflow-hidden group">
-                {/* Decorative Elements */}
-                <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700" />
-                <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl group-hover:bg-blue-400/30 transition-all duration-700" />
-                
-                <div className="w-24 h-24 bg-white/10 backdrop-blur-xl rounded-[2rem] flex items-center justify-center border border-white/20 shadow-inner">
-                  <Megaphone size={48} className="text-white animate-bounce-subtle" />
-                </div>
-                
-                <div className="space-y-4 relative z-10">
-                  <h3 className="text-4xl font-black tracking-tight">Nouvelle Gestion des Publicités</h3>
-                  <p className="text-xl text-blue-100 font-medium max-w-2xl mx-auto leading-relaxed">
-                    Nous avons créé une interface dédiée pour gérer vos annonces déفيلات والبرمجة (Splash Ads).
-                  </p>
-                </div>
-
-                <Link 
-                  href="/admin/ticker"
-                  className="group relative bg-white text-blue-700 px-12 py-6 rounded-[2rem] font-black text-xl hover:bg-blue-50 transition-all flex items-center gap-4 shadow-2xl shadow-black/20 hover:scale-105 active:scale-95 overflow-hidden"
-                >
-                  <span className="relative z-10">Ouvrir le Gestionnaire</span>
-                  <ArrowRight size={24} className="relative z-10 group-hover:translate-x-2 transition-transform" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                </Link>
-
-                <div className="flex gap-8 text-blue-200/60 font-bold text-sm tracking-widest uppercase mt-4">
-                  <div className="flex items-center gap-2">
-                    <Sparkles size={16} />
-                    News Ticker
-                  </div>
-                  <div className="h-4 w-[1px] bg-white/10" />
-                  <div className="flex items-center gap-2">
-                    <Sparkles size={16} />
-                    Splash Ads
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          /* HIDDEN_CONTENT_START */
-          <div className="hidden">
-
-            <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm max-w-4xl mx-auto">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20">
-                  <Megaphone size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold">News Ticker Manager</h3>
-                  <p className="text-sm text-slate-500">Manage the scrolling news bar on your storefront.</p>
-                </div>
-              </div>
-
-              <div className="flex gap-3 mb-8">
-                <input 
-                  type="text"
-                  placeholder="Type a new announcement here..."
-                  className="flex-1 px-5 py-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
-                  value={newNewsItem}
-                  onChange={(e) => setNewNewsItem(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && addNewsItem()}
-                />
-                <button 
-                  onClick={addNewsItem}
-                  className="px-8 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg active:scale-95"
-                >
-                  Post News
-                </button>
-              </div>
-
-              <div className="space-y-6">
-                <div className="flex gap-6">
-                  <div className="flex-1 flex flex-col gap-3">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Scrolling Speed</h4>
-                    <div className="flex gap-2">
-                      {[
-                        { label: 'Slow', value: 60 },
-                        { label: 'Normal', value: 30 },
-                        { label: 'Fast', value: 15 },
-                        { label: 'Very Fast', value: 8 }
-                      ].map((s) => (
-                        <button
-                          key={s.value}
-                          onClick={() => handleSaveNews(news, s.value, newsDirection)}
-                          className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold transition-all border ${
-                            newsSpeed === s.value
-                            ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200'
-                            : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300 hover:bg-blue-50'
-                          }`}
-                        >
-                          {s.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex-1 flex flex-col gap-3">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Direction</h4>
-                    <div className="flex gap-2">
-                      {[
-                        { label: 'Left (LTR)', value: 'left' },
-                        { label: 'Right (RTL)', value: 'right' }
-                      ].map((d) => (
-                        <button
-                          key={d.value}
-                          onClick={() => handleSaveNews(news, newsSpeed, d.value as 'left' | 'right')}
-                          className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold transition-all border ${
-                            newsDirection === d.value
-                            ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200'
-                            : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300 hover:bg-blue-50'
-                          }`}
-                        >
-                          {d.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Current Announcements</h4>
-                  {news.length === 0 ? (
-                    <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-400">
-                      No active news. Post something above to show it on your store!
-        ) : (
+        {activeTab === 'products' && (
           <div className="space-y-10">
             <AddProductModal 
               isOpen={isAddProductModalOpen} 
