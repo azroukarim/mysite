@@ -435,6 +435,54 @@ const AddProductModal = ({
   );
 };
 
+const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, itemName, itemCount }: { 
+  isOpen: boolean, 
+  onClose: () => void, 
+  onConfirm: () => void, 
+  itemName?: string,
+  itemCount?: number
+}) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
+      <div className="bg-white rounded-[2.5rem] w-full max-w-md relative z-10 shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in slide-in-from-bottom-4 duration-300">
+        <div className="p-8 text-center">
+          <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500 animate-bounce">
+            <Trash2 size={40} />
+          </div>
+          <h3 className="text-2xl font-black text-slate-900 mb-2 uppercase tracking-tight">Confirmer la suppression</h3>
+          <p className="text-slate-500 font-medium mb-8">
+            {itemCount ? (
+              <>Êtes-vous sûr de vouloir supprimer <span className="text-red-600 font-bold">{itemCount}</span> produits ? Cette action est irréversible.</>
+            ) : (
+              <>Êtes-vous sûr de vouloir supprimer <span className="text-red-600 font-bold">{itemName}</span> ? Cette action est irréversible.</>
+            )}
+          </p>
+          
+          <div className="flex gap-3">
+            <button 
+              onClick={onClose}
+              className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-black uppercase tracking-widest transition-all"
+            >
+              Annuler
+            </button>
+            <button 
+              onClick={() => {
+                onConfirm();
+                onClose();
+              }}
+              className="flex-1 py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg shadow-red-500/20 active:scale-95"
+            >
+              Supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 export default function AdminDashboard() {
   const { currency, symbol, formatPrice, convertPrice, setCurrency } = useCurrency();
@@ -484,6 +532,7 @@ export default function AdminDashboard() {
   const [showEditPreview, setShowEditPreview] = useState(false);
   const [quickPreviewProduct, setQuickPreviewProduct] = useState<Product | null>(null);
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id?: number, ids?: number[], name?: string } | null>(null);
 
   // Load session and products on load
   useEffect(() => {
@@ -799,7 +848,8 @@ export default function AdminDashboard() {
         throw new Error(errorData.error || 'Failed to save');
       }
     } catch (error: any) {
-      alert('Error saving data: ' + error.message);
+      const msg = error?.message || 'Error occurred';
+      alert('Error saving data: ' + msg);
       setStatus('');
       return false;
     }
@@ -891,10 +941,30 @@ export default function AdminDashboard() {
   };
 
   const deleteProduct = (id: number) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
-      const updated = products.filter((p) => p.id !== id);
+    const product = products.find(p => p.id === id);
+    if (product) {
+      setDeleteConfirm({ id, name: product.name });
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return;
+    
+    if (deleteConfirm.ids) {
+      // Bulk delete
+      const updated = products.filter(p => !deleteConfirm.ids?.includes(p.id));
+      const success = await handleSave(updated);
+      if (success) {
+        setSelectedIds([]);
+        setStatus(`${updated.length} items restants`);
+        setTimeout(() => setStatus(''), 2000);
+      }
+    } else if (deleteConfirm.id) {
+      // Single delete
+      const updated = products.filter((p) => p.id !== deleteConfirm.id);
       handleSave(updated);
     }
+    setDeleteConfirm(null);
   };
 
   const toggleVisibility = async (id: number) => {
@@ -999,15 +1069,7 @@ export default function AdminDashboard() {
 
   const applyBulkDelete = async () => {
     if (selectedIds.length === 0) return;
-    if (!confirm(`Êtes-vous sûr de vouloir supprimer ${selectedIds.length} produits ?`)) return;
-    
-    const updated = products.filter(p => !selectedIds.includes(p.id));
-    const success = await handleSave(updated);
-    if (success) {
-      setSelectedIds([]);
-      setStatus(`${updated.length} items restants`);
-      setTimeout(() => setStatus(''), 2000);
-    }
+    setDeleteConfirm({ ids: [...selectedIds] });
   };
 
   const removeBulkSaleDate = async () => {
@@ -2126,8 +2188,8 @@ export default function AdminDashboard() {
                         <Copy size={16} />
                       </button>
                     </div>
-                    <button onClick={() => deleteProduct(product.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Delete">
-                      <Trash2 size={16} />
+                    <button onClick={() => deleteProduct(product.id)} className="p-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl border border-red-200 transition-all" title="Delete">
+                      <Trash2 size={20} />
                     </button>
                   </div>
                 </div>
@@ -2247,6 +2309,14 @@ export default function AdminDashboard() {
           updatedData={quickPreviewProduct}
         />
       )}
+
+      <DeleteConfirmModal 
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={confirmDelete}
+        itemName={deleteConfirm?.name}
+        itemCount={deleteConfirm?.ids?.length}
+      />
     </div>
   );
 }
