@@ -89,8 +89,8 @@ export default function ProductCard({
   // 1. Current Price: Toggles between Promo (if sale active) and Normal (after sale)
   const currentPrice = isSaleActive ? prices.promo : prices.normal;
 
-  // 2. Strikethrough Price: Always shows the Strike price (Market reference)
-  const strikethroughPrice = prices.strike;
+  // 2. Strikethrough Price: Shows Normal Price during sale, or Strike Price (Market reference) normally
+  const strikethroughPrice = isSaleActive ? prices.normal : prices.strike;
 
   const handleAction = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -135,12 +135,14 @@ export default function ProductCard({
   return (
     <div className="relative group pt-1 sm:pt-5 h-full">
       {/* Flash Sale Countdown - Floating Badge Design */}
-      {isSaleActive && (
+      {product.sale_end_date && !saleEnded && (
         <div className="absolute top-0 left-0 right-0 z-20 flex justify-center -translate-y-0.5 sm:-translate-y-2 group-hover:-translate-y-3 transition-transform duration-500">
           <CountdownTimer 
-            endDate={product.sale_end_date!} 
+            endDate={product.sale_end_date} 
+            startDate={product.sale_start_date}
             onEnd={() => setSaleEnded(true)}
-            className="shadow-2xl scale-95 sm:scale-105"
+            className="shadow-2xl scale-[0.8] sm:scale-90"
+            compact
           />
         </div>
       )}

@@ -139,7 +139,7 @@ export default function Product() {
   const currentPrices = selectedDuration || { promo: product?.price || 0, normal: product?.price || 0, strike: null };
   
   const finalPrice = isSaleActive ? currentPrices.promo : currentPrices.normal;
-  const finalOldPrice = currentPrices.strike;
+  const finalOldPrice = isSaleActive ? currentPrices.normal : currentPrices.strike;
 
   if (loading) {
     return (
@@ -279,21 +279,30 @@ export default function Product() {
             </span>
           </div>
 
-          {isSaleActive && (
+          {product.sale_end_date && !saleEnded && (
             <div className="w-full space-y-3 py-2">
               <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2 text-xs font-black text-amber-600 uppercase bg-amber-50 w-fit px-3 py-1 rounded-lg border border-amber-100">
-                  <Zap size={14} className="fill-current" /> Promo Active
+                <div className={cn(
+                  "flex items-center gap-2 text-xs font-black uppercase w-fit px-3 py-1 rounded-lg border",
+                  isSaleActive 
+                    ? "text-amber-600 bg-amber-50 border-amber-100" 
+                    : "text-blue-600 bg-blue-50 border-blue-100"
+                )}>
+                  <Zap size={14} className="fill-current" /> 
+                  {isSaleActive ? "Promo Active" : "Upcoming Promo"}
                 </div>
                 <div className="text-[11px] font-bold text-slate-500 flex items-center gap-4 ml-1">
                   <div className="flex items-center gap-1">
-                    <span className="text-slate-400">Ends at:</span>
-                    <span className="text-red-500">{new Date(product.sale_end_date).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                    <span className="text-slate-400">{isSaleActive ? "Ends at:" : "Starts at:"}</span>
+                    <span className={isSaleActive ? "text-red-500" : "text-blue-500"}>
+                      {new Date(isSaleActive ? product.sale_end_date : (product.sale_start_date || product.sale_end_date)).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}
+                    </span>
                   </div>
                 </div>
               </div>
               <CountdownTimer 
                 endDate={product.sale_end_date} 
+                startDate={product.sale_start_date}
                 onEnd={() => setSaleEnded(true)}
                 className="shadow-2xl !mx-0"
               />

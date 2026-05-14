@@ -7,7 +7,7 @@ import {
   ChevronLeft, Package, Image as ImageIcon, 
   Euro, Tag, Search, CheckCircle2, Shield, ShieldAlert,
   Eye, EyeOff, Copy, ChevronUp, ChevronDown, LayoutGrid, List, Megaphone,
-  MoreVertical
+  MoreVertical, Zap, Calendar, Clock
 } from 'lucide-react';
 import Link from 'next/link';
 import ProductCard from '@/components/home/ProductCard';
@@ -597,6 +597,9 @@ export default function AdminDashboard() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [protectionEnabled, setProtectionEnabled] = useState<boolean | null>(null);
+  const [scheduledAds, setScheduledAds] = useState<any[]>([]);
+  const [isSavingSplash, setIsSavingSplash] = useState(false);
+  const [newAd, setNewAd] = useState({ image_url: '', start_date: '', end_date: '' });
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [bulkSaleDate, setBulkSaleDate] = useState<string | null>(null);
   const [bulkSaleHours, setBulkSaleHours] = useState<number>(0);
@@ -635,14 +638,24 @@ export default function AdminDashboard() {
       }
     });
 
+    // Load session from localStorage
     const savedSession = localStorage.getItem('adminSession');
+    const savedPass = localStorage.getItem('admin_pass');
+    
     if (savedSession) {
-      const { loggedIn, email: savedEmail, pass } = JSON.parse(savedSession);
-      if (loggedIn) {
-        setEmail(savedEmail);
-        setPassword(pass);
-        setIsLoggedIn(true);
+      try {
+        const { loggedIn, email: savedEmail, pass: sessionPass } = JSON.parse(savedSession);
+        if (loggedIn) {
+          setIsLoggedIn(true);
+          setEmail(savedEmail || '');
+          setPassword(savedPass || sessionPass || ''); // Priority to separate pass storage
+        }
+      } catch (e) {
+        console.error('Session parse error');
       }
+    } else if (savedPass) {
+       // Fallback for cases where only password was saved
+       setPassword(savedPass);
     }
 
     fetch('/api/products')
@@ -670,8 +683,20 @@ export default function AdminDashboard() {
     fetch('/api/admin/settings')
       .then((res) => res.json())
       .then((data) => {
-        if (data.success) setProtectionEnabled(data.protection_enabled);
+        if (data.success) {
+          setProtectionEnabled(data.protection_enabled);
+        }
       });
+
+    // Fetch scheduled ads
+    fetch('/api/admin/splash-ads')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setScheduledAds(data);
+        }
+      });
+
     return () => {
       subscription.unsubscribe();
     };
@@ -756,7 +781,9 @@ export default function AdminDashboard() {
 
       if (data.success) {
         setIsLoggedIn(true);
+        // Save session data
         localStorage.setItem('adminSession', JSON.stringify({ loggedIn: true, email: email, pass: password }));
+        localStorage.setItem('admin_pass', password); // Extra redundancy
       } else {
         alert(data.error || 'Invalid credentials!');
       }
@@ -816,6 +843,7 @@ export default function AdminDashboard() {
     setEmail('');
     setPassword('');
     localStorage.removeItem('adminSession');
+    localStorage.removeItem('admin_pass');
   };
 
   const handleDuplicate = async (product: Product) => {
@@ -861,6 +889,76 @@ export default function AdminDashboard() {
       setStatus('Order updated');
       setTimeout(() => setStatus(''), 1000);
     }
+  };
+
+  const handleSaveScheduledAds = async (updatedAds: any[]) => {
+    if (!password) {
+      alert('❌ جلسة الدخول انتهت. يرجى تسجيل الخروج والدخول مرة أخرى لحفظ الإعلانات.');
+      setStatus('❌ خطأ: لم يتم العثور على كلمة السر');
+      return;
+    }
+
+    setIsSavingSplash(true);
+    setStatus('🕒 محاولة الحفظ...');
+    try {
+      const res = await fetch('/api/admin/splash-ads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          password,
+          ads: updatedAds
+        }),
+      });
+      
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(`Server Error (${res.status}): ${errData.error || 'Unknown error'}`);
+      }
+
+      const data = await res.json();
+      if (data.success) {
+        setScheduledAds([...updatedAds]);
+        setStatus('✅ تم الحفظ بنجاح!');
+        setTimeout(() => setStatus(''), 3000);
+      } else {
+        throw new Error(data.error || 'فشل في معالجة البيانات');
+      }
+    } catch (err: any) {
+      console.error('CRITICAL ERROR:', err);
+      setStatus('❌ خطأ: ' + err.message);
+      alert('⚠️ تنبيه تقني (نسق هذا للمبرمج):\n' + err.message);
+    } finally {
+      setIsSavingSplash(false);
+    }
+  };
+
+  const addScheduledAd = () => {
+    if (!newAd.image_url || !newAd.start_date || !newAd.end_date) {
+      alert('Veuillez remplir tous les champs (Lien + Dates)');
+      return;
+    }
+    
+    // Update local state immediately for better UX
+    const updated = [...scheduledAds, { ...newAd, is_active: true, id: Date.now() }];
+    setScheduledAds(updated);
+    
+    // Sync with server
+    handleSaveScheduledAds(updated);
+    
+    // Reset form
+    setNewAd({ image_url: '', start_date: '', end_date: '' });
+  };
+
+  const deleteScheduledAd = (index: number) => {
+    const updated = scheduledAds.filter((_, i) => i !== index);
+    handleSaveScheduledAds(updated);
+  };
+
+  const toggleAdActive = (index: number) => {
+    const updated = scheduledAds.map((ad, i) => 
+      i === index ? { ...ad, is_active: !ad.is_active } : ad
+    );
+    handleSaveScheduledAds(updated);
   };
 
   const toggleProtection = async () => {
@@ -1526,8 +1624,52 @@ export default function AdminDashboard() {
         </div>
 
         {activeTab === 'news' ? (
-          /* News Management View */
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          /* News Management View - Redirect to new page */
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 py-12">
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-gradient-to-br from-blue-600 to-indigo-800 rounded-[3rem] p-12 text-white shadow-2xl shadow-blue-500/30 flex flex-col items-center text-center gap-8 border border-white/10 relative overflow-hidden group">
+                {/* Decorative Elements */}
+                <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700" />
+                <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl group-hover:bg-blue-400/30 transition-all duration-700" />
+                
+                <div className="w-24 h-24 bg-white/10 backdrop-blur-xl rounded-[2rem] flex items-center justify-center border border-white/20 shadow-inner">
+                  <Megaphone size={48} className="text-white animate-bounce-subtle" />
+                </div>
+                
+                <div className="space-y-4 relative z-10">
+                  <h3 className="text-4xl font-black tracking-tight">Nouvelle Gestion des Publicités</h3>
+                  <p className="text-xl text-blue-100 font-medium max-w-2xl mx-auto leading-relaxed">
+                    Nous avons créé une interface dédiée pour gérer vos annonces déفيلات والبرمجة (Splash Ads).
+                  </p>
+                </div>
+
+                <Link 
+                  href="/admin/ticker"
+                  className="group relative bg-white text-blue-700 px-12 py-6 rounded-[2rem] font-black text-xl hover:bg-blue-50 transition-all flex items-center gap-4 shadow-2xl shadow-black/20 hover:scale-105 active:scale-95 overflow-hidden"
+                >
+                  <span className="relative z-10">Ouvrir le Gestionnaire</span>
+                  <ArrowRight size={24} className="relative z-10 group-hover:translate-x-2 transition-transform" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                </Link>
+
+                <div className="flex gap-8 text-blue-200/60 font-bold text-sm tracking-widest uppercase mt-4">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={16} />
+                    News Ticker
+                  </div>
+                  <div className="h-4 w-[1px] bg-white/10" />
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={16} />
+                    Splash Ads
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* HIDDEN_CONTENT_START */
+          <div className="hidden">
+
             <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm max-w-4xl mx-auto">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-3 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20">
@@ -1633,6 +1775,142 @@ export default function AdminDashboard() {
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* Splash Ad Scheduler */}
+            <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm max-w-4xl mx-auto">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="p-3 bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-500/20">
+                  <Zap size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Splash Ad Scheduler</h3>
+                  <p className="text-sm text-slate-500">Program multiple ads to show at specific times.</p>
+                </div>
+              </div>
+
+              {/* Add New Ad Form */}
+              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 mb-8 space-y-4">
+                <h4 className="text-sm font-bold text-slate-700">Add New Scheduled Ad</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2 space-y-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Image URL</label>
+                    <input 
+                      type="text"
+                      placeholder="https://example.com/ad-image.jpg"
+                      className="w-full px-5 py-4 bg-white border border-slate-200 rounded-xl outline-none focus:border-indigo-500 transition-all font-medium"
+                      value={newAd.image_url}
+                      onChange={(e) => setNewAd({ ...newAd, image_url: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Start Date & Time</label>
+                    <div className="relative">
+                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                      <input 
+                        type="datetime-local"
+                        className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-xl outline-none focus:border-indigo-500 transition-all font-medium"
+                        value={newAd.start_date}
+                        onChange={(e) => setNewAd({ ...newAd, start_date: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">End Date & Time</label>
+                    <div className="relative">
+                      <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                      <input 
+                        type="datetime-local"
+                        className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-xl outline-none focus:border-indigo-500 transition-all font-medium"
+                        value={newAd.end_date}
+                        onChange={(e) => setNewAd({ ...newAd, end_date: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <button 
+                  onClick={addScheduledAd}
+                  disabled={isSavingSplash}
+                  className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg active:scale-95 disabled:opacity-50"
+                >
+                  {isSavingSplash ? 'Adding...' : 'Schedule Ad'}
+                </button>
+              </div>
+
+              {/* Scheduled Ads List */}
+              <div className="space-y-4">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Scheduled Campaigns ({scheduledAds.length})</h4>
+                {scheduledAds.length === 0 ? (
+                  <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-400 italic">
+                    No ads scheduled yet. Use the form above to add one.
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {scheduledAds.map((ad, i) => {
+                      const now = new Date();
+                      const start = new Date(ad.start_date);
+                      const end = new Date(ad.end_date);
+                      const isActive = now >= start && now <= end && ad.is_active;
+                      const isExpired = now > end;
+                      const isUpcoming = now < start;
+
+                      return (
+                        <div key={i} className={`p-4 rounded-2xl border transition-all ${
+                          isActive 
+                          ? "bg-indigo-50 border-indigo-200 shadow-md ring-2 ring-indigo-500/10" 
+                          : "bg-white border-slate-100 opacity-80"
+                        }`}>
+                          <div className="flex items-start gap-4">
+                            <div className="w-20 h-20 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 flex-shrink-0">
+                              <img src={ad.image_url} alt="" className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                                  isActive ? "bg-indigo-600 text-white" :
+                                  isUpcoming ? "bg-amber-100 text-amber-600" :
+                                  "bg-slate-100 text-slate-500"
+                                }`}>
+                                  {isActive ? "Currently Active" : isUpcoming ? "Upcoming" : "Expired"}
+                                </span>
+                                {!ad.is_active && (
+                                  <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider">Disabled</span>
+                                )}
+                              </div>
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2 text-xs text-slate-600">
+                                  <Calendar size={12} />
+                                  <span>From: {new Date(ad.start_date).toLocaleString()}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-slate-600">
+                                  <Clock size={12} />
+                                  <span>To: {new Date(ad.end_date).toLocaleString()}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              <button 
+                                onClick={() => toggleAdActive(i)}
+                                className={`p-2 rounded-lg border transition-all ${
+                                  ad.is_active ? "text-indigo-600 border-indigo-100 bg-indigo-50" : "text-slate-400 border-slate-100 bg-slate-50"
+                                }`}
+                              >
+                                {ad.is_active ? <Eye size={18} /> : <EyeOff size={18} />}
+                              </button>
+                              <button 
+                                onClick={() => deleteScheduledAd(i)}
+                                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 

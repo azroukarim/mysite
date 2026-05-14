@@ -7,15 +7,25 @@ export async function GET() {
   try {
     const { data: configs, error } = await supabase
       .from('admin_config')
-      .select('protection_enabled')
+      .select('protection_enabled, splash_ad_url, splash_ad_enabled')
       .limit(1);
 
-    // If table is empty or error, default to ENABLED for security
+    // If table is empty or error, default values
     if (error || !configs || configs.length === 0) {
-      return NextResponse.json({ success: true, protection_enabled: true });
+      return NextResponse.json({ 
+        success: true, 
+        protection_enabled: true,
+        splash_ad_url: '',
+        splash_ad_enabled: false
+      });
     }
 
-    return NextResponse.json({ success: true, protection_enabled: configs[0].protection_enabled });
+    return NextResponse.json({ 
+      success: true, 
+      protection_enabled: configs[0].protection_enabled,
+      splash_ad_url: configs[0].splash_ad_url || '',
+      splash_ad_enabled: configs[0].splash_ad_enabled || false
+    });
   } catch (error) {
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
@@ -23,27 +33,33 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { protection_enabled } = await request.json();
+    const { protection_enabled, splash_ad_url, splash_ad_enabled } = await request.json();
 
     // 1. Try to fetch the first record's ID
     const { data: existing } = await supabase.from('admin_config').select('id, username').limit(1);
 
     let error;
     if (!existing || existing.length === 0) {
-      // 2. If no record exists, try to insert one (might fail due to RLS, but we try)
+      // 2. If no record exists, try to insert one
       const { error: insertError } = await supabase
         .from('admin_config')
         .insert([{ 
           username: 'admin', 
           password: 'streamtv', 
-          protection_enabled: !!protection_enabled 
+          protection_enabled: !!protection_enabled,
+          splash_ad_url: splash_ad_url || '',
+          splash_ad_enabled: !!splash_ad_enabled
         }]);
       error = insertError;
     } else {
       // 3. If record exists, update it
       const { error: updateError } = await supabase
         .from('admin_config')
-        .update({ protection_enabled: !!protection_enabled })
+        .update({ 
+          protection_enabled: protection_enabled !== undefined ? !!protection_enabled : undefined,
+          splash_ad_url: splash_ad_url !== undefined ? splash_ad_url : undefined,
+          splash_ad_enabled: splash_ad_enabled !== undefined ? !!splash_ad_enabled : undefined
+        })
         .eq('id', existing[0].id);
       error = updateError;
     }
