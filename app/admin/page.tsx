@@ -435,7 +435,6 @@ const AddProductModal = ({
   );
 };
 
-const CATEGORIES = [
 
 export default function AdminDashboard() {
   const { currency, symbol, formatPrice, convertPrice, setCurrency } = useCurrency();
