@@ -33,12 +33,12 @@ export default function SplashAd() {
               enabled: true 
             });
             setIsClosing(false);
-            setTimeout(() => setIsVisible(true), 800);
+            setIsVisible(true);
             
-            // Auto-close after 3 seconds
+            // Auto-close after 2 seconds
             setTimeout(() => {
               handleClose();
-            }, 3000);
+            }, 2000);
           }
       })
       .catch(err => console.error("Splash fetch error:", err));
@@ -67,7 +67,7 @@ export default function SplashAd() {
         
         <div className="relative bg-white/10 backdrop-blur-2xl p-2 rounded-[2rem] border border-white/20 shadow-2xl overflow-hidden group">
           {/* Progress Bar */}
-          <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-blue-400 to-indigo-500 animate-[progress_1.5s_linear_forwards]" />
+          <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-blue-400 to-indigo-500 animate-[progress_2s_linear_forwards]" />
           
           <img 
             src={adData.url} 

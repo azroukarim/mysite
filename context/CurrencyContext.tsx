@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useMemo } from "react";
 
 // 1 EUR = 10 MAD (سعر ثابت قابل للتعديل)
-export const EUR_TO_MAD = 11; // تم تحديث السعر ليكون أكثر واقعية (11 DH)
+export const EUR_TO_MAD = 10;
 
 type Currency = "EUR" | "MAD";
 

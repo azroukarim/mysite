@@ -50,3 +50,15 @@ export function formatToGMTPlus1Date(date: Date | number | string): string {
   const shifted = new Date(d.getTime() + (1 * 60 * 60 * 1000));
   return shifted.toISOString().split('T')[0];
 }
+
+/**
+ * Returns current date/time in GMT+1 in format YYYY-MM-DDTHH:mm
+ * for datetime-local inputs
+ */
+export function getGMTPlus1DateTime(date: Date | number = new Date()): string {
+  const d = typeof date === 'number' ? new Date(date) : date;
+  // Shift by 1 hour to get GMT+1 string representation via toISOString
+  const shifted = new Date(d.getTime() + (1 * 60 * 60 * 1000));
+  return shifted.toISOString().slice(0, 16);
+}
+

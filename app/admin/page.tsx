@@ -12,7 +12,7 @@ import {
 import Link from 'next/link';
 import ProductCard from '@/components/home/ProductCard';
 import CountdownTimer from '@/components/product/CountdownTimer';
-import { parseSaleDate, formatToGMTPlus1Date } from '@/lib/dateUtils';
+import { parseSaleDate, formatToGMTPlus1Date, getGMTPlus1DateTime } from '@/lib/dateUtils';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { useCurrency } from '@/context/CurrencyContext';
@@ -43,7 +43,7 @@ const CATEGORIES = [
   'RESELLER PANELS'
 ];
 
-const EUR_TO_MAD = 11; // Ensure consistency with context
+const EUR_TO_MAD = 10; // Ensure consistency with context
 
 const CopyableDescription = ({ text, setStatus }: { text: string, setStatus: (s: string) => void }) => {
   if (!text) return null;
@@ -291,12 +291,8 @@ const AddProductModal = ({
                     onChange={(e) => {
                       if (e.target.checked) {
                         // Default to now and 7 days later in GMT+1
-                        const now = new Date();
-                        const gmtPlus1Now = new Date(now.getTime() + (1 * 60 * 60 * 1000));
-                        const start = gmtPlus1Now.toISOString().slice(0, 16);
-                        
-                        const weekLater = new Date(now.getTime() + (7 * 24 * 60 * 60 * 1000) + (1 * 60 * 60 * 1000));
-                        const end = weekLater.toISOString().slice(0, 16);
+                        const start = getGMTPlus1DateTime();
+                        const end = getGMTPlus1DateTime(Date.now() + 7 * 24 * 60 * 60 * 1000);
                         
                         setNewProduct({
                           ...newProduct, 
@@ -1348,13 +1344,13 @@ export default function AdminDashboard() {
         <div className="max-w-md w-full relative z-10 text-center">
 
           <div className="animate-flag-wave mb-8">
-            <h1 className="text-6xl font-black text-white drop-shadow-[0_2px_30px_rgba(0,0,0,0.5)] uppercase tracking-tight">
-              STREAM<span className="text-white ml-2">TV</span>
+            <h1 className="text-6xl font-black uppercase tracking-tight drop-shadow-[0_2px_30px_rgba(0,0,0,0.5)]">
+              <span className="text-white">DASH</span>
+              <span className="text-blue-400">BOARD</span>
             </h1>
-
           </div>
           <div className="mb-10">
-            <p className="text-blue-100 font-bold drop-shadow-md uppercase tracking-[0.2em] text-xs">Admin Panel</p>
+            <p className="text-blue-100/60 font-bold uppercase tracking-[0.3em] text-[10px]">Secure Access Portal</p>
           </div>
 
 
@@ -1496,7 +1492,10 @@ export default function AdminDashboard() {
             <div className="h-8 w-[1px] bg-slate-200 mx-1 hidden md:block" />
             <div>
             <div className="animate-flag-wave">
-              <h1 className="text-2xl font-black tracking-tight text-slate-950 uppercase">STREAM <span className="text-blue-600">TV</span> Admin</h1>
+              <h1 className="text-2xl font-black tracking-tight uppercase">
+                <span className="text-slate-950">DASH</span>
+                <span className="text-blue-600">BOARD</span>
+              </h1>
             </div>
             </div>
           </div>
@@ -1510,6 +1509,11 @@ export default function AdminDashboard() {
             )}
 
             {/* Currency Switcher */}
+            <div className="hidden sm:flex items-center gap-2 mr-2">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                1€ = 10 MAD
+              </span>
+            </div>
             <div className="hidden sm:flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200">
               <button 
                 onClick={() => setCurrency('EUR')}
@@ -1583,13 +1587,13 @@ export default function AdminDashboard() {
                 <Package size={22} />
                 Products
               </button>
-              <button 
-                onClick={() => window.location.href = '/admin/management'}
+              <Link 
+                href="/admin/management"
                 className="flex items-center gap-2 px-8 py-3.5 rounded-xl text-base font-black transition-all text-slate-500 hover:text-slate-700 hover:bg-white/50"
               >
                 <Megaphone size={22} />
                 News Ticker
-              </button>
+              </Link>
             </div>
 
             {activeTab === 'products' && (

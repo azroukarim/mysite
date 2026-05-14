@@ -21,25 +21,14 @@ import {
   Layers,
   ArrowRight
 } from 'lucide-react';
+import { getGMTPlus1DateTime } from '@/lib/dateUtils';
 
 export default function TickerManager() {
-  const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const savedPass = localStorage.getItem('admin_pass') || 
-                        JSON.parse(localStorage.getItem('adminSession') || '{}').pass;
-      return !!savedPass;
-    }
-    return false;
-  });
-  const [password, setPassword] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('admin_pass') || 
-             JSON.parse(localStorage.getItem('adminSession') || '{}').pass || '';
-    }
-    return '';
-  });
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [password, setPassword] = useState('');
   const [status, setStatus] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   // News Ticker State (Multiple Bars)
   const [tickerBars, setTickerBars] = useState<any[]>([]);
@@ -52,13 +41,25 @@ export default function TickerManager() {
   const [newNewsText, setNewNewsText] = useState('');
   const [newAd, setNewAd] = useState({ 
     image_url: '', 
-    start_time: new Date().toISOString().slice(0, 16), 
-    end_time: new Date(Date.now() + 24*60*60*1000).toISOString().slice(0, 16) 
+    start_time: getGMTPlus1DateTime(), 
+    end_time: getGMTPlus1DateTime(Date.now() + 24*60*60*1000) 
   });
 
   useEffect(() => {
-    // Session Loading - Already handled by initial state, but keeping for data sync
-    if (password) {
+    setIsMounted(true);
+    const savedPass = localStorage.getItem('admin_pass') || 
+                      JSON.parse(localStorage.getItem('adminSession') || '{}').pass || '';
+    
+    if (savedPass) {
+      setIsLoggedIn(true);
+      setPassword(savedPass);
+    } else {
+      setIsLoggedIn(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isLoggedIn && password) {
       // Fetch News Bars
     fetch('/api/admin/news')
       .then(res => res.json())
@@ -184,8 +185,8 @@ export default function TickerManager() {
     setAdQueue([...adQueue, { ...newAd, id: Date.now() }]);
     setNewAd({ 
       image_url: '', 
-      start_time: new Date().toISOString().slice(0, 16), 
-      end_time: new Date(Date.now() + 24*60*60*1000).toISOString().slice(0, 16) 
+      start_time: getGMTPlus1DateTime(), 
+      end_time: getGMTPlus1DateTime(Date.now() + 24*60*60*1000) 
     });
   };
 
@@ -194,7 +195,11 @@ export default function TickerManager() {
   };
 
 
-  if (!isLoggedIn) {
+  if (!isMounted || isLoggedIn === null) {
+    return <div className="min-h-screen bg-[#f8fafc]" />;
+  }
+
+  if (isLoggedIn === false) {
     return (
       <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-6 font-sans">
         <div className="bg-white/5 backdrop-blur-3xl p-10 rounded-[3rem] border border-white/10 w-full max-w-md text-center shadow-2xl">
@@ -224,9 +229,10 @@ export default function TickerManager() {
             </Link>
             <div className="h-10 w-[1px] bg-slate-200" />
             <div>
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+              <h1 className="text-2xl font-black tracking-tight flex items-center gap-3 uppercase">
                 <Megaphone className="text-blue-600" size={28} />
-                SYSTEM <span className="text-blue-600">BROADCAST</span>
+                <span className="text-slate-900">DASH</span>
+                <span className="text-blue-600">BOARD</span>
               </h1>
             </div>
           </div>

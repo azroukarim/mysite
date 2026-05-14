@@ -36,9 +36,9 @@ export default function NewsTicker() {
   if (loading || bars.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-4 mb-8">
+    <div className="flex flex-col gap-3 mb-10 px-4">
       {bars.filter(bar => bar.active && bar.items.length > 0).map((bar, barIndex) => (
-        <div key={bar.id || barIndex} className="space-y-2">
+        <div key={bar.id || barIndex} className="space-y-2 max-w-4xl mx-auto w-full">
           {bar.items.map((item: string, itemIndex: number) => {
             const isArabic = /[\u0600-\u06FF]/.test(item);
             const scrollDir = isArabic ? 'right' : (bar.direction || 'left');
@@ -46,15 +46,15 @@ export default function NewsTicker() {
             return (
               <div 
                 key={itemIndex} 
-                className="w-full bg-blue-600/5 border border-blue-100 py-5 overflow-hidden whitespace-nowrap rounded-[2rem] shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500" 
+                className="w-full bg-blue-600/5 border border-blue-100 py-2.5 overflow-hidden whitespace-nowrap rounded-full shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500" 
                 style={{ animationDelay: `${barIndex * 200 + itemIndex * 100}ms` }}
               >
                 <div className="flex items-center">
-                  <div className="px-8 py-2.5 bg-blue-600 text-white text-[14px] font-black uppercase tracking-widest rounded-r-[1.5rem] mr-8 z-10 shadow-lg shadow-blue-500/20">
+                  <div className="px-6 py-1.5 bg-blue-600 text-white text-[11px] font-black uppercase tracking-tighter rounded-full ml-2 mr-6 z-10 shadow-lg shadow-blue-500/20 flex-shrink-0">
                     {bar.name.toUpperCase()}
                   </div>
                   <div 
-                    className={`${scrollDir === 'right' ? 'animate-marquee-rtl' : 'animate-marquee'} inline-block text-blue-950 text-2xl font-black`}
+                    className={`${scrollDir === 'right' ? 'animate-marquee-rtl' : 'animate-marquee'} inline-block text-blue-950 text-base font-black`}
                     style={{ animationDuration: `${bar.speed || 30}s` }}
                   >
                     <span className="px-6"><bdi dir={isArabic ? 'rtl' : 'ltr'}>{item}{isArabic ? '\u200F' : ''}</bdi></span>
