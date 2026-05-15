@@ -162,13 +162,16 @@ export default function Footer() {
             <div className="w-12 h-1 bg-primary mx-auto rounded-full opacity-50" />
           </div>
           
-          <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 transition-all duration-500">
+          <div className="flex flex-wrap items-center justify-center gap-3 md:gap-6 transition-all duration-500">
             {paymentMethods.map((method) => (
-              <div key={method.name} className="relative h-12 w-20 md:h-16 md:w-28 bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden flex items-center justify-center p-3 group hover:border-primary/50 hover:shadow-2xl hover:scale-110 transition-all duration-500">
+              <div 
+                key={method.name} 
+                className={`relative h-16 w-28 md:h-28 md:w-48 bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden flex items-center justify-center group hover:border-primary/50 hover:shadow-2xl hover:scale-110 transition-all duration-500 ${(method.name === 'Remitly' || method.name === 'Sendwave') ? 'ring-2 ring-primary/20 scale-105' : ''}`}
+              >
                 <img 
                   src={method.image} 
                   alt={method.name} 
-                  className="max-h-full max-w-full object-contain transition-all duration-300"
+                  className={`max-h-[80%] max-w-[80%] object-contain transition-all duration-300 group-hover:scale-110 ${(method.name === 'Remitly' || method.name === 'Sendwave') ? 'scale-125' : ''}`}
                 />
               </div>
             ))}

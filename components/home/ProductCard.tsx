@@ -260,8 +260,8 @@ export default function ProductCard({
             </span>
             {strikethroughPrice && (
               <span className={cn(
-                "text-[8px] sm:text-base text-slate-400 line-through font-medium ml-1",
-                isReadOnly && "sm:text-xs"
+                "text-[10px] sm:text-lg ml-1 animate-x-strike",
+                isReadOnly && "sm:text-sm"
               )}>
                 {formatPrice(strikethroughPrice)}
               </span>
