@@ -593,6 +593,7 @@ export default function AdminDashboard() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [protectionEnabled, setProtectionEnabled] = useState<boolean | null>(null);
+  const [maintenanceEnabled, setMaintenanceEnabled] = useState<boolean | null>(null);
   const [scheduledAds, setScheduledAds] = useState<any[]>([]);
   const [isSavingSplash, setIsSavingSplash] = useState(false);
   const [newAd, setNewAd] = useState({ image_url: '', start_date: '', end_date: '' });
@@ -676,16 +677,17 @@ export default function AdminDashboard() {
       });
 
     // Fetch settings
-    fetch('/api/admin/settings')
+    fetch('/api/admin/settings', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
           setProtectionEnabled(data.protection_enabled);
+          setMaintenanceEnabled(data.maintenance_enabled);
         }
       });
 
     // Fetch scheduled ads
-    fetch('/api/admin/splash-ads')
+    fetch('/api/admin/splash-ads', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -987,6 +989,40 @@ export default function AdminDashboard() {
     } catch (error) {
       setProtectionEnabled(!newValue);
       alert('Network error updating protection');
+      setStatus('');
+    }
+  };
+
+  const toggleMaintenance = async () => {
+    const newValue = !maintenanceEnabled;
+    setMaintenanceEnabled(newValue);
+    setStatus('Updating maintenance status...');
+    
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, maintenance_enabled: newValue }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setStatus('Maintenance status updated!');
+          setTimeout(() => setStatus(''), 2000);
+        } else {
+          setMaintenanceEnabled(!newValue);
+          alert('Error: ' + (data.error || 'Failed to update'));
+          setStatus('');
+        }
+      } else {
+        setMaintenanceEnabled(!newValue);
+        alert('Server error: Failed to update maintenance status');
+        setStatus('');
+      }
+    } catch (error) {
+      setMaintenanceEnabled(!newValue);
+      alert('Network error updating maintenance status');
       setStatus('');
     }
   };
@@ -1473,7 +1509,7 @@ export default function AdminDashboard() {
 
           <div className="text-center mt-10">
             <Link href="/" className="text-sm font-bold text-white/70 hover:text-white transition-colors bg-white/10 backdrop-blur-md px-6 py-2 rounded-full border border-white/10">
-              ← Return to Storefront
+              ← Return to home
             </Link>
           </div>
         </div>
@@ -1530,27 +1566,41 @@ export default function AdminDashboard() {
             </div>
 
             <button 
-              onClick={toggleProtection}
+              type="button"
               disabled={protectionEnabled === null}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-medium border ${
-                protectionEnabled === null
-                ? "bg-slate-50 text-slate-300 border-slate-100 cursor-wait"
-                : protectionEnabled 
-                ? "bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100" 
-                : "bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100"
+              onClick={toggleProtection}
+              className={`px-6 py-2.5 rounded-xl font-black text-[10px] transition-all flex items-center gap-2 shadow-lg active:scale-95 ${
+                protectionEnabled === null 
+                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  : protectionEnabled 
+                    ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-red-500/20' 
+                    : 'bg-white border border-slate-200 text-slate-600 shadow-slate-100'
               }`}
               title={protectionEnabled === null ? "Loading settings..." : (protectionEnabled ? "Disable Content Protection" : "Enable Content Protection")}
             >
-              {protectionEnabled === null ? (
-                <div className="w-4 h-4 border-2 border-slate-300 border-t-transparent rounded-full animate-spin" />
-              ) : protectionEnabled ? (
-                <ShieldAlert size={18} />
-              ) : (
-                <Shield size={18} />
-              )}
-              <span className="hidden sm:inline">
-                {protectionEnabled === null ? "Loading..." : (protectionEnabled ? "Protection ON" : "Protection OFF")}
-              </span>
+              <div className="flex items-center gap-2 uppercase tracking-tighter">
+                <div className={`w-1.5 h-1.5 rounded-full ${protectionEnabled ? 'bg-white animate-pulse' : 'bg-slate-300'}`} />
+                {protectionEnabled === null ? "Loading..." : (protectionEnabled ? "PROTECTION ON" : "PROTECTION OFF")}
+              </div>
+            </button>
+
+            <button 
+              type="button"
+              disabled={maintenanceEnabled === null}
+              onClick={toggleMaintenance}
+              className={`px-6 py-2.5 rounded-xl font-black text-[10px] transition-all flex items-center gap-2 shadow-lg active:scale-95 ${
+                maintenanceEnabled === null 
+                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  : maintenanceEnabled 
+                    ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-orange-500/20' 
+                    : 'bg-white border border-slate-200 text-slate-600 shadow-slate-100'
+              }`}
+              title={maintenanceEnabled === null ? "Loading settings..." : (maintenanceEnabled ? "Disable Maintenance Mode" : "Enable Maintenance Mode")}
+            >
+              <div className="flex items-center gap-2 uppercase tracking-tighter">
+                <div className={`w-1.5 h-1.5 rounded-full ${maintenanceEnabled ? 'bg-white animate-pulse' : 'bg-slate-300'}`} />
+                {maintenanceEnabled === null ? "Loading..." : (maintenanceEnabled ? "MAINTENANCE ON" : "MAINTENANCE OFF")}
+              </div>
             </button>
 
             <button 

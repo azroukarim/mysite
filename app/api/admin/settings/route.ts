@@ -7,24 +7,30 @@ export async function GET() {
   try {
     const { data: configs, error } = await supabase
       .from('admin_config')
-      .select('protection_enabled, splash_ad_url, splash_ad_enabled')
+      .select('protection_enabled, splash_ads_json')
       .limit(1);
 
     // If table is empty or error, default values
     if (error || !configs || configs.length === 0) {
+      if (error) console.error('Database fetch error:', error);
       return NextResponse.json({ 
         success: true, 
-        protection_enabled: true,
+        protection_enabled: false,
+        maintenance_enabled: false,
         splash_ad_url: '',
         splash_ad_enabled: false
       });
     }
 
+    const config = configs[0];
+    const adsData = config.splash_ads_json || { ads: [] };
+
     return NextResponse.json({ 
       success: true, 
-      protection_enabled: configs[0].protection_enabled,
-      splash_ad_url: configs[0].splash_ad_url || '',
-      splash_ad_enabled: configs[0].splash_ad_enabled || false
+      protection_enabled: !!config.protection_enabled,
+      maintenance_enabled: !!adsData.maintenance_enabled,
+      splash_ad_url: adsData.ads?.[0]?.image_url || '',
+      splash_ad_enabled: (adsData.ads?.length || 0) > 0
     });
   } catch (error) {
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
@@ -33,10 +39,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { protection_enabled, splash_ad_url, splash_ad_enabled } = await request.json();
+    const { protection_enabled, maintenance_enabled } = await request.json();
 
     // 1. Try to fetch the first record's ID
-    const { data: existing } = await supabase.from('admin_config').select('id, username').limit(1);
+    const { data: existing } = await supabase.from('admin_config').select('id, splash_ads_json').limit(1);
 
     let error;
     if (!existing || existing.length === 0) {
@@ -47,18 +53,19 @@ export async function POST(request: Request) {
           username: 'admin', 
           password: 'streamtv', 
           protection_enabled: !!protection_enabled,
-          splash_ad_url: splash_ad_url || '',
-          splash_ad_enabled: !!splash_ad_enabled
+          splash_ads_json: { maintenance_enabled: !!maintenance_enabled }
         }]);
       error = insertError;
     } else {
       // 3. If record exists, update it
+      const currentJson = existing[0].splash_ads_json || { ads: [] };
+      const updatedJson = { ...currentJson, maintenance_enabled: !!maintenance_enabled };
+
       const { error: updateError } = await supabase
         .from('admin_config')
         .update({ 
           protection_enabled: protection_enabled !== undefined ? !!protection_enabled : undefined,
-          splash_ad_url: splash_ad_url !== undefined ? splash_ad_url : undefined,
-          splash_ad_enabled: splash_ad_enabled !== undefined ? !!splash_ad_enabled : undefined
+          splash_ads_json: updatedJson
         })
         .eq('id', existing[0].id);
       error = updateError;

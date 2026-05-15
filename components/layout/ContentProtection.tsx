@@ -14,10 +14,10 @@ export default function ContentProtection() {
           return;
         }
 
-        const res = await fetch('/api/admin/settings');
+        const res = await fetch('/api/admin/settings', { cache: 'no-store' });
         const data = await res.json();
         if (data.success) {
-          setEnabled(data.protection_enabled);
+          setEnabled(!!data.protection_enabled);
         }
       } catch (error) {
         console.error('Failed to fetch protection settings:', error);

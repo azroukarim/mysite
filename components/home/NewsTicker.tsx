@@ -46,15 +46,15 @@ export default function NewsTicker() {
             return (
               <div 
                 key={itemIndex} 
-                className="w-full bg-blue-600/5 border border-blue-100 py-2.5 overflow-hidden whitespace-nowrap rounded-full shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500" 
+                className="w-full bg-blue-600/5 border border-blue-100 overflow-hidden whitespace-nowrap rounded-full shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500" 
                 style={{ animationDelay: `${barIndex * 200 + itemIndex * 100}ms` }}
               >
                 <div className="flex items-center">
-                  <div className="px-6 py-1.5 bg-blue-600 text-white text-[11px] font-black uppercase tracking-tighter rounded-full ml-2 mr-6 z-10 shadow-lg shadow-blue-500/20 flex-shrink-0">
-                    {bar.name.toUpperCase()}
+                  <div className="px-6 py-2.5 bg-blue-600 text-white text-[11px] font-black uppercase tracking-widest animate-heart-pulse flex-shrink-0 z-10 shadow-[4px_0_15px_rgba(37,99,235,0.2)]">
+                    NEWS
                   </div>
                   <div 
-                    className={`${scrollDir === 'right' ? 'animate-marquee-rtl' : 'animate-marquee'} inline-block text-blue-950 text-base font-black`}
+                    className={`${scrollDir === 'right' ? 'animate-marquee-rtl' : 'animate-marquee'} inline-block text-blue-950 text-base font-black py-2`}
                     style={{ animationDuration: `${bar.speed || 30}s` }}
                   >
                     <span className="px-6"><bdi dir={isArabic ? 'rtl' : 'ltr'}>{item}{isArabic ? '\u200F' : ''}</bdi></span>
@@ -68,6 +68,18 @@ export default function NewsTicker() {
           })}
         </div>
       ))}
+      <style jsx>{`
+        @keyframes heart-pulse {
+          0% { transform: scale(1); }
+          15% { transform: scale(1.15); }
+          30% { transform: scale(1); }
+          45% { transform: scale(1.15); }
+          100% { transform: scale(1); }
+        }
+        .animate-heart-pulse {
+          animation: heart-pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+        }
+      `}</style>
     </div>
   );
 }

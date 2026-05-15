@@ -52,6 +52,7 @@ export const metadata: Metadata = {
 import ContentProtection from "@/components/layout/ContentProtection";
 
 import AuthRedirectHandler from "@/components/auth/AuthRedirectHandler";
+import MaintenanceMode from "@/components/layout/MaintenanceMode";
 
 export default function RootLayout({
   children,
@@ -63,6 +64,7 @@ export default function RootLayout({
       <body
         className={`${inter.className} ${montserrat.variable} antialiased flex flex-col min-h-screen`}
       >
+        <MaintenanceMode />
         <AuthRedirectHandler />
         <ContentProtection />
         <LanguageProvider>

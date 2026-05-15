@@ -130,6 +130,14 @@ const translations: any = {
   faq_q4: { en: 'Do you offer a free trial?', fr: 'Proposez-vous un essai gratuit ?' },
   faq_a4: { en: 'Yes, contact us on WhatsApp to get a 24-hour free trial to test our service quality.', fr: 'Oui, contactez-nous sur WhatsApp pour obtenir un essai gratuit de 24 heures afin de tester la qualité de notre service.' },
   payment_methods_title: { en: 'Our Available Payment Methods', fr: 'Nos moyens de paiement disponibles' },
+  
+  // Maintenance Mode
+  maintenance_title: { en: 'Site Under Maintenance', fr: 'Site en maintenance' },
+  maintenance_desc: { 
+    en: 'We are currently updating our store to provide you with the best experience. We will be back shortly!', 
+    fr: 'Nous mettons à jour notre boutique pour vous offrir la meilleure expérience. Nous serons de retour très bientôt !' 
+  },
+  maintenance_whatsapp: { en: 'Contact us on WhatsApp', fr: 'Contactez-nous sur WhatsApp' },
 };
 
 interface LanguageContextType {
