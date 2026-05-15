@@ -44,6 +44,7 @@ export default function Product() {
   const [selectedDuration, setSelectedDuration] = useState<any>(null);
   const [showCopied, setShowCopied] = useState(false);
   const [saleEnded, setSaleEnded] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const { t, language } = useLanguage();
   const { formatPrice } = useCurrency();
 
@@ -249,15 +250,36 @@ export default function Product() {
               {t('payment_methods_title')}
             </p>
             <div className="grid grid-cols-3 gap-4 lg:gap-6">
-              {paymentMethods.map((method) => (
-                <div key={method.name} className={`relative h-12 w-20 lg:h-16 lg:w-28 bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden flex items-center justify-center p-1 group hover:border-primary/50 hover:shadow-2xl hover:scale-110 transition-all duration-500 ${(method.name === 'Remitly' || method.name === 'Sendwave') ? 'ring-2 ring-primary/20 scale-105' : ''}`}>
-                  <img 
-                    src={method.image} 
-                    alt={method.name} 
-                    className={`max-h-full max-w-full object-contain transition-all duration-300 group-hover:scale-110 ${(method.name === 'Remitly' || method.name === 'Sendwave') ? 'scale-125' : ''}`}
-                  />
-                </div>
-              ))}
+              {paymentMethods.map((method) => {
+                const isSelected = selectedPayment === method.name;
+                return (
+                  <button 
+                    key={method.name} 
+                    onClick={() => setSelectedPayment(method.name)}
+                    className={cn(
+                      "relative h-12 w-20 lg:h-16 lg:w-28 bg-white rounded-2xl border transition-all duration-500 overflow-hidden flex items-center justify-center p-1 group hover:shadow-2xl hover:scale-110",
+                      isSelected 
+                        ? "border-primary ring-4 ring-primary/20 shadow-xl scale-110 z-10" 
+                        : "border-slate-200 shadow-lg",
+                      (method.name === 'Remitly' || method.name === 'Sendwave') && !isSelected ? 'ring-2 ring-primary/20 scale-105' : ''
+                    )}
+                  >
+                    <img 
+                      src={method.image} 
+                      alt={method.name} 
+                      className={cn(
+                        "max-h-full max-w-full object-contain transition-all duration-300 group-hover:scale-110",
+                        (method.name === 'Remitly' || method.name === 'Sendwave') ? 'scale-125' : ''
+                      )}
+                    />
+                    {isSelected && (
+                      <div className="absolute top-1 right-1 bg-primary text-white rounded-full p-0.5 shadow-sm">
+                        <Check size={8} strokeWidth={4} />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -437,15 +459,25 @@ export default function Product() {
 
             <Button
               size="lg"
-              className="w-full h-12 bg-[#25D366] text-white hover:bg-[#128C7E] flex items-center justify-center gap-3 font-black text-[13px] rounded-xl shadow-lg shadow-green-500/20 mt-2 transition-all hover:scale-[1.02] active:scale-95"
+              className={cn(
+                "w-full h-12 text-white flex items-center justify-center gap-3 font-black text-[13px] rounded-xl shadow-lg mt-2 transition-all active:scale-95",
+                selectedPayment 
+                  ? "bg-[#25D366] hover:bg-[#128C7E] shadow-green-500/20 hover:scale-[1.02]" 
+                  : "bg-slate-400 cursor-not-allowed grayscale"
+              )}
               onClick={() => {
+                if (!selectedPayment) {
+                  alert(language === 'en' ? 'Please select a payment method first!' : 'يرجى اختيار وسيلة دفع أولاً!');
+                  return;
+                }
                 const WHATSAPP_NUMBER = "212670965351";
                 const typeLabel = language === 'en' ? 'Type' : "Type d'abonnement";
                 const qtyLabel = language === 'en' ? 'Quantity' : "Quantité";
+                const paymentLabel = language === 'en' ? 'Payment Method' : "Moyen de paiement";
                 const durationText = selectedDuration ? `${typeLabel}: ${selectedDuration.label}` : (product.duration ? `${typeLabel}: ${product.duration}` : `${qtyLabel}: ${quantity}`);
                 const greeting = language === 'en' ? 'Hello, I would like to order:' : "Bonjour, je souhaite commander le produit :";
                 const totalLabel = language === 'en' ? 'Total Price' : "Prix total :";
-                const message = `${greeting} ${product.name}\n${durationText}\n${totalLabel} ${formatPrice(finalPrice * quantity)}`;
+                const message = `${greeting} ${product.name}\n${durationText}\n${paymentLabel}: ${selectedPayment}\n${totalLabel} ${formatPrice(finalPrice * quantity)}`;
                 const encodedMessage = encodeURIComponent(message);
                 window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
               }}
@@ -491,15 +523,31 @@ export default function Product() {
               {t('payment_methods_title')}
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4 opacity-100">
-              {paymentMethods.map((method) => (
-                <div key={method.name} className={`relative h-10 w-16 bg-white rounded-xl border border-slate-200 shadow-md overflow-hidden flex items-center justify-center p-0.5 group hover:border-primary/50 hover:shadow-lg hover:scale-105 transition-all duration-300 ${(method.name === 'Remitly' || method.name === 'Sendwave') ? 'ring-2 ring-primary/10 scale-105' : ''}`}>
-                  <img 
-                    src={method.image} 
-                    alt={method.name} 
-                    className={`max-h-full max-w-full object-contain transition-all duration-300 group-hover:scale-110 ${(method.name === 'Remitly' || method.name === 'Sendwave') ? 'scale-125' : ''}`}
-                  />
-                </div>
-              ))}
+              {paymentMethods.map((method) => {
+                const isSelected = selectedPayment === method.name;
+                return (
+                  <button 
+                    key={method.name} 
+                    onClick={() => setSelectedPayment(method.name)}
+                    className={cn(
+                      "relative h-10 w-16 bg-white rounded-xl border transition-all duration-300 overflow-hidden flex items-center justify-center p-0.5 group hover:shadow-lg hover:scale-105",
+                      isSelected 
+                        ? "border-primary ring-2 ring-primary/20 shadow-md scale-105 z-10" 
+                        : "border-slate-200 shadow-md",
+                      (method.name === 'Remitly' || method.name === 'Sendwave') && !isSelected ? 'ring-2 ring-primary/10 scale-105' : ''
+                    )}
+                  >
+                    <img 
+                      src={method.image} 
+                      alt={method.name} 
+                      className={cn(
+                        "max-h-full max-w-full object-contain transition-all duration-300 group-hover:scale-110",
+                        (method.name === 'Remitly' || method.name === 'Sendwave') ? 'scale-125' : ''
+                      )}
+                    />
+                  </button>
+                );
+              })}
             </div>
           </div>
 

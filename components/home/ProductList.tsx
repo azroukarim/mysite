@@ -23,7 +23,7 @@ export default function ProductList() {
   const [isAdding, setIsAdding] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 16;
+  const ITEMS_PER_PAGE = 20;
 
   useEffect(() => {
     const fetchProducts = async () => {
