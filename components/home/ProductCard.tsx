@@ -217,7 +217,7 @@ export default function ProductCard({
               {isSaleActive && (
                 <div className="text-[8px] sm:text-[9px] font-bold text-slate-500 space-y-0">
                   <div className="flex items-center gap-1">
-                    <span className="text-amber-600 uppercase text-[7px] sm:text-[8px]">Ends:</span>
+                    <span className="text-amber-600 uppercase text-[7px] sm:text-[8px]">Promo expire at:</span>
                     <span>{new Date(product.sale_end_date!).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}</span>
                   </div>
                 </div>

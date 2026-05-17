@@ -315,7 +315,7 @@ export default function Product() {
                 </div>
                 <div className="text-[11px] font-bold text-slate-500 flex items-center gap-4 ml-1">
                   <div className="flex items-center gap-1">
-                    <span className="text-slate-400">{isSaleActive ? "Ends at:" : "Starts at:"}</span>
+                    <span className="text-slate-400">{isSaleActive ? "Promo expire at:" : "Starts at:"}</span>
                     <span className={isSaleActive ? "text-red-500" : "text-blue-500"}>
                       {new Date(isSaleActive ? product.sale_end_date : (product.sale_start_date || product.sale_end_date)).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}
                     </span>

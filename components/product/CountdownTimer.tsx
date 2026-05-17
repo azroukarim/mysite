@@ -100,7 +100,7 @@ export default function CountdownTimer({ endDate, startDate, onEnd, className, c
           "font-black uppercase tracking-wider text-white/95",
           compact ? "text-[9px] leading-none" : "text-[10px] sm:text-[11px]"
         )}>
-          {timeLeft.isUpcoming ? (language === 'fr' ? 'Débute' : 'Starts') : (language === 'fr' ? 'Expire' : 'Ends')}
+          {timeLeft.isUpcoming ? (language === 'fr' ? 'Débute' : 'Starts') : 'Promo expire at'}
         </span>
       </div>
 
