@@ -19,7 +19,9 @@ import {
   Settings,
   Sparkles,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Menu,
+  X
 } from 'lucide-react';
 import { getGMTPlus1DateTime } from '@/lib/dateUtils';
 
@@ -29,6 +31,7 @@ export default function TickerManager() {
   const [status, setStatus] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // News Ticker State (Multiple Bars)
   const [tickerBars, setTickerBars] = useState<any[]>([]);
@@ -224,7 +227,7 @@ export default function TickerManager() {
       <nav className="sticky top-0 z-50 bg-white/70 backdrop-blur-2xl border-b border-slate-200/60 shadow-sm">
         <div className="max-w-[1400px] mx-auto px-8 h-24 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Link href="/admin" className="w-12 h-12 flex items-center justify-center bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 transition-all text-slate-600 hover:text-slate-900 shadow-sm">
+            <Link href="/admin" className="w-12 h-12 flex items-center justify-center bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 transition-all text-slate-600 hover:text-slate-900 shadow-sm" title="Back to Dashboard">
               <ChevronLeft size={24} />
             </Link>
             <div className="h-10 w-[1px] bg-slate-200" />
@@ -238,22 +241,80 @@ export default function TickerManager() {
           </div>
 
           <div className="flex items-center gap-4">
-            {status && (
-              <div className="px-6 py-2.5 bg-slate-900 text-white rounded-full text-xs font-black tracking-widest uppercase animate-in fade-in zoom-in duration-300">
-                {status}
-              </div>
-            )}
+            {/* Desktop Header Buttons */}
+            <div className="hidden lg:flex items-center gap-4">
+              {status && (
+                <div className="px-6 py-2.5 bg-slate-900 text-white rounded-full text-xs font-black tracking-widest uppercase animate-in fade-in zoom-in duration-300">
+                  {status}
+                </div>
+              )}
+              <Link 
+                href="/" 
+                className="px-6 py-3 bg-gradient-to-r from-slate-950 to-slate-800 hover:from-blue-600 hover:to-blue-700 text-white rounded-2xl transition-all font-black text-xs uppercase shadow-lg active:scale-95 duration-200 tracking-tighter border border-white/10 flex items-center gap-2"
+              >
+                <ChevronLeft size={14} />
+                <span>Return to Store</span>
+              </Link>
+              <button 
+                onClick={handleSaveAll}
+                disabled={isSaving}
+                className="px-8 py-3.5 bg-slate-900 text-white rounded-2xl font-black text-sm flex items-center gap-3 hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-900/10 disabled:opacity-50"
+              >
+                <Save size={18} />
+                SAVE CHANGES
+              </button>
+            </div>
+
+            {/* Mobile/Tablet Burger Menu Trigger */}
             <button 
-              onClick={handleSaveAll}
-              disabled={isSaving}
-              className="px-8 py-3.5 bg-slate-900 text-white rounded-2xl font-black text-sm flex items-center gap-3 hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-900/10 disabled:opacity-50"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden relative p-1.5 sm:p-2 rounded-full hover:bg-gray-100 active:scale-95 transition-all duration-200"
+              aria-label="Toggle Menu"
             >
-              <Save size={18} />
-              SAVE CHANGES
+              {mobileMenuOpen ? (
+                <X className="h-5 w-5 sm:h-6 sm:w-6 text-slate-700" />
+              ) : (
+                <Menu className="h-5 w-5 sm:h-6 sm:w-6 text-slate-700" />
+              )}
             </button>
           </div>
         </div>
-      </nav>
+
+        {/* Mobile Dropdown Panel */}
+        {mobileMenuOpen && (
+          <div className="absolute top-[80px] right-4 sm:right-6 w-72 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl p-5 z-50 animate-in fade-in slide-in-from-top-4 duration-300 flex flex-col space-y-4">
+            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">
+              NEWS MANAGER
+            </div>
+            {status && (
+              <div className="px-3 py-1.5 bg-slate-900 text-white rounded-xl text-[10px] font-black tracking-widest uppercase text-center w-fit mx-auto">
+                {status}
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-2">
+              <Link 
+                href="/" 
+                className="py-2.5 bg-gradient-to-r from-slate-950 to-slate-800 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl transition-all font-black text-[10px] uppercase shadow-sm active:scale-95 duration-200 tracking-wider flex items-center justify-center gap-1.5 border border-white/10"
+              >
+                <ChevronLeft size={12} />
+                <span>To Home Store</span>
+              </Link>
+
+              <button 
+                onClick={() => {
+                  handleSaveAll();
+                  setMobileMenuOpen(false);
+                }}
+                disabled={isSaving}
+                className="py-2.5 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase shadow-sm active:scale-95 flex items-center justify-center gap-1.5 disabled:opacity-50"
+              >
+                <Save size={12} />
+                <span>{isSaving ? "Saving..." : "Save"}</span>
+              </button>
+            </div>
+          </div>
+        )}</nav>
 
       <main className="max-w-[1400px] mx-auto px-8 py-12 grid gap-12 lg:grid-cols-[400px_1fr]">
         

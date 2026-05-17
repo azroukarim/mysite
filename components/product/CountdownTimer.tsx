@@ -70,53 +70,53 @@ export default function CountdownTimer({ endDate, startDate, onEnd, className, c
   };
 
   const TimeUnit = ({ value, label, small }: { value: number, label: string, small?: boolean }) => (
-    <div className="flex items-baseline gap-px leading-none">
+    <div className="flex items-baseline gap-[1px] leading-none">
       <span className={cn(
         "font-black tracking-tighter text-white sm:text-base",
-        small ? "text-[8.5px]" : "text-[9.5px]"
+        small ? "text-[12.5px]" : "text-[14px]"
       )}>{value.toString().padStart(2, '0')}</span>
       <span className={cn(
         "uppercase font-black text-white sm:text-[11px]",
-        small ? "text-[8px]" : "text-[9px]"
+        small ? "text-[9px]" : "text-[10px]"
       )}>{label}</span>
     </div>
   );
 
   return (
     <div className={cn(
-      "mx-auto w-fit flex flex-col items-center justify-center bg-gradient-to-r text-white rounded shadow-lg border border-white/10 transition-all",
-      compact ? "px-2 py-1 sm:h-auto" : "px-1.5 py-0.5 sm:px-4 sm:h-11 sm:rounded-full flex-row",
+      "mx-auto w-fit flex flex-col items-center justify-center bg-gradient-to-r text-white rounded-lg shadow-xl border border-white/15 transition-all",
+      compact ? "px-3 py-1.5 sm:h-auto" : "px-3.5 py-2 sm:px-4 sm:h-11 sm:rounded-full flex-row",
       timeLeft.isUpcoming 
-        ? "from-blue-600 via-blue-500 to-indigo-500 shadow-blue-500/20" 
-        : "from-red-600 via-red-500 to-amber-500 shadow-red-500/20",
+        ? "from-blue-600 via-blue-500 to-indigo-500 shadow-blue-500/25" 
+        : "from-red-600 via-red-500 to-amber-500 shadow-red-500/25",
       className
     )}>
       {/* Status Label (Positioned above or beside based on mode) */}
       <div className={cn(
         "flex items-center",
-        compact ? "mb-0.5" : "mr-2 border-r border-white/20 pr-2"
+        compact ? "mb-1 border-b border-white/10 pb-0.5 w-full justify-center" : "mr-2 border-r border-white/20 pr-2"
       )}>
         <span className={cn(
-          "font-black uppercase tracking-tighter text-white/90",
-          compact ? "text-[6px] leading-none" : "text-[7px] sm:text-[9px]"
+          "font-black uppercase tracking-wider text-white/95",
+          compact ? "text-[9px] leading-none" : "text-[10px] sm:text-[11px]"
         )}>
           {timeLeft.isUpcoming ? (language === 'fr' ? 'Débute' : 'Starts') : (language === 'fr' ? 'Expire' : 'Ends')}
         </span>
       </div>
 
-      <div className={cn("flex items-center", compact ? "gap-0.5" : "gap-0.5 sm:gap-2")}>
+      <div className={cn("flex items-center justify-center", compact ? "gap-1" : "gap-1 sm:gap-2")}>
         {/* Days Logic - Smaller on mobile */}
         <div className={cn(
           "flex items-center gap-0.5",
           timeLeft.days <= 0 && "hidden sm:flex"
         )}>
           <TimeUnit value={timeLeft.days} label={labels.days} small />
-          <span className="text-white/40 font-bold text-[8px] sm:text-base mx-px sm:mx-0.5 inline-block">:</span>
+          <span className="text-white/40 font-black text-[12px] sm:text-base mx-0.5 inline-block self-center">:</span>
         </div>
 
         {/* Hours Logic - Smaller on mobile */}
         <TimeUnit value={timeLeft.hours} label={labels.hours} small />
-        <span className="text-white/40 font-bold text-[8px] sm:text-base mx-px sm:mx-0.5 inline-block">:</span>
+        <span className="text-white/40 font-black text-[12px] sm:text-base mx-0.5 inline-block self-center">:</span>
         <TimeUnit value={timeLeft.minutes} label={labels.minutes} />
         
         {/* Seconds Logic */}
@@ -124,7 +124,7 @@ export default function CountdownTimer({ endDate, startDate, onEnd, className, c
           "flex items-center gap-0.5",
           timeLeft.days > 0 && "hidden sm:flex"
         )}>
-          <span className="text-white/40 font-bold text-[8px] sm:text-base mx-px sm:mx-0.5 inline-block">:</span>
+          <span className="text-white/40 font-black text-[12px] sm:text-base mx-0.5 inline-block self-center">:</span>
           <TimeUnit value={timeLeft.seconds} label={labels.seconds} />
         </div>
       </div>

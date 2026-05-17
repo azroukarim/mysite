@@ -50,11 +50,11 @@ export default function NewsTicker() {
                 style={{ animationDelay: `${barIndex * 200 + itemIndex * 100}ms` }}
               >
                 <div className="flex items-center">
-                  <div className="px-6 py-2.5 bg-blue-600 text-white text-[11px] font-black uppercase tracking-widest animate-heart-pulse flex-shrink-0 z-10 shadow-[4px_0_15px_rgba(37,99,235,0.2)]">
+                  <div className="px-3.5 py-1.5 sm:px-6 sm:py-2.5 bg-blue-600 text-white text-[9px] sm:text-[11px] font-black uppercase tracking-widest animate-heart-pulse flex-shrink-0 z-10 shadow-[4px_0_15px_rgba(37,99,235,0.2)]">
                     NEWS
                   </div>
                   <div 
-                    className={`${scrollDir === 'right' ? 'animate-marquee-rtl' : 'animate-marquee'} inline-block text-blue-950 text-base font-black py-2`}
+                    className={`${scrollDir === 'right' ? 'animate-marquee-rtl' : 'animate-marquee'} inline-block text-blue-950 text-xs sm:text-base font-black py-1.5 sm:py-2`}
                     style={{ animationDuration: `${bar.speed || 30}s` }}
                   >
                     <span className="px-6"><bdi dir={isArabic ? 'rtl' : 'ltr'}>{item}{isArabic ? '\u200F' : ''}</bdi></span>

@@ -46,7 +46,7 @@ export default function Product() {
   const [saleEnded, setSaleEnded] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const { t, language } = useLanguage();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, hidePrices } = useCurrency();
 
   // Reset sale status when date changes
   useEffect(() => {
@@ -331,22 +331,43 @@ export default function Product() {
             </div>
           )}
 
-          <div className="flex items-baseline gap-3 flex-wrap">
-            <span className={cn(
-              "text-3xl font-black transition-all tracking-tighter",
-              isSaleActive ? "text-red-600 drop-shadow-[0_0_15px_rgba(220,38,38,0.15)]" : "text-slate-900"
-            )}>
-              {formatPrice(finalPrice)}
-            </span>
-            {finalOldPrice && (
-              <div className="flex items-center gap-3">
-                <span className="text-2xl animate-x-strike">
-                  {formatPrice(finalOldPrice)}
+          <div className="flex items-baseline gap-3 flex-wrap w-full">
+            {hidePrices ? (
+              <a
+                href={`https://wa.me/212670965351?text=${encodeURIComponent(
+                  language === 'fr' 
+                    ? `Bonjour, je souhaite connaître le prix du produit: ${product.name}` 
+                    : `Hello, I want to know the price of the product: ${product.name}`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-[#25D366] hover:bg-[#20ba5a] text-white rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-300 shadow-xl hover:shadow-green-500/20 active:scale-95 border border-green-400"
+              >
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 fill-current" viewBox="0 0 24 24">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.42 9.864-9.864.002-2.637-1.03-5.114-2.906-6.99C16.555 1.875 14.077.844 11.44 1.841c-5.438 0-9.863 4.42-9.867 9.864-.001 1.73.457 3.419 1.32 4.933l-.994 3.635 3.723-.976zM17.487 14.4c-.27-.136-1.6-.79-1.848-.879-.249-.09-.43-.136-.61.136-.18.27-.697.879-.855 1.059-.158.18-.315.203-.585.068-1.228-.614-2.03-1.086-2.769-2.353-.195-.348-.195-.568-.02-.75.158-.163.315-.36.473-.54.158-.18.21-.315.315-.525.105-.21.053-.393-.027-.53-.079-.136-.61-1.472-.835-2.015-.22-.527-.459-.446-.61-.454-.15-.007-.33-.009-.51-.009-.18 0-.473.068-.72.338-.248.27-.946.923-.946 2.25 0 1.328.968 2.61 1.103 2.79.135.18 1.902 2.904 4.609 4.072.645.278 1.148.445 1.54.569.65.207 1.241.178 1.708.108.52-.078 1.6-.653 1.826-1.28.225-.628.225-1.168.158-1.28-.068-.113-.248-.18-.518-.316z"/>
+                </svg>
+                <span>{language === 'fr' ? 'Demander le prix sur WhatsApp' : 'Ask Price on WhatsApp'}</span>
+              </a>
+            ) : (
+              <>
+                <span className={cn(
+                  "text-3xl font-black transition-all tracking-tighter",
+                  isSaleActive && !hidePrices ? "text-red-600" : "text-slate-900",
+                  hidePrices && "text-xl font-black text-slate-500 bg-slate-100 border border-slate-200 px-3 py-1 rounded-xl uppercase tracking-tight"
+                )}>
+                  {formatPrice(finalPrice)}
                 </span>
-                <span className="px-3 py-1 bg-gradient-to-r from-red-600 to-amber-500 text-white text-[10px] font-black rounded-full shadow-xl">
-                  -{Math.round(((finalOldPrice - finalPrice) / finalOldPrice) * 100)}%
-                </span>
-              </div>
+                {finalOldPrice && !hidePrices && (
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl animate-x-strike">
+                      {formatPrice(finalOldPrice)}
+                    </span>
+                    <span className="px-3 py-1 bg-gradient-to-r from-red-600 to-amber-500 text-white text-[10px] font-black rounded-full shadow-xl">
+                      -{Math.round(((finalOldPrice - finalPrice) / finalOldPrice) * 100)}%
+                    </span>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
@@ -408,7 +429,7 @@ export default function Product() {
                           )}>
                             {formatPrice(isSaleActive ? opt.promo : opt.normal)}
                           </div>
-                          {opt.strike && (
+                          {opt.strike && !hidePrices && (
                             <div className="text-[11px] animate-x-strike ml-1">{formatPrice(opt.strike)}</div>
                           )}
                         </div>

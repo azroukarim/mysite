@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useCart } from "@/context/CartContext";
+import { useSearch } from "@/context/SearchContext";
 import { parseSaleDate } from "@/lib/dateUtils";
 import { X, ShoppingCart, Check, Zap, MonitorPlay, Star, ShieldCheck } from "lucide-react";
 import ProductCard from "./ProductCard";
@@ -11,14 +12,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { paymentMethods } from "@/lib/payment-methods";
 
 export default function ProductList() {
   const { t, language } = useLanguage();
-  const { formatPrice } = useCurrency();
+  const { currency, setCurrency, formatPrice } = useCurrency();
   const { addToCart } = useCart();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const { searchTerm, setSearchTerm } = useSearch();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isAdding, setIsAdding] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
@@ -91,34 +93,34 @@ export default function ProductList() {
     }
   };
 
-  const PaginationControls = () => {
+  const PaginationControls = ({ className = "py-2 sm:py-3" }: { className?: string }) => {
     if (totalPages <= 1) return null;
     return (
-      <div className="flex flex-col items-center gap-4 py-6 sm:py-10">
-        <div className="flex items-center gap-1 sm:gap-2">
+      <div className={cn("flex flex-col items-center gap-1.5 sm:gap-2", className)}>
+        <div className="flex items-center gap-0.5 sm:gap-2">
           <button
             onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
             className={cn(
-              "px-3 py-2 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-xs font-black transition-all flex items-center gap-1 sm:gap-2",
+              "px-2 py-1 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-black transition-all flex items-center gap-0.5 sm:gap-2",
               currentPage === 1 
-                ? "bg-slate-100 text-slate-400 cursor-not-allowed" 
+                ? "bg-slate-50 text-slate-300 cursor-not-allowed border border-slate-100" 
                 : "bg-white border border-slate-200 text-slate-600 hover:border-blue-500 hover:text-blue-600 shadow-sm"
             )}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-            PREVIOUS
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5"><path d="m15 18-6-6 6-6"/></svg>
+            PREV
           </button>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1">
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
                 key={page}
                 onClick={() => handlePageChange(page)}
                 className={cn(
-                  "w-8 h-8 sm:w-10 sm:h-10 rounded-xl text-[10px] sm:text-xs font-black transition-all flex items-center justify-center",
+                  "w-6 h-6 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-black transition-all flex items-center justify-center",
                   currentPage === page
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
                     : "bg-white border border-slate-100 text-slate-500 hover:border-blue-200 hover:text-blue-600 shadow-sm"
                 )}
               >
@@ -131,17 +133,17 @@ export default function ProductList() {
             onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage === totalPages}
             className={cn(
-              "px-3 py-2 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-xs font-black transition-all flex items-center gap-1 sm:gap-2",
+              "px-2 py-1 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-black transition-all flex items-center gap-0.5 sm:gap-2",
               currentPage === totalPages 
-                ? "bg-slate-100 text-slate-400 cursor-not-allowed" 
+                ? "bg-slate-50 text-slate-300 cursor-not-allowed border border-slate-100" 
                 : "bg-white border border-slate-200 text-slate-600 hover:border-blue-500 hover:text-blue-600 shadow-sm"
             )}
           >
             NEXT
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5"><path d="m9 18 6-6-6-6"/></svg>
           </button>
         </div>
-        <p className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-widest">
+        <p className="text-[8px] sm:text-xs text-slate-400 font-bold uppercase tracking-widest">
           Page {currentPage} of {totalPages}
         </p>
       </div>
@@ -168,23 +170,9 @@ export default function ProductList() {
         <NewsTicker />
       </div>
 
-      {/* Search Bar */}
-      <div className="relative max-w-[220px] mx-auto px-4 sm:px-0">
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        </div>
-        <input 
-          type="text"
-          placeholder={t('search_placeholder')}
-          className="w-full pl-8 pr-3 py-2 bg-white border border-slate-200 rounded-xl outline-none shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all text-[10px] sm:text-xs font-medium"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
-
       {/* Category Filter */}
-      <div className="max-w-4xl mx-auto px-2 sm:px-4">
-        <div className="flex flex-wrap sm:flex-nowrap items-center justify-center gap-1.5 sm:gap-2 pb-2 sm:overflow-x-auto no-scrollbar scroll-smooth">
+      <div className="max-w-full px-2 sm:px-4">
+        <div className="flex flex-wrap items-center justify-start gap-1.5 sm:gap-2 pb-2">
           {categories.map((category: any) => (
             <button
               key={category}
@@ -215,40 +203,80 @@ export default function ProductList() {
         </div>
       </div>
 
-      {/* Top Pagination */}
-      <PaginationControls />
 
-      <div id="products-grid" className="grid gap-1 grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 max-w-full mx-auto px-1 sm:px-4">
-        {paginatedProducts.length > 0 ? (
-          paginatedProducts.map((product) => (
-            <ProductCard 
-              key={product.id} 
-              product={product} 
-            />
-          ))
-        ) : (
-        <div className="col-span-full flex flex-col items-center justify-center py-20 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
-          <div className="text-6xl mb-6 opacity-20">🔍</div>
-          <h3 className="text-2xl font-bold text-slate-900 mb-2">
-            Product Not Found
-          </h3>
-          <p className="text-slate-500 max-w-sm mx-auto">
-            Sorry, we couldn't find what you're looking for. You can contact us directly on WhatsApp to provide this product for you:
-            <br />
-            <a 
-              href="https://wa.me/212670965351" 
-              target="_blank" 
-              className="inline-block mt-4 px-6 py-3 bg-green-500 text-white rounded-2xl font-bold hover:bg-green-600 transition-all shadow-lg shadow-green-200"
+
+      {/* Top Pagination and Products Grid Grouped for Close Spacing */}
+      <div className="space-y-0">
+        {/* Top Row: Currency Switcher & Pagination */}
+        <div className="relative flex items-center justify-between w-full h-auto py-0 px-2 sm:px-4">
+          <div className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10">
+            <button
+              onClick={() => setCurrency(currency === 'EUR' ? 'MAD' : 'EUR')}
+              className="flex items-center gap-0.5 sm:gap-1 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all duration-300 shadow-sm active:scale-95 text-[9px] sm:text-xs font-black select-none"
             >
-              Contact us on WhatsApp
-            </a>
-          </p>
+              <span className={currency === 'EUR' ? 'text-blue-600' : 'text-slate-400'}>EUR</span>
+              <span className="text-slate-300">/</span>
+              <span className={currency === 'MAD' ? 'text-green-600' : 'text-slate-400'}>MAD</span>
+            </button>
+          </div>
+
+          <PaginationControls className="mx-auto py-0" />
         </div>
-      )}
+
+        <div id="products-grid" className="grid gap-1 grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 max-w-full mx-auto px-1 sm:px-4">
+          {paginatedProducts.length > 0 ? (
+            paginatedProducts.map((product) => (
+              <ProductCard 
+                key={product.id} 
+                product={product} 
+              />
+            ))
+          ) : (
+            <div className="col-span-full flex flex-col items-center justify-center py-20 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+              <div className="text-6xl mb-6 opacity-20">🔍</div>
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">
+                Product Not Found
+              </h3>
+              <p className="text-slate-500 max-w-sm mx-auto">
+                Sorry, we couldn't find what you're looking for. You can contact us directly on WhatsApp to provide this product for you:
+                <br />
+                <a 
+                  href="https://wa.me/212670965351" 
+                  target="_blank" 
+                  className="inline-block mt-4 px-6 py-3 bg-green-500 text-white rounded-2xl font-bold hover:bg-green-600 transition-all shadow-lg shadow-green-200"
+                >
+                  Contact us on WhatsApp
+                </a>
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Bottom Pagination */}
-      <PaginationControls />
+      <PaginationControls className="py-6 sm:py-8" />
+
+      {/* Payment Methods Under Pagination */}
+      <div className="w-full max-w-4xl mx-auto pt-8 pb-4 border-t border-slate-100 flex flex-col items-center gap-4">
+        <span className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-[0.2em] text-center">
+          {t('payment_methods_title')}
+        </span>
+        <div className="flex flex-wrap items-center justify-center gap-3 opacity-90">
+          {paymentMethods.map((method: any) => (
+            <div 
+              key={method.name} 
+              className="h-8 w-16 md:h-12 md:w-24 bg-white px-2.5 py-1.5 rounded-xl border border-slate-200/80 shadow-sm flex items-center justify-center transition-all duration-300 hover:scale-105 hover:border-slate-300"
+              title={method.name}
+            >
+              <img 
+                src={method.image} 
+                alt={method.name} 
+                className="h-full w-full object-contain filter drop-shadow-sm"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
 );
 }

@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { 
-  Plus, Edit, Trash2, Save, X, Lock, LogOut, 
+  Plus, Edit, Trash2, Save, X, Lock, LogOut, Menu,
   ChevronLeft, Package, Image as ImageIcon, 
   Euro, Tag, Search, CheckCircle2, Shield, ShieldAlert,
   Eye, EyeOff, Copy, ChevronUp, ChevronDown, LayoutGrid, List, Megaphone,
@@ -594,6 +594,7 @@ export default function AdminDashboard() {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [protectionEnabled, setProtectionEnabled] = useState<boolean | null>(null);
   const [maintenanceEnabled, setMaintenanceEnabled] = useState<boolean | null>(null);
+  const [hidePrices, setHidePrices] = useState<boolean | null>(null);
   const [scheduledAds, setScheduledAds] = useState<any[]>([]);
   const [isSavingSplash, setIsSavingSplash] = useState(false);
   const [newAd, setNewAd] = useState({ image_url: '', start_date: '', end_date: '' });
@@ -613,6 +614,7 @@ export default function AdminDashboard() {
   const [quickPreviewProduct, setQuickPreviewProduct] = useState<Product | null>(null);
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id?: number, ids?: number[], name?: string } | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Load session and products on load
   useEffect(() => {
@@ -683,6 +685,7 @@ export default function AdminDashboard() {
         if (data.success) {
           setProtectionEnabled(data.protection_enabled);
           setMaintenanceEnabled(data.maintenance_enabled);
+          setHidePrices(data.hide_prices);
         }
       });
 
@@ -1023,6 +1026,40 @@ export default function AdminDashboard() {
     } catch (error) {
       setMaintenanceEnabled(!newValue);
       alert('Network error updating maintenance status');
+      setStatus('');
+    }
+  };
+
+  const toggleHidePrices = async () => {
+    const newValue = !hidePrices;
+    setHidePrices(newValue);
+    setStatus('Updating price visibility...');
+    
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, hide_prices: newValue }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setStatus('Price visibility updated!');
+          setTimeout(() => setStatus(''), 2000);
+        } else {
+          setHidePrices(!newValue);
+          alert('Error: ' + (data.error || 'Failed to update'));
+          setStatus('');
+        }
+      } else {
+        setHidePrices(!newValue);
+        alert('Server error: Failed to update price visibility');
+        setStatus('');
+      }
+    } catch (error) {
+      setHidePrices(!newValue);
+      alert('Network error updating price visibility');
       setStatus('');
     }
   };
@@ -1522,7 +1559,7 @@ export default function AdminDashboard() {
       <nav className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200">
         <div className="max-w-[1400px] mx-auto px-6 h-24 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/" className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-500">
+            <Link href="/" className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-500" title="Return to Store">
               <ChevronLeft size={20} />
             </Link>
             <div className="h-8 w-[1px] bg-slate-200 mx-1 hidden md:block" />
@@ -1537,81 +1574,242 @@ export default function AdminDashboard() {
           </div>
           
           <div className="flex items-center gap-4">
-            {status && (
-              <span className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-full text-sm font-medium border border-emerald-100">
-                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                {status}
-              </span>
-            )}
+            {/* Desktop Navigation Items */}
+            <div className="hidden lg:flex items-center gap-4">
+              {status && (
+                <span className="flex items-center gap-2 px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-full text-sm font-medium border border-emerald-100">
+                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                  {status}
+                </span>
+              )}
 
-            {/* Currency Switcher */}
-            <div className="hidden sm:flex items-center gap-2 mr-2">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
-                1€ = 10 MAD
-              </span>
-            </div>
-            <div className="hidden sm:flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200">
-              <button 
-                onClick={() => setCurrency('EUR')}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${currency === 'EUR' ? 'bg-white text-blue-600 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
-              >
-                EUR
-              </button>
-              <button 
-                onClick={() => setCurrency('MAD')}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${currency === 'MAD' ? 'bg-white text-blue-600 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
-              >
-                MAD
-              </button>
-            </div>
-
-            <button 
-              type="button"
-              disabled={protectionEnabled === null}
-              onClick={toggleProtection}
-              className={`px-6 py-2.5 rounded-xl font-black text-[10px] transition-all flex items-center gap-2 shadow-lg active:scale-95 ${
-                protectionEnabled === null 
-                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                  : protectionEnabled 
-                    ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-red-500/20' 
-                    : 'bg-white border border-slate-200 text-slate-600 shadow-slate-100'
-              }`}
-              title={protectionEnabled === null ? "Loading settings..." : (protectionEnabled ? "Disable Content Protection" : "Enable Content Protection")}
-            >
-              <div className="flex items-center gap-2 uppercase tracking-tighter">
-                <div className={`w-1.5 h-1.5 rounded-full ${protectionEnabled ? 'bg-white animate-pulse' : 'bg-slate-300'}`} />
-                {protectionEnabled === null ? "Loading..." : (protectionEnabled ? "PROTECTION ON" : "PROTECTION OFF")}
+              {/* Currency Switcher */}
+              <div className="flex items-center gap-2 mr-2">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                  1€ = 10 MAD
+                </span>
               </div>
-            </button>
-
-            <button 
-              type="button"
-              disabled={maintenanceEnabled === null}
-              onClick={toggleMaintenance}
-              className={`px-6 py-2.5 rounded-xl font-black text-[10px] transition-all flex items-center gap-2 shadow-lg active:scale-95 ${
-                maintenanceEnabled === null 
-                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                  : maintenanceEnabled 
-                    ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-orange-500/20' 
-                    : 'bg-white border border-slate-200 text-slate-600 shadow-slate-100'
-              }`}
-              title={maintenanceEnabled === null ? "Loading settings..." : (maintenanceEnabled ? "Disable Maintenance Mode" : "Enable Maintenance Mode")}
-            >
-              <div className="flex items-center gap-2 uppercase tracking-tighter">
-                <div className={`w-1.5 h-1.5 rounded-full ${maintenanceEnabled ? 'bg-white animate-pulse' : 'bg-slate-300'}`} />
-                {maintenanceEnabled === null ? "Loading..." : (maintenanceEnabled ? "MAINTENANCE ON" : "MAINTENANCE OFF")}
+              <div className="flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200">
+                <button 
+                  onClick={() => setCurrency('EUR')}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${currency === 'EUR' ? 'bg-white text-blue-600 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  EUR
+                </button>
+                <button 
+                  onClick={() => setCurrency('MAD')}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${currency === 'MAD' ? 'bg-white text-blue-600 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  MAD
+                </button>
               </div>
-            </button>
 
+              <Link 
+                href="/" 
+                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-slate-950 to-slate-800 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl transition-all font-black text-[10px] uppercase shadow-lg active:scale-95 duration-200 tracking-tighter border border-white/10"
+              >
+                <ChevronLeft size={12} />
+                <span>Return to Store</span>
+              </Link>
+
+              <button 
+                type="button"
+                disabled={protectionEnabled === null}
+                onClick={toggleProtection}
+                className={`px-6 py-2.5 rounded-xl font-black text-[10px] transition-all flex items-center gap-2 shadow-lg active:scale-95 ${
+                  protectionEnabled === null 
+                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    : protectionEnabled 
+                      ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-red-500/20' 
+                      : 'bg-white border border-slate-200 text-slate-600 shadow-slate-100'
+                }`}
+                title={protectionEnabled === null ? "Loading settings..." : (protectionEnabled ? "Disable Content Protection" : "Enable Content Protection")}
+              >
+                <div className="flex items-center gap-2 uppercase tracking-tighter">
+                  <div className={`w-1.5 h-1.5 rounded-full ${protectionEnabled ? 'bg-white animate-pulse' : 'bg-slate-300'}`} />
+                  {protectionEnabled === null ? "Loading..." : (protectionEnabled ? "PROTECTION ON" : "PROTECTION OFF")}
+                </div>
+              </button>
+
+              <button 
+                type="button"
+                disabled={maintenanceEnabled === null}
+                onClick={toggleMaintenance}
+                className={`px-6 py-2.5 rounded-xl font-black text-[10px] transition-all flex items-center gap-2 shadow-lg active:scale-95 ${
+                  maintenanceEnabled === null 
+                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    : maintenanceEnabled 
+                      ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-orange-500/20' 
+                      : 'bg-white border border-slate-200 text-slate-600 shadow-slate-100'
+                }`}
+                title={maintenanceEnabled === null ? "Loading settings..." : (maintenanceEnabled ? "Disable Maintenance Mode" : "Enable Maintenance Mode")}
+              >
+                <div className="flex items-center gap-2 uppercase tracking-tighter">
+                  <div className={`w-1.5 h-1.5 rounded-full ${maintenanceEnabled ? 'bg-white animate-pulse' : 'bg-slate-300'}`} />
+                  {maintenanceEnabled === null ? "Loading..." : (maintenanceEnabled ? "MAINTENANCE ON" : "MAINTENANCE OFF")}
+                </div>
+              </button>
+
+              <button 
+                type="button"
+                disabled={hidePrices === null}
+                onClick={toggleHidePrices}
+                className={`px-6 py-2.5 rounded-xl font-black text-[10px] transition-all flex items-center gap-2 shadow-lg active:scale-95 ${
+                  hidePrices === null 
+                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    : hidePrices 
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-purple-500/20' 
+                      : 'bg-white border border-slate-200 text-slate-600 shadow-slate-100'
+                }`}
+                title={hidePrices === null ? "Loading settings..." : (hidePrices ? "Make Prices Visible" : "Hide Prices from Visitors")}
+              >
+                <div className="flex items-center gap-2 uppercase tracking-tighter">
+                  <div className={`w-1.5 h-1.5 rounded-full ${hidePrices ? 'bg-white animate-pulse' : 'bg-slate-300'}`} />
+                  {hidePrices === null ? "Loading..." : (hidePrices ? "PRICES HIDDEN" : "PRICES VISIBLE")}
+                </div>
+              </button>
+
+              <button 
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all font-medium"
+              >
+                <LogOut size={18} />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            </div>
+
+            {/* Burger Menu Button (Mobile & Tablet) */}
             <button 
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all font-medium"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden relative p-1.5 sm:p-2 rounded-full hover:bg-gray-100 active:scale-95 transition-all duration-200"
+              aria-label="Toggle Navigation Menu"
             >
-              <LogOut size={18} />
-              <span className="hidden sm:inline">Logout</span>
+              {mobileMenuOpen ? (
+                <X className="h-5 w-5 sm:h-6 sm:w-6 text-slate-700" />
+              ) : (
+                <Menu className="h-5 w-5 sm:h-6 sm:w-6 text-slate-700" />
+              )}
             </button>
           </div>
         </div>
+
+        {/* Mobile Dropdown Panel */}
+        {mobileMenuOpen && (
+          <div className="absolute top-[80px] right-4 sm:right-6 w-72 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl p-5 z-50 animate-in fade-in slide-in-from-top-4 duration-300 flex flex-col space-y-4">
+            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">
+              ADMIN CONTROL
+            </div>
+            
+            {status && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black border border-emerald-100 w-fit">
+                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                {status}
+              </div>
+            )}
+
+            {/* Security Toggles List */}
+            <div className="flex flex-col gap-2.5">
+              <button 
+                type="button"
+                disabled={protectionEnabled === null}
+                onClick={toggleProtection}
+                className={`w-full py-3 rounded-xl font-black text-[10px] tracking-widest uppercase transition-all flex items-center justify-center gap-2 shadow-sm border active:scale-95 ${
+                  protectionEnabled === null 
+                    ? 'bg-slate-50 text-slate-400 cursor-not-allowed border-slate-100'
+                    : protectionEnabled 
+                      ? 'bg-gradient-to-r from-red-600 to-amber-600 border-transparent text-white shadow-red-500/10' 
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <div className={`w-1.5 h-1.5 rounded-full ${protectionEnabled ? 'bg-white animate-pulse' : 'bg-slate-300'}`} />
+                {protectionEnabled === null ? "Loading..." : (protectionEnabled ? "PROTECTION ON" : "PROTECTION OFF")}
+              </button>
+
+              <button 
+                type="button"
+                disabled={maintenanceEnabled === null}
+                onClick={toggleMaintenance}
+                className={`w-full py-3 rounded-xl font-black text-[10px] tracking-widest uppercase transition-all flex items-center justify-center gap-2 shadow-sm border active:scale-95 ${
+                  maintenanceEnabled === null 
+                    ? 'bg-slate-50 text-slate-400 cursor-not-allowed border-slate-100'
+                    : maintenanceEnabled 
+                      ? 'bg-gradient-to-r from-orange-600 to-amber-500 border-transparent text-white shadow-orange-500/10' 
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <div className={`w-1.5 h-1.5 rounded-full ${maintenanceEnabled ? 'bg-white animate-pulse' : 'bg-slate-300'}`} />
+                {maintenanceEnabled === null ? "Loading..." : (maintenanceEnabled ? "MAINTENANCE ON" : "MAINTENANCE OFF")}
+              </button>
+
+              <button 
+                type="button"
+                disabled={hidePrices === null}
+                onClick={toggleHidePrices}
+                className={`w-full py-3 rounded-xl font-black text-[10px] tracking-widest uppercase transition-all flex items-center justify-center gap-2 shadow-sm border active:scale-95 ${
+                  hidePrices === null 
+                    ? 'bg-slate-50 text-slate-400 cursor-not-allowed border-slate-100'
+                    : hidePrices 
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 border-transparent text-white shadow-purple-500/10' 
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <div className={`w-1.5 h-1.5 rounded-full ${hidePrices ? 'bg-white animate-pulse' : 'bg-slate-300'}`} />
+                {hidePrices === null ? "Loading..." : (hidePrices ? "PRICES HIDDEN" : "PRICES VISIBLE")}
+              </button>
+            </div>
+
+            {/* Currency switcher bar */}
+            <div className="border-t border-slate-100 pt-3 flex flex-col gap-2">
+              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                PREFERENCES
+              </div>
+              <div className="flex items-center justify-between px-1">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Currency</span>
+                  <span className="text-[9px] font-bold text-slate-400">1€ = 10 MAD</span>
+                </div>
+                <div className="flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200">
+                  <button 
+                    onClick={() => setCurrency('EUR')}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${currency === 'EUR' ? 'bg-white text-blue-600 shadow-sm border border-slate-200/40' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    EUR
+                  </button>
+                  <button 
+                    onClick={() => setCurrency('MAD')}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${currency === 'MAD' ? 'bg-white text-blue-600 shadow-sm border border-slate-200/40' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    MAD
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions list */}
+            <div className="border-t border-slate-100 pt-3 flex flex-col gap-2">
+              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                ACTIONS
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Link 
+                  href="/" 
+                  className="py-2.5 bg-gradient-to-r from-slate-950 to-slate-800 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl transition-all font-black text-[10px] uppercase shadow-sm active:scale-95 duration-200 tracking-wider flex items-center justify-center gap-1.5 border border-white/10"
+                >
+                  <ChevronLeft size={12} />
+                  <span>To Home Store</span>
+                </Link>
+
+                <button 
+                  onClick={handleLogout}
+                  className="py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-all font-black text-[10px] uppercase shadow-sm active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  <LogOut size={12} />
+                  <span>Logout</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
 
       <main className="max-w-[1400px] mx-auto px-6 py-12 space-y-12">

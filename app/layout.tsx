@@ -7,7 +7,9 @@ import type { Metadata } from "next";
 import { Inter, Montserrat } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { SettingsProvider } from "@/context/SettingsContext";
 import LayoutWrapper from "@/components/layout/LayoutWrapper";
+import { SearchProvider } from "@/context/SearchContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -67,16 +69,20 @@ export default function RootLayout({
         <MaintenanceMode />
         <AuthRedirectHandler />
         <ContentProtection />
-        <LanguageProvider>
-          <CurrencyProvider>
-            <CartProvider>
-              <LayoutWrapper>
-                {children}
-              </LayoutWrapper>
-              <ScrollToTop />
-            </CartProvider>
-          </CurrencyProvider>
-        </LanguageProvider>
+        <SettingsProvider>
+          <LanguageProvider>
+            <CurrencyProvider>
+              <CartProvider>
+                <SearchProvider>
+                  <LayoutWrapper>
+                    {children}
+                  </LayoutWrapper>
+                  <ScrollToTop />
+                </SearchProvider>
+              </CartProvider>
+            </CurrencyProvider>
+          </LanguageProvider>
+        </SettingsProvider>
       </body>
     </html>
   );

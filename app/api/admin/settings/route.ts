@@ -17,6 +17,7 @@ export async function GET() {
         success: true, 
         protection_enabled: false,
         maintenance_enabled: false,
+        hide_prices: false,
         splash_ad_url: '',
         splash_ad_enabled: false
       });
@@ -29,6 +30,7 @@ export async function GET() {
       success: true, 
       protection_enabled: !!config.protection_enabled,
       maintenance_enabled: !!adsData.maintenance_enabled,
+      hide_prices: !!adsData.hide_prices,
       splash_ad_url: adsData.ads?.[0]?.image_url || '',
       splash_ad_enabled: (adsData.ads?.length || 0) > 0
     });
@@ -39,7 +41,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { protection_enabled, maintenance_enabled } = await request.json();
+    const { protection_enabled, maintenance_enabled, hide_prices } = await request.json();
 
     // 1. Try to fetch the first record's ID
     const { data: existing } = await supabase.from('admin_config').select('id, splash_ads_json').limit(1);
@@ -53,13 +55,20 @@ export async function POST(request: Request) {
           username: 'admin', 
           password: 'streamtv', 
           protection_enabled: !!protection_enabled,
-          splash_ads_json: { maintenance_enabled: !!maintenance_enabled }
+          splash_ads_json: { 
+            maintenance_enabled: !!maintenance_enabled,
+            hide_prices: !!hide_prices
+          }
         }]);
       error = insertError;
     } else {
       // 3. If record exists, update it
       const currentJson = existing[0].splash_ads_json || { ads: [] };
-      const updatedJson = { ...currentJson, maintenance_enabled: !!maintenance_enabled };
+      const updatedJson = { 
+        ...currentJson, 
+        maintenance_enabled: maintenance_enabled !== undefined ? !!maintenance_enabled : currentJson.maintenance_enabled,
+        hide_prices: hide_prices !== undefined ? !!hide_prices : currentJson.hide_prices
+      };
 
       const { error: updateError } = await supabase
         .from('admin_config')
