@@ -186,6 +186,17 @@ export default function Header() {
             </Link>
 
             <Link
+              href="/store"
+              onClick={closeMobileMenu}
+              className={`flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-primary/10 hover:text-primary transition-all duration-200 text-xs sm:text-sm font-bold ${
+                pathname === '/store' ? 'bg-orange-50 text-primary border border-orange-100' : 'text-slate-700'
+              }`}
+            >
+              <span>🛒</span>
+              <span>{language === 'en' ? 'Store' : 'Boutique'}</span>
+            </Link>
+
+            <Link
               href="/offers"
               onClick={closeMobileMenu}
               className={`flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-primary/10 hover:text-primary transition-all duration-200 text-xs sm:text-sm font-bold ${
